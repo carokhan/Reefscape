@@ -16,7 +16,7 @@ def is_invalid_state(state):
         return True
     if state["coralHopper"] and state["elevatorPos"] != "INTAKE":
         return True
-    if not state["algaeDetected"] and state["elevatorPos"] in ["PROCESS", "NET"]:
+    if not state["algaeDetected"] and state["elevatorPos"] in ["AP", "AN"]:
         return True
     if not state["coralOuttake"] and state["elevatorPos"] in ["L1", "L2", "L3", "L4"]:
         return True
@@ -24,6 +24,15 @@ def is_invalid_state(state):
         return True
     if not state["reefAlign"] and state["elevatorPos"] in ["L1"]:
         return True
+    if sum([state["reefAlign"], state["netAlign"], state["processorAlign"]]) > 1:
+        return True
+    if state["netAlign"] and state["elevatorPos"] != "AN":
+        return True
+    if state["processorAlign"] and state["elevatorPos"] != "AP":
+        return True
+    if state["elevatorPos"] in ["AN", "AP"] and state["reefAlign"]:
+        return True
+    
     return False
 
 
@@ -48,7 +57,6 @@ def get_result_states(state):
 
     if (
         state["coralOuttake"]
-        and state["elevatorPos"] in ["ZERO", "INTAKE"]
         and not state["reefAlign"]
     ):
         result_states.append("CORAL_READY")
@@ -69,11 +77,23 @@ def get_result_states(state):
     ):
         result_states.append(f"CORAL_SCORE_{state['elevatorPos']}")
 
-    if state["algaeDetected"] == True:
-        result_states.append("ALGAE_PRESCORE")
+    if (
+        state["algaeDetected"] == True
+        and not state["processorAlign"] and not state["netAlign"]):
+        result_states.append("ALGAE_READY")
 
     if not state["algaeDetected"] and state["elevatorPos"] in ["A2", "A3"]:
         result_states.append(f"ALGAE_INTAKE_{state['elevatorPos']}")
+
+    if (
+        state["algaeDetected"] == True
+        and state["processorAlign"]):
+        result_states.append("ALGAE_PRESCORE_AP")
+
+    if (
+        state["algaeDetected"] == True
+        and state["netAlign"]):
+        result_states.append("ALGAE_PRESCORE_AN")
 
     if (
         state["coralOuttake"] == True
@@ -81,6 +101,7 @@ def get_result_states(state):
         and state["reefAlign"] == True
     ):
         result_states.append(f"CORAL_SCORE_{state['elevatorPos']}")
+
 
     if (
         state["coralHopper"] is False
@@ -93,6 +114,37 @@ def get_result_states(state):
     return result_states
 
 
+def get_prioritized_state(result_states):
+    """
+    Given a list of result states, return the highest-priority state.
+    Priority is given to 'score', 'transfer', and 'prescore' states over 'ready' states.
+
+    :param result_states: List of result states.
+    :return: The highest-priority state as a string.
+    """
+    # Priority order (higher priority means earlier in the list)
+    priority_order = [
+        "CORAL_SCORE_",  # Score states have the highest priority
+        "CORAL_TRANSFER", # Transfer comes next
+        "CORAL_PRESCORE", # Prescore comes next
+        "ALGAE_INTAKE",   # Algae intake
+        "ALGAE_PRESCORE_AP", # Prescore for algae with processor alignment
+        "ALGAE_PRESCORE_AN", # Prescore for algae with net alignment
+        "CORAL_PREINTAKE",
+        "CORAL_READY",    # Ready states come after transfer, score, and prescore
+        "ALGAE_READY",    # Ready states are of equal priority
+        "IDLE"            # Idle state has the lowest priority
+    ]
+    
+    # Sort result states based on priority order
+    for state in priority_order:
+        for result_state in result_states:
+            if state in result_state:
+                return result_state
+    
+    # If no state matches the priority order, return an empty string (or None, depending on your preference)
+    return ""
+
 if __name__ == "__main__":
     state_variables = {
         "coralHopper": [True, False],
@@ -100,18 +152,20 @@ if __name__ == "__main__":
         "elevatorPos": [
             "ZERO",
             "INTAKE",
-            "PROCESS",
+            "AP",
             "L1",
             "A2",
             "L2",
             "A3",
             "L3",
             "L4",
-            "NET",
+            "AN",
         ],
         "reefAlign": [True, False],
         "reefDetected": [True, False],
         "algaeDetected": [True, False],
+        "netAlign": [True, False],
+        "processorAlign": [True, False]
     }
 
     keys = state_variables.keys()
@@ -131,9 +185,7 @@ if __name__ == "__main__":
         else:
             # Get the result states if valid
             state["resultState"] = get_result_states(state)
-            state["resultState"] = (
-                ", ".join(state["resultState"]) if state["resultState"] else ""
-            )
+            state["resultState"] = get_prioritized_state(state["resultState"])
 
         all_states.append(state)
 
