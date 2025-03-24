@@ -54,10 +54,6 @@ import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
 import frc.robot.subsystems.outtake.OuttakeIOTalonFX;
-import frc.robot.subsystems.vision.Vision;
-import frc.robot.subsystems.vision.VisionIO;
-import frc.robot.subsystems.vision.VisionIOPhotonVision;
-import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.CommandXboxControllerSubsystem;
 import java.util.Arrays;
@@ -87,7 +83,6 @@ public class RobotContainer {
   public final Gripper gripper;
   public final Climber climber;
   public final LED led;
-  public final Vision vision;
 
   // Controller
   private final CommandXboxController driver = new CommandXboxControllerSubsystem(0);
@@ -116,7 +111,6 @@ public class RobotContainer {
         gripper = new Gripper(new GripperIOTalonFX());
         climber = new Climber(new ClimberIOSpark());
         led = new LED(new LEDIOReal());
-        vision = new Vision(new VisionIOPhotonVision());
         break;
 
       case SIM:
@@ -134,7 +128,6 @@ public class RobotContainer {
         gripper = new Gripper(new GripperIOSim());
         climber = new Climber(new ClimberIOSim());
         led = new LED(new LEDIOSim());
-        vision = new Vision(new VisionIOPhotonVisionSim());
         break;
 
       default:
@@ -152,7 +145,6 @@ public class RobotContainer {
         gripper = new Gripper(new GripperIO() {});
         climber = new Climber(new ClimberIO() {});
         led = new LED(new LEDIO() {});
-        vision = new Vision(new VisionIO() {});
         break;
     }
 

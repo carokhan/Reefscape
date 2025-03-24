@@ -1,7 +1,4 @@
-[submodule "src/main/java/frc/robot/subsystems/vision/1086-Vision-2025"]
-	path = src/main/java/frc/robot/subsystems/vision/1086-Vision-2025
-	url = https://github.com/SpaceStudios/1086-Vision-2025.git
 [submodule "vision"]
-	path = src/main/java/frc/robot/subsystems/1086-Vision-2025
+	path = src/main/java/frc/robot/subsystems/vision
 	url = https://github.com/SpaceStudios/1086-Vision-2025.git
 	branch = Jackson

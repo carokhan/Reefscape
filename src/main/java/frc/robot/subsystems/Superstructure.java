@@ -13,11 +13,9 @@ import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
-
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.Supplier;
-
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -82,13 +80,13 @@ public class Superstructure {
 
   @AutoLogOutput(key = "Superstructure/Coral Intake")
   private final Trigger coralIntakeRequest;
-  
+
   @AutoLogOutput(key = "Superstructure/Reverse Hopper")
   private final Trigger reverseHopperRequest;
-  
+
   @AutoLogOutput(key = "Superstructure/Algae Intake")
   private final Trigger algaeIntakeRequest;
-  
+
   @AutoLogOutput(key = "Superstructure/Climb")
   private final Trigger climbRequest;
 
@@ -145,8 +143,8 @@ public class Superstructure {
     this.endClimbRequest = endClimbRequest;
     this.homeRequest = homeRequest;
 
-    for (var state: State.values()) {
-        stateTriggers.put(state, new Trigger(() -> this.state == state && DriverStation.isEnabled()));
+    for (var state : State.values()) {
+      stateTriggers.put(state, new Trigger(() -> this.state == state && DriverStation.isEnabled()));
     }
   }
 
@@ -154,6 +152,4 @@ public class Superstructure {
   public void periodic() {
     Logger.recordOutput("Superstructure/Superstructure State", state);
   }
-
-  
 }
