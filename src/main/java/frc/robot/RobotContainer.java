@@ -22,10 +22,10 @@ import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.Target;
-import frc.robot.subsystems.climber.Climber;
-import frc.robot.subsystems.climber.ClimberIO;
-import frc.robot.subsystems.climber.ClimberIOSim;
-import frc.robot.subsystems.climber.ClimberIOSpark;
+import frc.robot.subsystems.climb.Climb;
+import frc.robot.subsystems.climb.ClimbIO;
+import frc.robot.subsystems.climb.ClimbIOSim;
+import frc.robot.subsystems.climb.ClimbIOSpark;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.subsystems.drive.DriveCommands;
 import frc.robot.subsystems.drive.GyroIO;
@@ -85,7 +85,7 @@ public class RobotContainer {
   public final Elevator elevator;
   public final Outtake outtake;
   public final Gripper gripper;
-  public final Climber climber;
+  public final Climb climb;
   public final LED led;
   public final Vision vision;
 
@@ -114,7 +114,7 @@ public class RobotContainer {
         elevator = new Elevator(new ElevatorIOTalonFX());
         outtake = new Outtake(new OuttakeIOTalonFX());
         gripper = new Gripper(new GripperIOTalonFX());
-        climber = new Climber(new ClimberIOSpark());
+        climb = new Climb(new ClimbIOSpark());
         led = new LED(new LEDIOReal());
         vision = new Vision(new VisionIOPhotonVision());
         break;
@@ -132,7 +132,7 @@ public class RobotContainer {
         elevator = new Elevator(new ElevatorIOSim());
         outtake = new Outtake(new OuttakeIOSim());
         gripper = new Gripper(new GripperIOSim());
-        climber = new Climber(new ClimberIOSim());
+        climb = new Climb(new ClimbIOSim());
         led = new LED(new LEDIOSim());
         vision = new Vision(new VisionIOPhotonVisionSim());
         break;
@@ -150,7 +150,7 @@ public class RobotContainer {
         elevator = new Elevator(new ElevatorIO() {});
         outtake = new Outtake(new OuttakeIO() {});
         gripper = new Gripper(new GripperIO() {});
-        climber = new Climber(new ClimberIO() {});
+        climb = new Climb(new ClimbIO() {});
         led = new LED(new LEDIO() {});
         vision = new Vision(new VisionIO() {});
         break;
@@ -162,7 +162,7 @@ public class RobotContainer {
             elevator,
             outtake,
             gripper,
-            climber,
+            climb,
             led,
             drive::getPose,
             drive::getVelocityFieldRelative,

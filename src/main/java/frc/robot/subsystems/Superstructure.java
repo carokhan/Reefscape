@@ -4,7 +4,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import frc.robot.subsystems.climber.Climber;
+import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.gripper.Gripper;
@@ -106,7 +106,7 @@ public class Superstructure {
   private final Elevator elevator;
   private final Outtake outtake;
   private final Gripper gripper;
-  private final Climber climber;
+  private final Climb climb;
   private final LED led;
 
   public Superstructure(
@@ -114,7 +114,7 @@ public class Superstructure {
       Elevator elevator,
       Outtake outtake,
       Gripper gripper,
-      Climber climber,
+      Climb climb,
       LED led,
       Supplier<Pose2d> pose,
       Supplier<ChassisSpeeds> velocity,
@@ -130,7 +130,7 @@ public class Superstructure {
     this.elevator = elevator;
     this.outtake = outtake;
     this.gripper = gripper;
-    this.climber = climber;
+    this.climb = climb;
     this.led = led;
 
     this.pose = pose;
