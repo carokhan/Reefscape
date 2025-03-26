@@ -1,0 +1,4 @@
+[submodule "vision"]
+	path = src/main/java/frc/robot/subsystems/vision
+	url = https://github.com/SpaceStudios/1086-Vision-2025.git
+	branch = Jackson
