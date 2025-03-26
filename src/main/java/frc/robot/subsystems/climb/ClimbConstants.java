@@ -4,7 +4,7 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.util.Units;
 
 public class ClimbConstants {
-  public static final int spark = 40;
+  public static final int spark = 50;
 
   public static final boolean inverted = false;
 

@@ -26,7 +26,7 @@ public class HopperIOSim implements HopperIO {
   private double appliedVolts = 0.0;
 
   @Override
-  public void processInputs(HopperIOInputsAutoLogged inputs) {
+  public void updateInputs(HopperIOInputsAutoLogged inputs) {
     sim.setInputVoltage(appliedVolts);
     sim.update(0.02);
 

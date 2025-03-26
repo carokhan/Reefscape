@@ -18,7 +18,7 @@ public interface GripperIO {
     public double sensorTempCelsius = 20.0;
   }
 
-  public default void processInputs(final GripperIOInputsAutoLogged inputs) {}
+  public default void updateInputs(final GripperIOInputsAutoLogged inputs) {}
 
   public default void setVoltage(double voltage) {}
 }

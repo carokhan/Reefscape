@@ -18,7 +18,7 @@ public interface OuttakeIO {
     public double sensorTempCelsius = 20.0;
   }
 
-  public default void processInputs(final OuttakeIOInputsAutoLogged inputs) {}
+  public default void updateInputs(final OuttakeIOInputsAutoLogged inputs) {}
 
   public default void setVoltage(double voltage) {}
 }

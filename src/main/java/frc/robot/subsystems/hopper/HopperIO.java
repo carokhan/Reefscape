@@ -13,7 +13,7 @@ public interface HopperIO {
     public boolean motorStalled = false;
   }
 
-  public default void processInputs(final HopperIOInputsAutoLogged inputs) {}
+  public default void updateInputs(final HopperIOInputsAutoLogged inputs) {}
 
   public default void setVoltage(double voltage) {}
 }

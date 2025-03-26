@@ -16,7 +16,6 @@ import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
 import org.littletonrobotics.junction.Logger;
-import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
 
 public class Elevator extends SubsystemBase {
   private final ElevatorIO io;
@@ -43,11 +42,7 @@ public class Elevator extends SubsystemBase {
       new LoggedTunableNumber("Elevator/kG/Stage2"),
       new LoggedTunableNumber("Elevator/kG/Stage3")
   };
-  private static final LoggedTunableNumber[] kA = {
-      new LoggedTunableNumber("Elevator/kA/Stage1"),
-      new LoggedTunableNumber("Elevator/kA/Stage2"),
-      new LoggedTunableNumber("Elevator/kA/Stage3")
-  };
+
   private static final LoggedTunableNumber maxVelocity = new LoggedTunableNumber("Elevator/MaxVelocityMetersPerSec",
       ElevatorConstants.maxVelocity);
   private static final LoggedTunableNumber maxAcceleration = new LoggedTunableNumber(
@@ -83,10 +78,15 @@ public class Elevator extends SubsystemBase {
 
     LoggedTunableNumber.ifChanged(hashCode(), () -> {
       for (int stage = 0; stage <= 2; stage++) {
-          io.setPDFF(stage, kP.get(), kD.get(), kS[stage].get(), kG[stage].get());
+        io.setPDFF(stage, kP.get(), kD.get(), kS[stage].get(), kG[stage].get());
       }
-  });
-  
+      ;
+      io.setMagic(maxVelocity.get(), maxAcceleration.get());
+
+    });
+
+    io.setSlot((int) (inputs.positionMeters / Units.inchesToMeters(23)));
+    io.setTarget(inputs.targetPositionMeters);
   }
 
   public Command setExtension(DoubleSupplier meters) {

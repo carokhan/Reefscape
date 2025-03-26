@@ -35,7 +35,7 @@ public class HopperIOSpark implements HopperIO {
   }
 
   @Override
-  public void processInputs(HopperIOInputsAutoLogged inputs) {
+  public void updateInputs(HopperIOInputsAutoLogged inputs) {
     sparkStickyFault = false;
     ifOk(spark, spark::getAppliedOutput, (value) -> inputs.motorAppliedVolts = value);
     ifOk(spark, spark::getOutputCurrent, (value) -> inputs.motorCurrentAmps = value);
