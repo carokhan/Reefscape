@@ -10,6 +10,7 @@ import com.revrobotics.spark.SparkMax;
 import com.revrobotics.spark.config.SparkBaseConfig.IdleMode;
 import com.revrobotics.spark.config.SparkMaxConfig;
 import edu.wpi.first.math.filter.Debouncer;
+import frc.robot.util.SparkUtil;
 
 public class HopperIOSpark implements HopperIO {
   private final SparkMax spark = new SparkMax(HopperConstants.spark, MotorType.kBrushless);
@@ -25,7 +26,7 @@ public class HopperIOSpark implements HopperIO {
         .smartCurrentLimit(HopperConstants.current)
         .voltageCompensation(12.0);
 
-    tryUntilOk(
+    SparkUtil.tryUntilOk(
         spark,
         5,
         () ->

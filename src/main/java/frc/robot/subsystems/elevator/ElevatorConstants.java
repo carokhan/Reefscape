@@ -3,8 +3,8 @@ package frc.robot.subsystems.elevator;
 import edu.wpi.first.math.util.Units;
 
 public class ElevatorConstants {
-  public static final int spark = 10;
-  public static final int followerSpark = 11;
+  public static final int talon = 10;
+  public static final int followerTalon = 11;
 
   public static final double AP = 0.05;
   public static final double L1 = 0.33;

@@ -7,13 +7,16 @@ public interface ElevatorIO {
   public static class ElevatorIOInputs {
     public double positionMeters = 0.0;
     public double targetPositionMeters = 0.0;
+    public double velocityMetersPerSec = 0.0;
 
     public double motorAppliedVolts = 0.0;
-    public double motorCurrentAmps = 0.0;
+    public double motorStatorCurrentAmps = 0.0;
+    public double motorSupplyCurrentAmps = 0.0;
     public double motorVelocityMetersPerSecond = 0.0;
 
     public double followerAppliedVolts = 0.0;
-    public double followerCurrentAmps = 0.0;
+    public double followerStatorCurrentAmps = 0.0;
+    public double followerSupplyCurrentAmps = 0.0;
     public double followerVelocityMetersPerSecond = 0.0;
 
     public boolean motorConnected = false;
