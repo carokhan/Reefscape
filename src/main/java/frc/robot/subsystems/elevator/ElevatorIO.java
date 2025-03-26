@@ -41,4 +41,7 @@ public interface ElevatorIO {
   public default void resetEncoder() {
     resetEncoder(0.0);
   }
+
+  public default void setPDFF(
+      int slot, double kP, double kD, double kS, double kG) {}
 }

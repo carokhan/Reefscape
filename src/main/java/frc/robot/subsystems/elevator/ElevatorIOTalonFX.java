@@ -6,6 +6,7 @@ package frc.robot.subsystems.elevator;
 
 import com.ctre.phoenix6.BaseStatusSignal;
 import com.ctre.phoenix6.StatusSignal;
+import com.ctre.phoenix6.configs.SlotConfigs;
 import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.Follower;
 import com.ctre.phoenix6.controls.MotionMagicVoltage;
@@ -48,27 +49,42 @@ public class ElevatorIOTalonFX implements ElevatorIO {
         ElevatorConstants.gearing / (2 * Math.PI * ElevatorConstants.drumRadius);
 
     config.Slot0.GravityType = GravityTypeValue.Elevator_Static;
-    config.Slot0.kG = 0.65;
-    config.Slot0.kS = 0.15;
-    config.Slot0.kV = 3.34;
-    config.Slot0.kA = 0.1;
-    config.Slot0.kP = 150.0;
-    config.Slot0.kD = 10.0;
+    config.Slot0.kG = ElevatorConstants.kG[0];
+    config.Slot0.kS = ElevatorConstants.kS[0];
+    config.Slot0.kV = ElevatorConstants.kV;
+    config.Slot0.kA = ElevatorConstants.kA;
+    config.Slot0.kP = ElevatorConstants.kP;
+    config.Slot0.kD = ElevatorConstants.kD;
 
-    config.ClosedLoopRamps.VoltageClosedLoopRampPeriod = 0.1;
+    config.Slot1.GravityType = GravityTypeValue.Elevator_Static;
+    config.Slot1.kG = ElevatorConstants.kG[1];
+    config.Slot1.kS = ElevatorConstants.kS[1];
+    config.Slot1.kV = ElevatorConstants.kV;
+    config.Slot1.kA = ElevatorConstants.kA;
+    config.Slot1.kP = ElevatorConstants.kP;
+    config.Slot1.kD = ElevatorConstants.kD;
 
-    config.CurrentLimits.StatorCurrentLimit = 80.0;
+    config.Slot2.GravityType = GravityTypeValue.Elevator_Static;
+    config.Slot2.kG = ElevatorConstants.kG[2];
+    config.Slot2.kS = ElevatorConstants.kS[2];
+    config.Slot2.kV = ElevatorConstants.kV;
+    config.Slot2.kA = ElevatorConstants.kA;
+    config.Slot2.kP = ElevatorConstants.kP;
+    config.Slot2.kD = ElevatorConstants.kD;
+
+    config.ClosedLoopRamps.VoltageClosedLoopRampPeriod = ElevatorConstants.rampPeriod;
+
+    config.CurrentLimits.StatorCurrentLimit = ElevatorConstants.statorCurrent;
     config.CurrentLimits.StatorCurrentLimitEnable = true;
-    config.CurrentLimits.SupplyCurrentLimit = 70.0;
+    config.CurrentLimits.SupplyCurrentLimit = ElevatorConstants.supplyCurrent;
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
-    config.CurrentLimits.SupplyCurrentLowerLimit = 40.0;
+    config.CurrentLimits.SupplyCurrentLowerLimit = ElevatorConstants.supplyCurrentLow;
     config.CurrentLimits.SupplyCurrentLowerTime = 0.0;
 
-    config.MotionMagic.MotionMagicAcceleration = 12.0;
-    config.MotionMagic.MotionMagicCruiseVelocity = 4.5;
-
-    config.MotionMagic.MotionMagicExpo_kV = 1.9;
-    config.MotionMagic.MotionMagicExpo_kA = 0.1141;
+    config.MotionMagic.MotionMagicAcceleration = ElevatorConstants.maxAcceleration;
+    config.MotionMagic.MotionMagicCruiseVelocity = ElevatorConstants.maxVelocity;
+    config.MotionMagic.MotionMagicExpo_kV = ElevatorConstants.kVExpo;
+    config.MotionMagic.MotionMagicExpo_kA = ElevatorConstants.kAExpo;
 
     motor.getConfigurator().apply(config);
     follower.getConfigurator().apply(config);
@@ -104,5 +120,21 @@ public class ElevatorIOTalonFX implements ElevatorIO {
   @Override
   public void resetEncoder(final double position) {
     motor.setPosition(position);
+  }
+
+  @Override
+  public void setPDFF(
+      int slot, double kP, double kD, double kS, double kG) {
+    var slotConfigs =
+        new SlotConfigs()
+            .withKP(kP)
+            .withKI(ElevatorConstants.kI)
+            .withKD(kD)
+            .withKS(kS)
+            .withKV(ElevatorConstants.kV)
+            .withKA(ElevatorConstants.kA)
+            .withKG(kG);
+    slotConfigs.SlotNumber = slot;
+    motor.getConfigurator().apply(slotConfigs, 0.0);
   }
 }
