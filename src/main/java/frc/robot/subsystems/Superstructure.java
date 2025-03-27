@@ -25,24 +25,34 @@ import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Superstructure {
-  public static enum Target {
-    IDLE(0, 0, 0),
-    L1(ElevatorConstants.L1, OuttakeConstants.L1, 0),
-    L2(ElevatorConstants.L2, OuttakeConstants.L234, 0),
-    L3(ElevatorConstants.L3, OuttakeConstants.L234, 0),
-    L4(ElevatorConstants.L4, OuttakeConstants.L234, 0),
-    AP(ElevatorConstants.AP, 0, GripperConstants.AP),
-    A2(ElevatorConstants.A2, 0, GripperConstants.A23),
-    A3(ElevatorConstants.A3, 0, GripperConstants.A23),
-    AN(ElevatorConstants.AN, 0, GripperConstants.AN);
+  public static enum CoralTarget {
+    IDLE(0, 0),
+    L1(ElevatorConstants.L1, OuttakeConstants.L1),
+    L2(ElevatorConstants.L2, OuttakeConstants.L234),
+    L3(ElevatorConstants.L3, OuttakeConstants.L234),
+    L4(ElevatorConstants.L4, OuttakeConstants.L234);
 
     public final double elevatorHeight;
     public final double outtakeSpeed;
-    public final double gripperSpeed;
 
-    private Target(double elevatorHeight, double outtakeSpeed, double gripperSpeed) {
+    private CoralTarget(double elevatorHeight, double outtakeSpeed) {
       this.elevatorHeight = elevatorHeight;
       this.outtakeSpeed = outtakeSpeed;
+    }
+  }
+
+  public static enum AlgaeTarget {
+    IDLE(0, 0),
+    AP(ElevatorConstants.AP, GripperConstants.AP),
+    A2(ElevatorConstants.A2, GripperConstants.A23),
+    A3(ElevatorConstants.A3, GripperConstants.A23),
+    AN(ElevatorConstants.AN, GripperConstants.AN);
+
+    public final double elevatorHeight;
+    public final double gripperSpeed;
+
+    private AlgaeTarget(double elevatorHeight, double gripperSpeed) {
+      this.elevatorHeight = elevatorHeight;
       this.gripperSpeed = gripperSpeed;
     }
   }
@@ -78,7 +88,6 @@ public class Superstructure {
 
   private final Supplier<Pose2d> pose;
   private final Supplier<ChassisSpeeds> velocity;
-  private final Supplier<Target> target;
 
   @AutoLogOutput(key = "Superstructure/Score")
   private final Trigger scoreRequest;
@@ -119,6 +128,9 @@ public class Superstructure {
   private final Climb climb;
   private final LED led;
 
+  private final Supplier<CoralTarget> coralTarget;
+  private final Supplier <AlgaeTarget> algaeTarget;
+
   public Superstructure(
       Hopper hopper,
       Elevator elevator,
@@ -128,7 +140,8 @@ public class Superstructure {
       LED led,
       Supplier<Pose2d> pose,
       Supplier<ChassisSpeeds> velocity,
-      Supplier<Target> target,
+      Supplier<CoralTarget> coralTarget,
+      Supplier<AlgaeTarget> algaeTarget,
       Trigger scoreRequest,
       Trigger coralIntakeRequest,
       Trigger reverseHopperRequest,
@@ -146,7 +159,8 @@ public class Superstructure {
 
     this.pose = pose;
     this.velocity = velocity;
-    this.target = target;
+    this.coralTarget = coralTarget;
+    this.algaeTarget = algaeTarget;
 
     this.scoreRequest = scoreRequest;
     this.coralIntakeRequest = coralIntakeRequest;
@@ -167,7 +181,18 @@ public class Superstructure {
         .and(coralIntakeRequest)
         .onTrue(this.forceState(State.CORAL_PREINTAKE));
 
-    // IDLE -> ALGAE_PREINTAKE
+    // IDLE -> ALGAE_INTAKE_[LEVEL]
+    stateTriggers
+      .get(State.IDLE)
+      .and(algaeIntakeRequest)
+      .and(() -> (algaeTarget.get() == AlgaeTarget.A2))
+      .onTrue(this.forceState(State.ALGAE_INTAKE_A2));
+    
+    stateTriggers
+      .get(State.IDLE)
+      .and(algaeIntakeRequest)
+      .and(() -> (algaeTarget.get() == AlgaeTarget.A3))
+      .onTrue(this.forceState(State.ALGAE_INTAKE_A3));
 
     // IDLE -> CLIMB_PREPULL
     stateTriggers.get(State.IDLE).and(preClimbRequest).onTrue(this.forceState(State.CLIMB_PREPULL));
@@ -187,7 +212,30 @@ public class Superstructure {
         .whileTrue(outtake.index())
         .whileTrue(hopper.setVoltage(() -> reverseHopperRequest.getAsBoolean() ? -6.0 : 6.0))
         .and(outtake::getDetected)
-        .onTrue(this.forceState(State.CORAL_PRESCORE));
+        .onTrue(this.forceState(State.CORAL_READY));
+
+    // CORAL -> IDLE
+    stateTriggers
+      .get(State.CORAL_READY)
+      .or(stateTriggers.get(State.CORAL_PRESCORE))
+      .or(stateTriggers.get(State.CORAL_CONFIRM_L1))
+      .or(stateTriggers.get(State.CORAL_CONFIRM_L2))
+      .or(stateTriggers.get(State.CORAL_CONFIRM_L3))
+      .or(stateTriggers.get(State.CORAL_CONFIRM_L4))
+      .or(stateTriggers.get(State.CORAL_SCORE_L1))
+      .or(stateTriggers.get(State.CORAL_SCORE_L2))
+      .or(stateTriggers.get(State.CORAL_SCORE_L3))
+      .or(stateTriggers.get(State.CORAL_SCORE_L4))
+      .and(() -> !outtake.getDetected())
+      .onTrue(this.forceState(State.IDLE));
+
+    // CORAL_OUTTAKE -> IDLE
+    stateTriggers
+        .get(State.CORAL_OUTTAKE)
+        .whileTrue(outtake.setVoltage(OuttakeConstants.L234))
+        .and(() -> !outtake.getDetected())
+        .and(preClimbReq.negate())
+        .onTrue(this.forceState(State.IDLE));
 
     // CLIMB_PREPULL -> CLIMB_PULL
     stateTriggers

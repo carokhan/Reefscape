@@ -22,7 +22,8 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Superstructure;
-import frc.robot.subsystems.Superstructure.Target;
+import frc.robot.subsystems.Superstructure.AlgaeTarget;
+import frc.robot.subsystems.Superstructure.CoralTarget;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
 import frc.robot.subsystems.climb.ClimbIOSim;
@@ -65,9 +66,12 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
@@ -98,34 +102,42 @@ public class RobotContainer {
   private final AutoFactory autoFactory;
   private final LoggedDashboardChooser<Command> autoChooser;
 
-  // private final EnumMap<ElevatorSetpoint, Command> outtakeCommands;
+  private CoralTarget coralTarget = CoralTarget.L4;
+  private AlgaeTarget algaeTarget = AlgaeTarget.AN;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  /**
+   * The container for the robot. Contains subsystems, OI devices, and commands.
+   */
   public RobotContainer() {
     switch (ROBOT_TYPE) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
+        drive = new Drive(
+            new GyroIOPigeon2(),
+            new ModuleIOTalonFX(TunerConstants.FrontLeft),
+            new ModuleIOTalonFX(TunerConstants.FrontRight),
+            new ModuleIOTalonFX(TunerConstants.BackLeft),
+            new ModuleIOTalonFX(TunerConstants.BackRight));
         // hopper =
-        //     new Hopper(
-        //         new HopperIOSpark(), new ProximityIOGrapple(HopperConstants.laser, null, null,
+        // new Hopper(
+        // new HopperIOSpark(), new ProximityIOGrapple(HopperConstants.laser, null,
+        // null,
         // 0));
-        hopper = new Hopper(new HopperIO() {}, new ProximityIO() {});
+        hopper = new Hopper(new HopperIO() {
+        }, new ProximityIO() {
+        });
         elevator = new Elevator(new ElevatorIOTalonFX());
         // outtake =
-        //     new Outtake(
-        //         new OuttakeIOTalonFX(),
-        //         new ProximityIORedux(
-        //             OuttakeConstants.canandcolor, OuttakeConstants.proximityThreshold));
-        outtake = new Outtake(new OuttakeIO() {}, new ProximityIO() {});
+        // new Outtake(
+        // new OuttakeIOTalonFX(),
+        // new ProximityIORedux(
+        // OuttakeConstants.canandcolor, OuttakeConstants.proximityThreshold));
+        outtake = new Outtake(new OuttakeIO() {
+        }, new ProximityIO() {
+        });
         // gripper = new Gripper(new GripperIOTalonFX());
-        gripper = new Gripper(new GripperIO() {});
+        gripper = new Gripper(new GripperIO() {
+        });
         climb = new Climb(new ClimbIOSpark());
         led = new LED(new LEDIOReal());
         vision = new Vision(new VisionIOPhotonVision());
@@ -133,13 +145,13 @@ public class RobotContainer {
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIOSim(TunerConstants.FrontLeft),
+            new ModuleIOSim(TunerConstants.FrontRight),
+            new ModuleIOSim(TunerConstants.BackLeft),
+            new ModuleIOSim(TunerConstants.BackRight));
         hopper = new Hopper(new HopperIOSim(), new ProximityIOSim());
         elevator = new Elevator(new ElevatorIOSim());
         outtake = new Outtake(new OuttakeIOSim(), new ProximityIOSim());
@@ -151,57 +163,69 @@ public class RobotContainer {
 
       default:
         // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
-        hopper = new Hopper(new HopperIO() {}, new ProximityIO() {});
-        elevator = new Elevator(new ElevatorIO() {});
-        outtake = new Outtake(new OuttakeIO() {}, new ProximityIO() {});
-        gripper = new Gripper(new GripperIO() {});
-        climb = new Climb(new ClimbIO() {});
-        led = new LED(new LEDIO() {});
-        vision = new Vision(new VisionIO() {});
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            });
+        hopper = new Hopper(new HopperIO() {
+        }, new ProximityIO() {
+        });
+        elevator = new Elevator(new ElevatorIO() {
+        });
+        outtake = new Outtake(new OuttakeIO() {
+        }, new ProximityIO() {
+        });
+        gripper = new Gripper(new GripperIO() {
+        });
+        climb = new Climb(new ClimbIO() {
+        });
+        led = new LED(new LEDIO() {
+        });
+        vision = new Vision(new VisionIO() {
+        });
         break;
     }
 
-    superstructure =
-        new Superstructure(
-            hopper,
-            elevator,
-            outtake,
-            gripper,
-            climb,
-            led,
-            drive::getPose,
-            drive::getVelocityFieldRelative,
-            () -> Target.L4,
-            driver.rightTrigger(),
-            driver.leftTrigger(),
-            driver.a(),
-            driver.leftTrigger(),
-            driver.povLeft(),
-            driver.povUp(),
-            driver.povDown(),
-            operator.leftTrigger());
+    superstructure = new Superstructure(
+        hopper,
+        elevator,
+        outtake,
+        gripper,
+        climb,
+        led,
+        drive::getPose,
+        drive::getVelocityFieldRelative,
+        () -> coralTarget,
+        () -> algaeTarget,
+        driver.rightTrigger(),
+        driver.leftTrigger(),
+        driver.a(),
+        driver.leftTrigger(),
+        driver.povLeft(),
+        driver.povUp(),
+        driver.povDown(),
+        operator.leftTrigger());
 
-    autoFactory =
-        new AutoFactory(
-            drive::getPose,
-            drive::setPose,
-            drive::followTrajectory,
-            true,
-            drive,
-            (sample, isStart) -> {
-              Logger.recordOutput(
-                  "ActiveTrajectory",
-                  Arrays.stream(sample.getPoses())
-                      .map(AllianceFlipUtil::apply)
-                      .toArray(Pose2d[]::new));
-            });
+    autoFactory = new AutoFactory(
+        drive::getPose,
+        drive::setPose,
+        drive::followTrajectory,
+        true,
+        drive,
+        (sample, isStart) -> {
+          Logger.recordOutput(
+              "ActiveTrajectory",
+              Arrays.stream(sample.getPoses())
+                  .map(AllianceFlipUtil::apply)
+                  .toArray(Pose2d[]::new));
+        });
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
@@ -227,9 +251,11 @@ public class RobotContainer {
   }
 
   /**
-   * Use this method to define your button->command mappings. Buttons can be created by
+   * Use this method to define your button->command mappings. Buttons can be
+   * created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
+   * it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
@@ -244,6 +270,31 @@ public class RobotContainer {
             () -> 1));
 
     driver.povRight().onTrue(Commands.runOnce(() -> climb.resetEncoder()));
+
+    operator.y().onTrue(Commands.runOnce(
+        () -> {
+          coralTarget = CoralTarget.L4;
+          algaeTarget = AlgaeTarget.AN;
+        }));
+    operator.x().onTrue(
+      Commands.runOnce(
+        () -> {
+          coralTarget = CoralTarget.L3;
+        }
+    ));
+    operator.b().onTrue(
+      Commands.runOnce(
+        () -> {
+          coralTarget = CoralTarget.L2;
+        }
+    ));
+    operator.a().onTrue(
+      Commands.runOnce(
+        () -> {
+          coralTarget = CoralTarget.L1;
+          algaeTarget = AlgaeTarget.AP;
+        }
+    ));
   }
 
   /**
