@@ -138,6 +138,7 @@ public class Robot extends LoggedRobot {
     //     "Camera1Pos",
     //     new Pose3d(robotContainer.drive.getPose()).transformBy(VisionConstants.robotToCamera1));
     CommandScheduler.getInstance().run();
+    // RobotContainer.superstructure.periodic();
 
     // Return to normal thread priority
     Threads.setCurrentThreadPriority(false, 10);

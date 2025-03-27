@@ -13,4 +13,6 @@ public class OuttakeConstants {
 
   public static final int current = 40;
   public static final boolean inverted = false;
+
+  public static final double proximityThreshold = 0.1;
 }

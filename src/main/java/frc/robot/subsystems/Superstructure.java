@@ -3,8 +3,13 @@ package frc.robot.subsystems;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
 import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.subsystems.climb.Climb;
+import frc.robot.subsystems.climb.ClimbConstants;
 import frc.robot.subsystems.elevator.Elevator;
 import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.gripper.Gripper;
@@ -66,8 +71,8 @@ public class Superstructure {
     ALGAE_CONFIRM_AN,
     ALGAE_SCORE_AP,
     ALGAE_SCORE_AN,
-    PRE_CLIMB,
-    CLIMB,
+    CLIMB_PREPULL,
+    CLIMB_PULL,
     IDLE
   }
 
@@ -87,18 +92,25 @@ public class Superstructure {
   @AutoLogOutput(key = "Superstructure/Algae Intake")
   private final Trigger algaeIntakeRequest;
 
+  @AutoLogOutput(key = "Superstructure/Pre Climb")
+  private final Trigger preClimbRequest;
+
   @AutoLogOutput(key = "Superstructure/Climb")
   private final Trigger climbRequest;
 
-  @AutoLogOutput(key = "Superstructure/End Climb")
-  private final Trigger endClimbRequest;
+  @AutoLogOutput(key = "Superstructure/Cancel Climb")
+  private final Trigger cancelClimbRequest;
 
   @AutoLogOutput(key = "Superstructure/Homing Request")
   private final Trigger homeRequest;
 
+  @AutoLogOutput(key = "Superstructure/State")
   private State state = State.IDLE;
+
   private State prevState = State.IDLE;
   private Map<State, Trigger> stateTriggers = new HashMap<State, Trigger>();
+
+  private Timer stateTimer = new Timer();
 
   private final Hopper hopper;
   private final Elevator elevator;
@@ -121,8 +133,9 @@ public class Superstructure {
       Trigger coralIntakeRequest,
       Trigger reverseHopperRequest,
       Trigger algaeIntakeRequest,
+      Trigger preClimbRequest,
       Trigger climbRequest,
-      Trigger endClimbRequest,
+      Trigger cancelClimbRequest,
       Trigger homeRequest) {
     this.hopper = hopper;
     this.elevator = elevator;
@@ -139,17 +152,77 @@ public class Superstructure {
     this.coralIntakeRequest = coralIntakeRequest;
     this.reverseHopperRequest = reverseHopperRequest;
     this.algaeIntakeRequest = algaeIntakeRequest;
+    this.preClimbRequest = preClimbRequest;
     this.climbRequest = climbRequest;
-    this.endClimbRequest = endClimbRequest;
+    this.cancelClimbRequest = cancelClimbRequest;
     this.homeRequest = homeRequest;
 
     for (var state : State.values()) {
       stateTriggers.put(state, new Trigger(() -> this.state == state && DriverStation.isEnabled()));
     }
+
+    // IDLE -> CORAL_PREINTAKE
+    stateTriggers
+        .get(State.IDLE)
+        .and(coralIntakeRequest)
+        .onTrue(this.forceState(State.CORAL_PREINTAKE));
+
+    // IDLE -> ALGAE_PREINTAKE
+
+    // IDLE -> CLIMB_PREPULL
+    stateTriggers.get(State.IDLE).and(preClimbRequest).onTrue(this.forceState(State.CLIMB_PREPULL));
+
+    // CORAL_PREINTAKE -> CORAL_TRANSFER
+    stateTriggers
+        .get(State.CORAL_PREINTAKE)
+        .whileTrue(elevator.setExtension(ElevatorConstants.intake))
+        .whileTrue(outtake.index())
+        .whileTrue(hopper.setVoltage(() -> reverseHopperRequest.getAsBoolean() ? -6.0 : 6.0))
+        .and(hopper::getDetected)
+        .onTrue(this.forceState(State.CORAL_TRANSFER));
+
+    // CORAL_TRANSFER -> CORAL_PRESCORE
+    stateTriggers
+        .get(State.CORAL_TRANSFER)
+        .whileTrue(outtake.index())
+        .whileTrue(hopper.setVoltage(() -> reverseHopperRequest.getAsBoolean() ? -6.0 : 6.0))
+        .and(outtake::getDetected)
+        .onTrue(this.forceState(State.CORAL_PRESCORE));
+
+    // CLIMB_PREPULL -> CLIMB_PULL
+    stateTriggers
+        .get(State.CLIMB_PREPULL)
+        .whileTrue(climb.setPosition(ClimbConstants.ready))
+        .and(climbRequest)
+        .onTrue(this.forceState(State.CLIMB_PULL));
+
+    stateTriggers
+        .get(State.CLIMB_PULL)
+        .whileTrue(
+            climb
+                .setPosition(ClimbConstants.climbed)
+                .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
+
+    // CLIMB_PULL -> CLIMB_PREPULL
+    stateTriggers
+        .get(State.CLIMB_PULL)
+        .and(cancelClimbRequest)
+        .onTrue(this.forceState(State.CLIMB_PREPULL));
   }
 
   /** This file is not a subsystem, so this MUST be called manually. */
   public void periodic() {
     Logger.recordOutput("Superstructure/Superstructure State", state);
+  }
+
+  private Command forceState(State nextState) {
+    return Commands.runOnce(
+            () -> {
+              System.out.println("Changing state to " + nextState);
+              stateTimer.reset();
+              this.prevState = this.state;
+              this.state = nextState;
+            })
+        .ignoringDisable(true);
   }
 }

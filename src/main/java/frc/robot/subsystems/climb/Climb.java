@@ -4,8 +4,10 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.Alert;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.AutoLogOutput;
+import org.littletonrobotics.junction.Logger;
 
 public class Climb extends SubsystemBase {
   private final ClimbIO io;
@@ -24,6 +26,7 @@ public class Climb extends SubsystemBase {
   @Override
   public void periodic() {
     io.updateInputs(inputs);
+    Logger.processInputs("Climber", inputs);
 
     climbDisconnected.set(!inputs.motorConnected);
 
@@ -34,5 +37,13 @@ public class Climb extends SubsystemBase {
 
   public Command setPosition(Rotation2d position) {
     return this.run(() -> io.setPosition(position));
+  }
+
+  public Command resetEncoder() {
+    return Commands.runOnce(() -> io.resetEncoder()).ignoringDisable(true);
+  }
+
+  public Command setBrakeMode(boolean enabled) {
+    return Commands.runOnce(() -> io.setBrakeMode(brakeModeEnabled));
   }
 }

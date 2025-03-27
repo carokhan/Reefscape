@@ -24,32 +24,25 @@ public interface ElevatorIO {
     public double followerTempCelsius = 0.0;
   }
 
-  public default void updateInputs(final ElevatorIOInputsAutoLogged inputs) {
-  }
+  public default void updateInputs(final ElevatorIOInputsAutoLogged inputs) {}
 
-  public default void setTarget(final double meters) {
-  }
+  public default void setTarget(final double meters) {}
 
-  public default void setVoltage(final double voltage) {
-  }
+  public default void setVoltage(final double voltage) {}
 
   public default void stop() {
     setVoltage(0);
   }
 
-  public default void resetEncoder(final double position) {
-  }
+  public default void resetEncoder(final double position) {}
 
   public default void resetEncoder() {
     resetEncoder(0.0);
   }
 
-  public default void setPDFF(
-      int slot, double kP, double kD, double kS, double kG) {
-  }
+  public default void setPDFF(int slot, double kP, double kD, double kS, double kG) {}
 
-  public default void setMagic(double velocity, double acceleration) {
-  }
+  public default void setMagic(double velocity, double acceleration) {}
 
   public default void setSlot(int slot) {}
 }

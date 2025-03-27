@@ -18,6 +18,7 @@ import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
+import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Superstructure;
@@ -41,11 +42,9 @@ import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
 import frc.robot.subsystems.gripper.Gripper;
 import frc.robot.subsystems.gripper.GripperIO;
 import frc.robot.subsystems.gripper.GripperIOSim;
-import frc.robot.subsystems.gripper.GripperIOTalonFX;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.HopperIO;
 import frc.robot.subsystems.hopper.HopperIOSim;
-import frc.robot.subsystems.hopper.HopperIOSpark;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.led.LEDIO;
 import frc.robot.subsystems.led.LEDIOReal;
@@ -53,7 +52,8 @@ import frc.robot.subsystems.led.LEDIOSim;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeIO;
 import frc.robot.subsystems.outtake.OuttakeIOSim;
-import frc.robot.subsystems.outtake.OuttakeIOTalonFX;
+import frc.robot.subsystems.proximity.ProximityIO;
+import frc.robot.subsystems.proximity.ProximityIOSim;
 import frc.robot.subsystems.vision.Vision;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
@@ -89,6 +89,8 @@ public class RobotContainer {
   public final LED led;
   public final Vision vision;
 
+  public static Superstructure superstructure;
+
   // Controller
   private final CommandXboxController driver = new CommandXboxControllerSubsystem(0);
   private final CommandXboxController operator = new CommandXboxControllerSubsystem(1);
@@ -110,10 +112,20 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.FrontRight),
                 new ModuleIOTalonFX(TunerConstants.BackLeft),
                 new ModuleIOTalonFX(TunerConstants.BackRight));
-        hopper = new Hopper(new HopperIOSpark());
+        // hopper =
+        //     new Hopper(
+        //         new HopperIOSpark(), new ProximityIOGrapple(HopperConstants.laser, null, null,
+        // 0));
+        hopper = new Hopper(new HopperIO() {}, new ProximityIO() {});
         elevator = new Elevator(new ElevatorIOTalonFX());
-        outtake = new Outtake(new OuttakeIOTalonFX());
-        gripper = new Gripper(new GripperIOTalonFX());
+        // outtake =
+        //     new Outtake(
+        //         new OuttakeIOTalonFX(),
+        //         new ProximityIORedux(
+        //             OuttakeConstants.canandcolor, OuttakeConstants.proximityThreshold));
+        outtake = new Outtake(new OuttakeIO() {}, new ProximityIO() {});
+        // gripper = new Gripper(new GripperIOTalonFX());
+        gripper = new Gripper(new GripperIO() {});
         climb = new Climb(new ClimbIOSpark());
         led = new LED(new LEDIOReal());
         vision = new Vision(new VisionIOPhotonVision());
@@ -128,9 +140,9 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        hopper = new Hopper(new HopperIOSim());
+        hopper = new Hopper(new HopperIOSim(), new ProximityIOSim());
         elevator = new Elevator(new ElevatorIOSim());
-        outtake = new Outtake(new OuttakeIOSim());
+        outtake = new Outtake(new OuttakeIOSim(), new ProximityIOSim());
         gripper = new Gripper(new GripperIOSim());
         climb = new Climb(new ClimbIOSim());
         led = new LED(new LEDIOSim());
@@ -146,9 +158,9 @@ public class RobotContainer {
                 new ModuleIO() {},
                 new ModuleIO() {},
                 new ModuleIO() {});
-        hopper = new Hopper(new HopperIO() {});
+        hopper = new Hopper(new HopperIO() {}, new ProximityIO() {});
         elevator = new Elevator(new ElevatorIO() {});
-        outtake = new Outtake(new OuttakeIO() {});
+        outtake = new Outtake(new OuttakeIO() {}, new ProximityIO() {});
         gripper = new Gripper(new GripperIO() {});
         climb = new Climb(new ClimbIO() {});
         led = new LED(new LEDIO() {});
@@ -156,7 +168,7 @@ public class RobotContainer {
         break;
     }
 
-    final Superstructure superstructure =
+    superstructure =
         new Superstructure(
             hopper,
             elevator,
@@ -171,6 +183,7 @@ public class RobotContainer {
             driver.leftTrigger(),
             driver.a(),
             driver.leftTrigger(),
+            driver.povLeft(),
             driver.povUp(),
             driver.povDown(),
             operator.leftTrigger());
@@ -229,6 +242,8 @@ public class RobotContainer {
             () -> -driver.getRightX(),
             () -> OperatorConstants.deadband,
             () -> 1));
+
+    driver.povRight().onTrue(Commands.runOnce(() -> climb.resetEncoder()));
   }
 
   /**
