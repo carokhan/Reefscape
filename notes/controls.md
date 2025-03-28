@@ -17,7 +17,6 @@
 | B | READY_ALGAE | SPIT_ALGAE |
 | X | READY_CORAL | CORAL_OUTTAKE |
 | Y | any | Zero gyro |
-
 | Right Trigger | CLIMB_PREPULL | Climb |
 | Left Trigger | CLIMB_PULL | Cancel Climb |
 
