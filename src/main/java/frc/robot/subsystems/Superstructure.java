@@ -234,7 +234,7 @@ public class Superstructure {
         .get(State.CORAL_OUTTAKE)
         .whileTrue(outtake.setVoltage(OuttakeConstants.L234))
         .and(() -> !outtake.getDetected())
-        .and(preClimbReq.negate())
+        .and(preClimbRequest.negate())
         .onTrue(this.forceState(State.IDLE));
 
     // CLIMB_PREPULL -> CLIMB_PULL
