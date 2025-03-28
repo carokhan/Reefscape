@@ -11,14 +11,14 @@
 | Right Trigger | CORAL_CONFIRM_[LEVEL] | Score coral on confirmed level -> IDLE |
 | Either Bumper | IDLE | Align with algae on selected reef -> ALGAE_INTAKE_[LEVEL] |
 | Left Trigger | ALGAE_INTAKE_[LEVEL] | Intake algae with current request -> ALGAE_READY |
-| Either Bumper | ALGAE_READY | Align with net |
-| Right Trigger | ALGAE_CONFIRM_[LEVEL] | Score algae on confirmed level, return to IDLE |
+| Either Bumper | ALGAE_READY | Align with net -> ALGAE_PRESCORE_AN  |
+| Right Trigger | ALGAE_CONFIRM_[LEVEL] | Score algae on confirmed level -> IDLE |
 | A | any | Reverse hopper |
-| B | READY_ALGAE | SPIT_ALGAE |
-| X | READY_CORAL | CORAL_OUTTAKE |
+| B | READY_ALGAE | ALGAE_OUTTAKE -> IDLE |
+| X | READY_CORAL | CORAL_OUTTAKE -> IDLE |
 | Y | any | Zero gyro |
-| Right Trigger | CLIMB_PREPULL | Climb |
-| Left Trigger | CLIMB_PULL | Cancel Climb |
+| Right Trigger | CLIMB_PREPULL | Climb -> CLIMB_PULL |
+| Right Bumper | CLIMB_PULL | Cancel climb -> CLIMB_PREPULL |
 
 ## Operator
 
@@ -28,3 +28,4 @@
 | X | Set target coral level to L2 |
 | B | Set target coral level to L3 |
 | Y | Set target coral level to L4, set algae target to net |
+| Right Trigger + Left Joystick | Enable manual elevator control |
