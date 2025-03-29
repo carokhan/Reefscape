@@ -95,9 +95,6 @@ public class Superstructure {
   @AutoLogOutput(key = "Superstructure/Coral Intake")
   private final Trigger coralIntakeRequest;
 
-  @AutoLogOutput(key = "Superstructure/Reverse Hopper")
-  private final Trigger reverseHopperRequest;
-
   @AutoLogOutput(key = "Superstructure/Algae Intake")
   private final Trigger algaeIntakeRequest;
 
@@ -144,7 +141,6 @@ public class Superstructure {
       Supplier<AlgaeTarget> algaeTarget,
       Trigger scoreRequest,
       Trigger coralIntakeRequest,
-      Trigger reverseHopperRequest,
       Trigger algaeIntakeRequest,
       Trigger preClimbRequest,
       Trigger climbRequest,
@@ -164,7 +160,6 @@ public class Superstructure {
 
     this.scoreRequest = scoreRequest;
     this.coralIntakeRequest = coralIntakeRequest;
-    this.reverseHopperRequest = reverseHopperRequest;
     this.algaeIntakeRequest = algaeIntakeRequest;
     this.preClimbRequest = preClimbRequest;
     this.climbRequest = climbRequest;
@@ -202,7 +197,7 @@ public class Superstructure {
         .get(State.CORAL_PREINTAKE)
         .whileTrue(elevator.setExtension(ElevatorConstants.intake))
         .whileTrue(outtake.index())
-        .whileTrue(hopper.setVoltage(() -> reverseHopperRequest.getAsBoolean() ? -6.0 : 6.0))
+        .whileTrue(hopper.setVoltage(() -> 6.0))
         .and(hopper::getDetected)
         .onTrue(this.forceState(State.CORAL_TRANSFER));
 
@@ -210,7 +205,7 @@ public class Superstructure {
     stateTriggers
         .get(State.CORAL_TRANSFER)
         .whileTrue(outtake.index())
-        .whileTrue(hopper.setVoltage(() -> reverseHopperRequest.getAsBoolean() ? -6.0 : 6.0))
+        .whileTrue(hopper.setVoltage(() -> 6.0))
         .and(outtake::getDetected)
         .onTrue(this.forceState(State.CORAL_READY));
 

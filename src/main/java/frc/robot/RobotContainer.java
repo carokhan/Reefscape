@@ -202,11 +202,10 @@ public class RobotContainer {
             () -> algaeTarget,
             driver.rightTrigger(),
             driver.leftTrigger(),
-            driver.a(),
             driver.leftTrigger(),
-            driver.povLeft(),
-            driver.povUp(),
-            driver.povDown(),
+            driver.a(),
+            driver.rightTrigger(),
+            driver.rightBumper(),
             operator.leftTrigger());
 
     autoFactory =

@@ -8,10 +8,10 @@ public class LEDConstants {
 
   public static enum Mode {
     OFF(Color.kBlack),
-    ALGAE(Color.kTeal),
-    CORAL(Color.kPurple),
-    CONFIRM_SCORE(Color.kGreen),
-    IDLE(Color.kBlue),
+    INTAKING(Color.kOrange),
+    ALGAE_READY(Color.kTeal),
+    CORAL_READY(Color.kPurple),
+    CONFIRM(Color.kGreen),
     INVALID(Color.kRed),
     DISABLED(Color.kYellow);
 
@@ -21,4 +21,6 @@ public class LEDConstants {
       this.color = color;
     }
   }
+
+  public static final double waveExponent = 0.4;
 }

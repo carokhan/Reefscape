@@ -13,7 +13,7 @@
 | Left Trigger | ALGAE_INTAKE_[LEVEL] | Intake algae with current request -> ALGAE_READY |
 | Either Bumper | ALGAE_READY | Align with net -> ALGAE_PRESCORE_AN  |
 | Right Trigger | ALGAE_CONFIRM_[LEVEL] | Score algae on confirmed level -> IDLE |
-| A | any | Reverse hopper |
+| A | IDLE | Begin climb -> CLIMB_PREPULL |
 | B | READY_ALGAE | ALGAE_OUTTAKE -> IDLE |
 | X | READY_CORAL | CORAL_OUTTAKE -> IDLE |
 | Y | any | Zero gyro |
