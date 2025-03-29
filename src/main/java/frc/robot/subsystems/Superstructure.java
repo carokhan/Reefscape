@@ -115,6 +115,7 @@ public class Superstructure {
 
   @AutoLogOutput(key = "Superstructure/State")
   private State state = State.IDLE;
+
   private State prevState = State.IDLE;
 
   private Map<State, Trigger> stateTriggers = new HashMap<State, Trigger>();

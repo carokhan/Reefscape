@@ -49,7 +49,7 @@ public class VisionConstants {
           Units.inchesToMeters(12.066),
           Units.inchesToMeters(-11.906),
           Units.inchesToMeters(8.355),
-          new Rotation3d(0.0, Units.degreesToRadians(13.125000) , Units.degreesToRadians(-30)));
+          new Rotation3d(0.0, Units.degreesToRadians(13.125000), Units.degreesToRadians(-30)));
   // Basic filtering thresholds
   public static double maxSingleTagAmbiguity = 0.4;
   public static double maxZErrorMeters = 0.1;

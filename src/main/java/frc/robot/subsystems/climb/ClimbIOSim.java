@@ -53,9 +53,7 @@ public class ClimbIOSim implements ClimbIO {
   @Override
   public void setPosition(final Rotation2d position) {
     setVoltage(
-        pid.calculate(
-                armSim.getAngleRads(),
-                position.getRadians())
+        pid.calculate(armSim.getAngleRads(), position.getRadians())
             + feedforward.calculate(pid.getSetpoint().position, pid.getSetpoint().velocity));
   }
 

@@ -3,10 +3,9 @@ package frc.robot.subsystems.gripper;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
+import frc.robot.util.ExtendedDCMotor;
 import java.util.Optional;
 import java.util.function.Consumer;
-
-import frc.robot.util.ExtendedDCMotor;
 
 public class GripperIOSim implements GripperIO {
   private final DCMotorSim motorSim;
@@ -14,8 +13,7 @@ public class GripperIOSim implements GripperIO {
   private Optional<Consumer<GripperIOInputsAutoLogged>> callback = Optional.empty();
   private double appliedVolts = 0.0;
 
-  public GripperIOSim(
-      ) {
+  public GripperIOSim() {
     this.motorSim =
         new DCMotorSim(
             LinearSystemId.createDCMotorSystem(

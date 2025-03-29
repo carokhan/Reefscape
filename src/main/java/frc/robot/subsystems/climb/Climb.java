@@ -6,9 +6,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
-
 import java.util.function.BooleanSupplier;
-
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -61,5 +59,5 @@ public class Climb extends SubsystemBase {
 
   public void setCoastOverride(BooleanSupplier coastOverride) {
     this.coastOverride = coastOverride;
-}
+  }
 }

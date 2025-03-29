@@ -4,7 +4,6 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.system.plant.LinearSystemId;
 import edu.wpi.first.wpilibj.simulation.DCMotorSim;
 import frc.robot.util.ExtendedDCMotor;
-
 import java.util.Optional;
 import java.util.function.Consumer;
 
@@ -13,9 +12,8 @@ public class OuttakeIOSim implements OuttakeIO {
 
   private Optional<Consumer<OuttakeIOInputsAutoLogged>> callback = Optional.empty();
   private double appliedVolts = 0.0;
-  
-  public OuttakeIOSim(
-      ) {
+
+  public OuttakeIOSim() {
     this.motorSim =
         new DCMotorSim(
             LinearSystemId.createDCMotorSystem(

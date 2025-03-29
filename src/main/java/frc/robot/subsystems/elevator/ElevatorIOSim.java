@@ -55,7 +55,6 @@ public class ElevatorIOSim implements ElevatorIO {
             + ff.calculate(pid.getSetpoint().velocity));
   }
 
-
   @Override
   public void setVoltage(final double voltage) {
     volts = voltage;
