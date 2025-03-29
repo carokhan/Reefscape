@@ -1,15 +1,9 @@
 package frc.robot.subsystems.led;
 
-import java.util.List;
-import java.util.function.DoubleSupplier;
-
-import org.littletonrobotics.junction.Logger;
-
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
-import edu.wpi.first.wpilibj2.command.Command;
-import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import org.littletonrobotics.junction.Logger;
 
 public class LED extends SubsystemBase {
   private final LEDIO io;
@@ -17,7 +11,7 @@ public class LED extends SubsystemBase {
 
   public LED(LEDIO io) {
     this.io = io;
-  } 
+  }
 
   @Override
   public void periodic() {
@@ -46,8 +40,7 @@ public class LED extends SubsystemBase {
     return color;
   }
 
-  private Color breathCalculate(
-      Color c1, Color c2, double duration, double timestamp) {
+  private Color breathCalculate(Color c1, Color c2, double duration, double timestamp) {
     double x = ((timestamp % duration) / duration) * 2.0 * Math.PI;
     double ratio = (Math.sin(x) + 1.0) / 2.0;
     double red = (c1.red * (1 - ratio)) + (c2.red * ratio);
@@ -85,7 +78,4 @@ public class LED extends SubsystemBase {
       setIndex(i, new Color(red, green, blue));
     }
   }
-
-
-
 }

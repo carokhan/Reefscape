@@ -21,4 +21,7 @@ public class OuttakeConstants {
 
   public static final double L1 = 0.1;
   public static final double L234 = 0.5;
+
+  public static final double gearing = 20.0 / 12.0;
+  public static final double moi = 0.004;
 }

@@ -5,4 +5,7 @@ public class HopperConstants {
   public static final int laser = 31;
 
   public static final int current = 40;
+
+  public static final double gearing = 28.0 / 12.0;
+  public static final double moi = 0.004;
 }

@@ -20,11 +20,17 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
+import frc.robot.RobotContainer.RobotType;
 import frc.robot.subsystems.drive.TunerConstants;
+import frc.robot.util.Tracer;
+
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
+import java.util.HashMap;
+import java.util.function.BiConsumer;
+
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -34,23 +40,24 @@ import org.littletonrobotics.junction.wpilog.WPILOGWriter;
 import org.littletonrobotics.urcl.URCL;
 
 /**
- * The VM is configured to automatically run this class, and to call the functions corresponding to
- * each mode, as described in the TimedRobot documentation. If you change the name of this class or
- * the package after creating this project, you must also update the build.gradle file in the
+ * The VM is configured to automatically run this class, and to call the
+ * functions corresponding to
+ * each mode, as described in the TimedRobot documentation. If you change the
+ * name of this class or
+ * the package after creating this project, you must also update the
+ * build.gradle file in the
  * project.
  */
 public class Robot extends LoggedRobot {
   private Command autonomousCommand;
   private RobotContainer robotContainer;
 
-  private static final boolean IS_PRACTICE = !DriverStation.isFMSAttached();
-  ;
+  private static final boolean IS_PRACTICE = !DriverStation.isFMSAttached();;
   private static final String LOG_DIRECTORY = "/U";
-  private static final long MIN_FREE_SPACE =
-      IS_PRACTICE
-          ? 100000000
-          : // 100 MB
-          1000000000; // 1 GB
+  private static final long MIN_FREE_SPACE = IS_PRACTICE
+      ? 100000000
+      : // 100 MB
+      1000000000; // 1 GB
 
   public Robot() {
     // Record metadata
@@ -70,6 +77,7 @@ public class Robot extends LoggedRobot {
         Logger.recordMetadata("GitDirty", "Unknown");
         break;
     }
+    initializeTracerLogging();
 
     // Set up data receivers & replay source
     switch (Constants.currentMode) {
@@ -98,13 +106,12 @@ public class Robot extends LoggedRobot {
     Logger.start();
 
     // Check for valid swerve config
-    var modules =
-        new SwerveModuleConstants[] {
-          TunerConstants.FrontLeft,
-          TunerConstants.FrontRight,
-          TunerConstants.BackLeft,
-          TunerConstants.BackRight
-        };
+    var modules = new SwerveModuleConstants[] {
+        TunerConstants.FrontLeft,
+        TunerConstants.FrontRight,
+        TunerConstants.BackLeft,
+        TunerConstants.BackRight
+    };
     for (var constants : modules) {
       if (constants.DriveMotorType != DriveMotorArrangement.TalonFX_Integrated
           || constants.SteerMotorType != SteerMotorArrangement.TalonFX_Integrated) {
@@ -117,6 +124,32 @@ public class Robot extends LoggedRobot {
     // and put our autonomous chooser on the dashboard.
     robotContainer = new RobotContainer();
     // CameraServer.startAutomaticCapture();
+  }
+
+  @Override
+  public void loopFunc() {
+    Tracer.trace("Robot/LoopFunc", super::loopFunc);
+  }
+
+  private void initializeTracerLogging() {
+    HashMap<String, Integer> commandCounts = new HashMap<>();
+    final BiConsumer<Command, Boolean> logCommandFunction = (Command command, Boolean active) -> {
+      String name = command.getName();
+      int count = commandCounts.getOrDefault(name, 0) + (active ? 1 : -1);
+      commandCounts.put(name, count);
+      if (Constants.currentMode != Constants.Mode.REAL)
+        Logger.recordOutput(
+            "Commands/CommandsUnique/" + name + "_" + Integer.toHexString(command.hashCode()),
+            active.booleanValue());
+      if (Constants.currentMode != Constants.Mode.REAL)
+        Logger.recordOutput("Commands/CommandsAll/" + name, count > 0);
+    };
+
+    var scheduler = CommandScheduler.getInstance();
+
+    scheduler.onCommandInitialize(c -> logCommandFunction.accept(c, true));
+    scheduler.onCommandFinish(c -> logCommandFunction.accept(c, false));
+    scheduler.onCommandInterrupt(c -> logCommandFunction.accept(c, false));
   }
 
   /** This function is called periodically during all modes. */
@@ -132,11 +165,13 @@ public class Robot extends LoggedRobot {
     // the Command-based framework to work.
 
     // Logger.recordOutput(
-    //     "Camera0Pos",
-    //     new Pose3d(robotContainer.drive.getPose()).transformBy(VisionConstants.robotToCamera0));
+    // "Camera0Pos",
+    // new
+    // Pose3d(robotContainer.drive.getPose()).transformBy(VisionConstants.robotToCamera0));
     // Logger.recordOutput(
-    //     "Camera1Pos",
-    //     new Pose3d(robotContainer.drive.getPose()).transformBy(VisionConstants.robotToCamera1));
+    // "Camera1Pos",
+    // new
+    // Pose3d(robotContainer.drive.getPose()).transformBy(VisionConstants.robotToCamera1));
     CommandScheduler.getInstance().run();
     // RobotContainer.superstructure.periodic();
 
@@ -146,13 +181,18 @@ public class Robot extends LoggedRobot {
 
   /** This function is called once when the robot is disabled. */
   @Override
-  public void disabledInit() {}
+  public void disabledInit() {
+  }
 
   /** This function is called periodically when disabled. */
   @Override
-  public void disabledPeriodic() {}
+  public void disabledPeriodic() {
+  }
 
-  /** This autonomous runs the autonomous command selected by your {@link RobotContainer} class. */
+  /**
+   * This autonomous runs the autonomous command selected by your
+   * {@link RobotContainer} class.
+   */
   @Override
   public void autonomousInit() {
     autonomousCommand = robotContainer.getAutonomousCommand();
@@ -165,7 +205,8 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically during autonomous. */
   @Override
-  public void autonomousPeriodic() {}
+  public void autonomousPeriodic() {
+  }
 
   /** This function is called once when teleop is enabled. */
   @Override
@@ -181,7 +222,8 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically during operator control. */
   @Override
-  public void teleopPeriodic() {}
+  public void teleopPeriodic() {
+  }
 
   /** This function is called once when test mode is enabled. */
   @Override
@@ -192,15 +234,18 @@ public class Robot extends LoggedRobot {
 
   /** This function is called periodically during test mode. */
   @Override
-  public void testPeriodic() {}
+  public void testPeriodic() {
+  }
 
   /** This function is called once when the robot is first started up. */
   @Override
-  public void simulationInit() {}
+  public void simulationInit() {
+  }
 
   /** This function is called periodically whilst in simulation. */
   @Override
-  public void simulationPeriodic() {}
+  public void simulationPeriodic() {
+  }
 
   void setupLog() {
     // Check if the log directory exists

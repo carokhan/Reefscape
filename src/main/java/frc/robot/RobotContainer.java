@@ -15,11 +15,13 @@ package frc.robot;
 
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
-import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
+import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
+import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.AlgaeTarget;
@@ -43,9 +45,11 @@ import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
 import frc.robot.subsystems.gripper.Gripper;
 import frc.robot.subsystems.gripper.GripperIO;
 import frc.robot.subsystems.gripper.GripperIOSim;
+import frc.robot.subsystems.gripper.GripperIOTalonFX;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.HopperIO;
 import frc.robot.subsystems.hopper.HopperIOSim;
+import frc.robot.subsystems.hopper.HopperIOSpark;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.led.LEDIO;
 import frc.robot.subsystems.led.LEDIOReal;
@@ -59,19 +63,25 @@ import frc.robot.subsystems.proximity.ProximityIO;
 import frc.robot.subsystems.proximity.ProximityIORedux;
 import frc.robot.subsystems.proximity.ProximityIOSim;
 import frc.robot.subsystems.vision.Vision;
+import frc.robot.subsystems.vision.VisionConstants;
 import frc.robot.subsystems.vision.VisionIO;
 import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.CommandXboxControllerSubsystem;
 import java.util.Arrays;
+import java.util.Set;
+
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
@@ -96,8 +106,8 @@ public class RobotContainer {
   public static Superstructure superstructure;
 
   // Controller
-  private final CommandXboxController driver = new CommandXboxControllerSubsystem(0);
-  private final CommandXboxController operator = new CommandXboxControllerSubsystem(1);
+  private final CommandXboxControllerSubsystem driver = new CommandXboxControllerSubsystem(0);
+  private final CommandXboxControllerSubsystem operator = new CommandXboxControllerSubsystem(1);
 
   private final AutoFactory autoFactory;
   private final LoggedDashboardChooser<Command> autoChooser;
@@ -105,123 +115,149 @@ public class RobotContainer {
   private CoralTarget coralTarget = CoralTarget.L4;
   private AlgaeTarget algaeTarget = AlgaeTarget.AN;
 
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
+  private boolean superstructureCoastOverride = false;
+
+  /**
+   * The container for the robot. Contains subsystems, OI devices, and commands.
+   */
   public RobotContainer() {
     switch (ROBOT_TYPE) {
       case REAL:
         // Real robot, instantiate hardware IO implementations
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
-        // hopper =
-        // new Hopper(
-        // new HopperIOSpark(), new ProximityIOGrapple(HopperConstants.laser, null,
-        // null));
-        hopper = new Hopper(new HopperIO() {}, new ProximityIO() {});
+        drive = new Drive(
+            new GyroIOPigeon2(),
+            new ModuleIOTalonFX(TunerConstants.FrontLeft),
+            new ModuleIOTalonFX(TunerConstants.FrontRight),
+            new ModuleIOTalonFX(TunerConstants.BackLeft),
+            new ModuleIOTalonFX(TunerConstants.BackRight));
+        hopper = new Hopper(
+            new HopperIOSpark(),
+            // new ProximityIOGrapple(HopperConstants.laser, null,
+            new ProximityIO() {
+            });
         elevator = new Elevator(new ElevatorIOTalonFX());
-        // outtake =
-        // new Outtake(
-        // new OuttakeIOTalonFX(),
-        // new ProximityIORedux(
-        // OuttakeConstants.canandcolor, OuttakeConstants.proximityThreshold),
-        // new ProximityIOGrapple(
-        // OuttakeConstants.laserEffector,
-        // OuttakeConstants.rangingMode,
-        // OuttakeConstants.regionOfInterest));
-        outtake =
-            new Outtake(
-                new OuttakeIOTalonFX(),
-                new ProximityIORedux(
-                    OuttakeConstants.canandcolor, OuttakeConstants.proximityThreshold),
-                new ProximityIO() {
-                  {
-                  }
-                });
-        // gripper =
-        // new Gripper(
-        // new GripperIOTalonFX(), new ProximityIOGrapple(GripperConstants.laser, null,
-        // null));
-        gripper = new Gripper(new GripperIO() {}, new ProximityIO() {});
+        outtake = new Outtake(
+            new OuttakeIOTalonFX(),
+            new ProximityIORedux(
+                OuttakeConstants.canandcolor, OuttakeConstants.proximityThreshold),
+            new ProximityIO() {
+              {
+              }
+            });
+        gripper = new Gripper(
+            new GripperIOTalonFX(),
+            // new ProximityIOGrapple(GripperConstants.laser, null,
+            new ProximityIO() {
+            });
         climb = new Climb(new ClimbIOTalonFX());
         led = new LED(new LEDIOReal());
-        vision = new Vision(new VisionIOPhotonVision());
+        vision = new Vision(
+            drive::addVisionMeasurement,
+            new VisionIOPhotonVision(
+                VisionConstants.CAM_FL_NAME,
+                VisionConstants.robotToLeftCam,
+                drive::getRotation),
+            new VisionIOPhotonVision(
+                VisionConstants.CAM_FR_NAME,
+                VisionConstants.robotToRightCam,
+                drive::getRotation));
         break;
 
       case SIM:
         // Sim robot, instantiate physics sim IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIOSim(TunerConstants.FrontLeft),
+            new ModuleIOSim(TunerConstants.FrontRight),
+            new ModuleIOSim(TunerConstants.BackLeft),
+            new ModuleIOSim(TunerConstants.BackRight));
         hopper = new Hopper(new HopperIOSim(), new ProximityIOSim());
         elevator = new Elevator(new ElevatorIOSim());
         outtake = new Outtake(new OuttakeIOSim(), new ProximityIOSim(), new ProximityIOSim());
         gripper = new Gripper(new GripperIOSim(), new ProximityIOSim());
         climb = new Climb(new ClimbIOSim());
         led = new LED(new LEDIOSim());
-        vision = new Vision(new VisionIOPhotonVisionSim());
+        vision = new Vision(
+            drive::addVisionMeasurement,
+            new VisionIOPhotonVisionSim(
+                VisionConstants.CAM_FL_NAME,
+                VisionConstants.robotToLeftCam,
+                drive::getPose),
+            new VisionIOPhotonVisionSim(
+                VisionConstants.CAM_FR_NAME,
+                VisionConstants.robotToRightCam,
+                drive::getPose));
         break;
 
       default:
         // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
-        hopper = new Hopper(new HopperIO() {}, new ProximityIO() {});
-        elevator = new Elevator(new ElevatorIO() {});
-        outtake = new Outtake(new OuttakeIO() {}, new ProximityIO() {}, new ProximityIO() {});
-        gripper = new Gripper(new GripperIO() {}, new ProximityIO() {});
-        climb = new Climb(new ClimbIO() {});
-        led = new LED(new LEDIO() {});
-        vision = new Vision(new VisionIO() {});
+        drive = new Drive(
+            new GyroIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            },
+            new ModuleIO() {
+            });
+        hopper = new Hopper(new HopperIO() {
+        }, new ProximityIO() {
+        });
+        elevator = new Elevator(new ElevatorIO() {
+        });
+        outtake = new Outtake(new OuttakeIO() {
+        }, new ProximityIO() {
+        }, new ProximityIO() {
+        });
+        gripper = new Gripper(new GripperIO() {
+        }, new ProximityIO() {
+        });
+        climb = new Climb(new ClimbIO() {
+        });
+        led = new LED(new LEDIO() {
+        });
+        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {
+        }, new VisionIO() {
+        });
         break;
     }
 
-    superstructure =
-        new Superstructure(
-            hopper,
-            elevator,
-            outtake,
-            gripper,
-            climb,
-            led,
-            drive::getPose,
-            drive::getVelocityFieldRelative,
-            () -> coralTarget,
-            () -> algaeTarget,
-            driver.rightTrigger(),
-            driver.leftTrigger(),
-            driver.leftTrigger(),
-            driver.a(),
-            driver.rightTrigger(),
-            driver.rightBumper(),
-            operator.leftTrigger());
+    superstructure = new Superstructure(
+        hopper,
+        elevator,
+        outtake,
+        gripper,
+        climb,
+        led,
+        drive::getPose,
+        drive::getVelocityFieldRelative,
+        () -> coralTarget,
+        () -> algaeTarget,
+        driver.rightTrigger(),
+        driver.leftTrigger(),
+        driver.leftTrigger(),
+        driver.a(),
+        driver.rightTrigger(),
+        driver.rightBumper(),
+        operator.leftTrigger(),
+        operator.leftBumper());
 
-    autoFactory =
-        new AutoFactory(
-            drive::getPose,
-            drive::setPose,
-            drive::followTrajectory,
-            true,
-            drive,
-            (sample, isStart) -> {
-              Logger.recordOutput(
-                  "ActiveTrajectory",
-                  Arrays.stream(sample.getPoses())
-                      .map(AllianceFlipUtil::apply)
-                      .toArray(Pose2d[]::new));
-            });
+    autoFactory = new AutoFactory(
+        drive::getPose,
+        drive::setPose,
+        drive::followTrajectory,
+        true,
+        drive,
+        (sample, isStart) -> {
+          Logger.recordOutput(
+              "ActiveTrajectory",
+              Arrays.stream(sample.getPoses())
+                  .map(AllianceFlipUtil::apply)
+                  .toArray(Pose2d[]::new));
+        });
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
@@ -242,14 +278,24 @@ public class RobotContainer {
     autoChooser.addOption(
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
 
+    RobotModeTriggers.autonomous()
+        .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));
+
+    climb.setCoastOverride(() -> superstructureCoastOverride);
+
+    driver.setDefaultCommand(driver.rumbleCmd(0.0, 0.0));
+    operator.setDefaultCommand(operator.rumbleCmd(0.0, 0.0));
+
     // Configure the button bindings
     configureButtonBindings();
   }
 
   /**
-   * Use this method to define your button->command mappings. Buttons can be created by
+   * Use this method to define your button->command mappings. Buttons can be
+   * created by
    * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
+   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
+   * it to a {@link
    * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
    */
   private void configureButtonBindings() {
@@ -295,6 +341,41 @@ public class RobotContainer {
                   coralTarget = CoralTarget.L1;
                   algaeTarget = AlgaeTarget.AP;
                 }));
+
+    operator.leftBumper().onTrue(Commands.runOnce(
+        () -> {
+          if (DriverStation.isDisabled()) {
+            superstructureCoastOverride = true;
+          }
+        }).ignoringDisable(true)).onFalse(Commands.runOnce(
+            () -> {
+              superstructureCoastOverride = false;
+            }).ignoringDisable(true));
+    RobotModeTriggers.disabled().onFalse(
+        Commands.runOnce(
+            () -> {
+              superstructureCoastOverride = false;
+            }).ignoringDisable(true));
+
+    new Trigger(
+        () -> DriverStation.isTeleopEnabled()
+            && DriverStation.getMatchTime() > 0
+            && DriverStation.getMatchTime() <= Math.round(OperatorConstants.endgameAlert1Seconds))
+        .onTrue(
+            driver.rumbleCmd(0.5, 0.5)
+                .withTimeout(0.5)
+                .withName("Controller Endgame Alert 1"));
+    new Trigger(
+        () -> DriverStation.isTeleopEnabled()
+            && DriverStation.getMatchTime() > 0
+            && DriverStation.getMatchTime() <= Math.round(OperatorConstants.endgameAlert2Seconds))
+        .onTrue(
+            driver.rumbleCmd(1.0, 1.0)
+                .withTimeout(0.2)
+                .andThen(Commands.waitSeconds(0.1))
+                .repeatedly()
+                .withTimeout(0.9)
+                .withName("Controller Endgame Alert 2")); // Rumble three times
   }
 
   /**

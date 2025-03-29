@@ -110,10 +110,13 @@ public class Superstructure {
   @AutoLogOutput(key = "Superstructure/Homing Request")
   private final Trigger homeRequest;
 
+  @AutoLogOutput(key = "Superstrucure/Coast Request")
+  private final Trigger superstructureCoastRequest;
+
   @AutoLogOutput(key = "Superstructure/State")
   private State state = State.IDLE;
-
   private State prevState = State.IDLE;
+
   private Map<State, Trigger> stateTriggers = new HashMap<State, Trigger>();
 
   private Timer stateTimer = new Timer();
@@ -145,7 +148,8 @@ public class Superstructure {
       Trigger preClimbRequest,
       Trigger climbRequest,
       Trigger cancelClimbRequest,
-      Trigger homeRequest) {
+      Trigger homeRequest,
+      Trigger superstructureCoastRequest) {
     this.hopper = hopper;
     this.elevator = elevator;
     this.outtake = outtake;
@@ -165,6 +169,7 @@ public class Superstructure {
     this.climbRequest = climbRequest;
     this.cancelClimbRequest = cancelClimbRequest;
     this.homeRequest = homeRequest;
+    this.superstructureCoastRequest = superstructureCoastRequest;
 
     for (var state : State.values()) {
       stateTriggers.put(state, new Trigger(() -> this.state == state && DriverStation.isEnabled()));

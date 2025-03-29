@@ -14,4 +14,7 @@ public class GripperConstants {
   public static final double currentLower = 30;
   public static final double currentLowerTime = 0.5;
   public static final boolean inverted = false;
+
+  public static final double gearing = 3.0;
+  public static final double moi = 0.004;
 }
