@@ -11,7 +11,8 @@ public interface ClimbIO {
     public double targetPositionRad = 0.0;
     public double motorVelocityRadPerSec = 0.0;
     public double motorAppliedVolts = 0.0;
-    public double motorCurrentAmps = 0.0;
+    public double motorStatorCurrentAmps = 0.0;
+    public double motorSupplyCurrentAmps = 0.0;
     public double motorTempCelsius = 0.0;
   }
 

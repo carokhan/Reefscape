@@ -24,7 +24,7 @@ public class ClimbIOSpark implements ClimbIO {
   private final SoftLimitConfig limits = new SoftLimitConfig();
 
   private static final LoggedTunableNumber kP =
-      new LoggedTunableNumber("Climb/kP", ClimbConstants.kP);
+      new LoggedTunableNumber("Climb/kP", ClimbConstants.kPSpark);
 
   private final Debouncer connectedDebounce = new Debouncer(0.5);
 
@@ -43,13 +43,13 @@ public class ClimbIOSpark implements ClimbIO {
     config
         .inverted(ClimbConstants.inverted)
         .idleMode(IdleMode.kBrake)
-        .smartCurrentLimit(ClimbConstants.current)
+        .smartCurrentLimit(ClimbConstants.sparkCurrent)
         .apply(limits);
 
     config
         .encoder
-        .positionConversionFactor(ClimbConstants.gearing * 2 * Math.PI)
-        .velocityConversionFactor(ClimbConstants.gearing * 2 * Math.PI / 60.0);
+        .positionConversionFactor((1 / ClimbConstants.gearing) * 2 * Math.PI)
+        .velocityConversionFactor((1 / ClimbConstants.gearing) * 2 * Math.PI / 60.0);
 
     config.closedLoop.feedbackSensor(FeedbackSensor.kPrimaryEncoder).pidf(kP.get(), 0.0, 0.0, 0.0);
 
@@ -73,7 +73,7 @@ public class ClimbIOSpark implements ClimbIO {
         spark,
         new DoubleSupplier[] {spark::getAppliedOutput, spark::getBusVoltage},
         (values) -> inputs.motorAppliedVolts = values[0] * values[1]);
-    ifOk(spark, spark::getOutputCurrent, (value) -> inputs.motorCurrentAmps = value);
+    ifOk(spark, spark::getOutputCurrent, (value) -> inputs.motorSupplyCurrentAmps = value);
     ifOk(spark, spark::getMotorTemperature, (value) -> inputs.motorTempCelsius = value);
     inputs.motorConnected = connectedDebounce.calculate(!sparkStickyFault);
   }

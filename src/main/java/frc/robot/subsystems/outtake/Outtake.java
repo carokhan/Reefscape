@@ -13,28 +13,35 @@ public class Outtake extends SubsystemBase {
   private final OuttakeIO io;
   private final OuttakeIOInputsAutoLogged inputs = new OuttakeIOInputsAutoLogged();
 
-  private final ProximityIO proximityIO;
-  private final ProximityIOInputsAutoLogged proximityInputs = new ProximityIOInputsAutoLogged();
+  private final ProximityIO coralProximityIO;
+  private final ProximityIOInputsAutoLogged coralProximityInputs =
+      new ProximityIOInputsAutoLogged();
 
-  public Outtake(OuttakeIO io, ProximityIO proximityIO) {
+  private final ProximityIO reefProximityIO;
+  private final ProximityIOInputsAutoLogged reefProximityInputs = new ProximityIOInputsAutoLogged();
+
+  public Outtake(OuttakeIO io, ProximityIO coralProximityIO, ProximityIO reefProximityIO) {
     this.io = io;
-    this.proximityIO = proximityIO;
+    this.coralProximityIO = coralProximityIO;
+    this.reefProximityIO = reefProximityIO;
   }
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    proximityIO.updateInputs(proximityInputs);
+    coralProximityIO.updateInputs(coralProximityInputs);
+    reefProximityIO.updateInputs(reefProximityInputs);
 
     Logger.processInputs("Outtake", inputs);
-    Logger.processInputs("Outtake/Proximity", proximityInputs);
+    Logger.processInputs("Outtake/CoralProximity", coralProximityInputs);
+    Logger.processInputs("Outtake/ReefProximity", reefProximityInputs);
   }
 
   public Command index() {
     return Commands.sequence(
         setVoltage(2.0)
-            .until(() -> proximityInputs.detected)
-            .unless(() -> proximityInputs.detected),
+            .until(() -> coralProximityInputs.detected)
+            .unless(() -> coralProximityInputs.detected),
         setVoltage(0));
   }
 
@@ -66,6 +73,6 @@ public class Outtake extends SubsystemBase {
   }
 
   public boolean getDetected() {
-    return proximityInputs.detected;
+    return coralProximityInputs.detected;
   }
 }

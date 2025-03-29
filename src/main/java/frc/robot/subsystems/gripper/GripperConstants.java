@@ -1,8 +1,8 @@
 package frc.robot.subsystems.gripper;
 
 public class GripperConstants {
-  public static final int talon = 41;
-  public static final int laser = 42;
+  public static final int talon = 40;
+  public static final int laser = 41;
 
   public static final double AP = 1;
   public static final double A23 = -12;

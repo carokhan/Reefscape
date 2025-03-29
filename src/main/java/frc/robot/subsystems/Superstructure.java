@@ -129,7 +129,7 @@ public class Superstructure {
   private final LED led;
 
   private final Supplier<CoralTarget> coralTarget;
-  private final Supplier <AlgaeTarget> algaeTarget;
+  private final Supplier<AlgaeTarget> algaeTarget;
 
   public Superstructure(
       Hopper hopper,
@@ -183,16 +183,16 @@ public class Superstructure {
 
     // IDLE -> ALGAE_INTAKE_[LEVEL]
     stateTriggers
-      .get(State.IDLE)
-      .and(algaeIntakeRequest)
-      .and(() -> (algaeTarget.get() == AlgaeTarget.A2))
-      .onTrue(this.forceState(State.ALGAE_INTAKE_A2));
-    
+        .get(State.IDLE)
+        .and(algaeIntakeRequest)
+        .and(() -> (algaeTarget.get() == AlgaeTarget.A2))
+        .onTrue(this.forceState(State.ALGAE_INTAKE_A2));
+
     stateTriggers
-      .get(State.IDLE)
-      .and(algaeIntakeRequest)
-      .and(() -> (algaeTarget.get() == AlgaeTarget.A3))
-      .onTrue(this.forceState(State.ALGAE_INTAKE_A3));
+        .get(State.IDLE)
+        .and(algaeIntakeRequest)
+        .and(() -> (algaeTarget.get() == AlgaeTarget.A3))
+        .onTrue(this.forceState(State.ALGAE_INTAKE_A3));
 
     // IDLE -> CLIMB_PREPULL
     stateTriggers.get(State.IDLE).and(preClimbRequest).onTrue(this.forceState(State.CLIMB_PREPULL));
@@ -216,18 +216,18 @@ public class Superstructure {
 
     // CORAL -> IDLE
     stateTriggers
-      .get(State.CORAL_READY)
-      .or(stateTriggers.get(State.CORAL_PRESCORE))
-      .or(stateTriggers.get(State.CORAL_CONFIRM_L1))
-      .or(stateTriggers.get(State.CORAL_CONFIRM_L2))
-      .or(stateTriggers.get(State.CORAL_CONFIRM_L3))
-      .or(stateTriggers.get(State.CORAL_CONFIRM_L4))
-      .or(stateTriggers.get(State.CORAL_SCORE_L1))
-      .or(stateTriggers.get(State.CORAL_SCORE_L2))
-      .or(stateTriggers.get(State.CORAL_SCORE_L3))
-      .or(stateTriggers.get(State.CORAL_SCORE_L4))
-      .and(() -> !outtake.getDetected())
-      .onTrue(this.forceState(State.IDLE));
+        .get(State.CORAL_READY)
+        .or(stateTriggers.get(State.CORAL_PRESCORE))
+        .or(stateTriggers.get(State.CORAL_CONFIRM_L1))
+        .or(stateTriggers.get(State.CORAL_CONFIRM_L2))
+        .or(stateTriggers.get(State.CORAL_CONFIRM_L3))
+        .or(stateTriggers.get(State.CORAL_CONFIRM_L4))
+        .or(stateTriggers.get(State.CORAL_SCORE_L1))
+        .or(stateTriggers.get(State.CORAL_SCORE_L2))
+        .or(stateTriggers.get(State.CORAL_SCORE_L3))
+        .or(stateTriggers.get(State.CORAL_SCORE_L4))
+        .and(() -> !outtake.getDetected())
+        .onTrue(this.forceState(State.IDLE));
 
     // CORAL_OUTTAKE -> IDLE
     stateTriggers
