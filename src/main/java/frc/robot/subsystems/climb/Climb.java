@@ -46,7 +46,11 @@ public class Climb extends SubsystemBase {
   }
 
   public Command setPosition(Rotation2d position) {
-    return this.run(() -> io.setPosition(position));
+    return this.run(
+        () -> {
+          inputs.targetPositionRad = position.getRadians();
+          io.setPosition(position);
+        });
   }
 
   public Command resetEncoder() {
@@ -59,5 +63,13 @@ public class Climb extends SubsystemBase {
 
   public void setCoastOverride(BooleanSupplier coastOverride) {
     this.coastOverride = coastOverride;
+  }
+
+  public double getPositionRad() {
+    return inputs.motorPositionRad;
+  }
+
+  public double getTargetPositionRad() {
+    return inputs.targetPositionRad;
   }
 }

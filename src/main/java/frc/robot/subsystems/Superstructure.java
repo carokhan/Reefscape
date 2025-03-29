@@ -2,8 +2,11 @@ package frc.robot.subsystems;
 
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.kinematics.ChassisSpeeds;
+import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Timer;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
@@ -23,6 +26,9 @@ import java.util.Map;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
+import org.littletonrobotics.junction.mechanism.LoggedMechanism2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismLigament2d;
+import org.littletonrobotics.junction.mechanism.LoggedMechanismRoot2d;
 
 public class Superstructure {
   public static enum CoralTarget {
@@ -110,7 +116,7 @@ public class Superstructure {
   @AutoLogOutput(key = "Superstructure/Homing Request")
   private final Trigger homeRequest;
 
-  @AutoLogOutput(key = "Superstrucure/Coast Request")
+  @AutoLogOutput(key = "Superstructure/Coast Request")
   private final Trigger superstructureCoastRequest;
 
   @AutoLogOutput(key = "Superstructure/State")
@@ -131,6 +137,80 @@ public class Superstructure {
 
   private final Supplier<CoralTarget> coralTarget;
   private final Supplier<AlgaeTarget> algaeTarget;
+
+  @AutoLogOutput(key = "Superstructure/Visualizer")
+  private final LoggedMechanism2d mech2d =
+      new LoggedMechanism2d(Units.inchesToMeters(48), Units.inchesToMeters(96));
+
+  private final LoggedMechanismRoot2d mech2dRoot =
+      mech2d.getRoot(
+          "drive_base", Units.inchesToMeters(24 - 28.5 / 2), Units.inchesToMeters(1.125));
+  private final LoggedMechanismLigament2d driveLigament =
+      mech2dRoot.append(
+          new LoggedMechanismLigament2d(
+              "drive", Units.inchesToMeters(28.5), 0, 2, new Color8Bit(Color.kWhite)));
+
+  private final LoggedMechanismRoot2d elevatorRoot =
+      mech2d.getRoot("elevator_base", Units.inchesToMeters(24 - 3), Units.inchesToMeters(4.087));
+  private final LoggedMechanismLigament2d elevatorLigament =
+      elevatorRoot.append(
+          new LoggedMechanismLigament2d(
+              "elevator", Units.inchesToMeters(0 + 8.5), 92.5, 4, new Color8Bit(Color.kYellow)));
+  private final LoggedMechanismLigament2d elevatorTargetLigament =
+      elevatorRoot.append(
+          new LoggedMechanismLigament2d(
+              "elevator_target",
+              Units.inchesToMeters(36),
+              92.5,
+              2,
+              new Color8Bit(Color.kPaleGoldenrod)));
+
+  private final LoggedMechanismLigament2d outtakeLigament =
+      elevatorLigament.append(
+          new LoggedMechanismLigament2d(
+              "outtake", Units.inchesToMeters(8), 90, 4, new Color8Bit(Color.kGray)));
+  private final LoggedMechanismLigament2d gripperLigament =
+      elevatorLigament.append(
+          new LoggedMechanismLigament2d(
+              "gripper", Units.inchesToMeters(20), 25, 4, new Color8Bit(Color.kGray)));
+
+  private final LoggedMechanismRoot2d hopperRoot =
+      mech2d.getRoot("hopper_base", Units.inchesToMeters(24 + 2), Units.inchesToMeters(11.8));
+  private final LoggedMechanismLigament2d hopperLigament =
+      hopperRoot.append(
+          new LoggedMechanismLigament2d(
+              "hopper", Units.inchesToMeters(14), 32, 4, new Color8Bit(Color.kGray)));
+
+  private final LoggedMechanismRoot2d climbRoot =
+      mech2d.getRoot("climb_base", Units.inchesToMeters(24 + 12.75), Units.inchesToMeters(15.8125));
+  private final LoggedMechanismLigament2d climbLigament =
+      climbRoot
+          .append(
+              new LoggedMechanismLigament2d(
+                  "climb", Units.inchesToMeters(10), 274.914, 4, new Color8Bit(Color.kRoyalBlue)))
+          .append(
+              new LoggedMechanismLigament2d(
+                  "climb_barb",
+                  Units.inchesToMeters(8.5),
+                  270,
+                  4,
+                  new Color8Bit(Color.kRoyalBlue)));
+  private final LoggedMechanismLigament2d climbTargetLigament =
+      climbRoot
+          .append(
+              new LoggedMechanismLigament2d(
+                  "climb_target",
+                  Units.inchesToMeters(10),
+                  274.914,
+                  2,
+                  new Color8Bit(Color.kLightBlue)))
+          .append(
+              new LoggedMechanismLigament2d(
+                  "climb_barb_target",
+                  Units.inchesToMeters(8.5),
+                  270,
+                  2,
+                  new Color8Bit(Color.kLightBlue)));
 
   public Superstructure(
       Hopper hopper,
@@ -196,7 +276,7 @@ public class Superstructure {
         .onTrue(this.forceState(State.ALGAE_INTAKE_A3));
 
     // IDLE -> CLIMB_PREPULL
-    stateTriggers.get(State.IDLE).and(preClimbRequest).onTrue(this.forceState(State.CLIMB_PREPULL));
+    preClimbRequest.onTrue(this.forceState(State.CLIMB_PREPULL));
 
     // CORAL_PREINTAKE -> CORAL_TRANSFER
     stateTriggers
@@ -262,6 +342,32 @@ public class Superstructure {
   /** This file is not a subsystem, so this MUST be called manually. */
   public void periodic() {
     Logger.recordOutput("Superstructure/Superstructure State", state);
+
+    // hopperLigament.setColor(
+    //     Math.signum(hopper.getVoltage()) == -1.0
+    //         ? new Color8Bit(Color.kRed)
+    //         : Math.signum(hopper.getVoltage()) == 1.0
+    //             ? new Color8Bit(Color.kGreen)
+    //             : new Color8Bit(Color.kOrange));
+    // outtakeLigament.setColor(
+    //     Math.signum(outtake.getVoltage()) == -1.0
+    //         ? new Color8Bit(Color.kRed)
+    //         : Math.signum(hopper.getVoltage()) == 1.0
+    //             ? new Color8Bit(Color.kGreen)
+    //             : new Color8Bit(Color.kOrange));
+    // gripperLigament.setColor(
+    //     Math.signum(gripper.getVoltage()) == -1.0
+    //         ? new Color8Bit(Color.kRed)
+    //         : Math.signum(hopper.getVoltage()) == 1.0
+    //             ? new Color8Bit(Color.kGreen)
+    //             : new Color8Bit(Color.kGray));
+
+    // elevatorLigament.setLength(elevator.getExtensionMeters() + Units.inchesToMeters(8.5));
+    // elevatorTargetLigament.setLength(elevator.getSetpoint() + Units.inchesToMeters(8.5));
+
+    // climbLigament.setAngle(climb.getPositionRad());
+    // climbTargetLigament.setAngle(climb.getTargetPositionRad());
+    // Logger.recordOutput("Superstructure/Mech2d", mech2d);
   }
 
   private Command forceState(State nextState) {

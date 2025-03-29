@@ -42,4 +42,8 @@ public class Hopper extends SubsystemBase {
   public boolean getDetected() {
     return proximityInputs.detected;
   }
+
+  public double getVoltage() {
+    return inputs.motorAppliedVolts;
+  }
 }

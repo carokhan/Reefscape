@@ -75,4 +75,8 @@ public class Outtake extends SubsystemBase {
   public boolean getDetected() {
     return coralProximityInputs.detected;
   }
+
+  public double getVoltage() {
+    return inputs.motorAppliedVolts;
+  }
 }

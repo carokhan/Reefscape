@@ -38,4 +38,8 @@ public class Gripper extends SubsystemBase {
   public Command setVoltage(double voltage) {
     return this.setVoltage(() -> voltage);
   }
+
+  public double getVoltage() {
+    return inputs.motorAppliedVolts;
+  }
 }
