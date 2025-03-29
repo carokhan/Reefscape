@@ -15,6 +15,7 @@ package frc.robot;
 
 import choreo.auto.AutoFactory;
 import edu.wpi.first.math.geometry.Pose2d;
+import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -286,6 +287,15 @@ public class RobotContainer {
             () -> -driver.getRightX(),
             () -> OperatorConstants.deadband,
             () -> 1));
+    driver
+        .y()
+        .onTrue(
+            Commands.runOnce(
+                    () ->
+                        drive.setPose(
+                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                    drive)
+                .ignoringDisable(true));
 
     driver.povRight().onTrue(Commands.runOnce(() -> climb.resetEncoder()));
 
