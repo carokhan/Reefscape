@@ -45,6 +45,7 @@ import frc.robot.util.LoggedTunableNumber;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
@@ -221,6 +222,18 @@ public class Drive extends SubsystemBase {
     Logger.recordOutput("SwerveStates/SetpointsOptimized", setpointStates);
   }
 
+  public Command driveVelocityFieldRelative(Supplier<ChassisSpeeds> speeds) {
+    return this.driveVelocity(
+        () -> {
+          var speed = ChassisSpeeds.fromFieldRelativeSpeeds(speeds.get(), getRotation());
+          return speed;
+        });
+  }
+
+  public Command driveVelocity(Supplier<ChassisSpeeds> speeds) {
+    return this.run(() -> runVelocity(speeds.get()));
+  }
+
   /** Runs the drive in a straight line with the specified drive output. */
   public void runCharacterization(double output) {
     for (int i = 0; i < 4; i++) {
@@ -331,8 +344,8 @@ public class Drive extends SubsystemBase {
       Pose2d visionRobotPoseMeters,
       double timestampSeconds,
       Matrix<N3, N1> visionMeasurementStdDevs) {
-    // poseEstimator.addVisionMeasurement(
-    //     visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
+    poseEstimator.addVisionMeasurement(
+        visionRobotPoseMeters, timestampSeconds, visionMeasurementStdDevs);
   }
 
   /** Returns the maximum linear speed in meters per sec. */

@@ -13,8 +13,8 @@ public class ElevatorConstants {
   public static final double L2 = 0.63;
   public static final double A3 = 0.81;
   public static final double L3 = 1.05;
-  public static final double L4 = 1.75;
-  public static final double AN = 1.76;
+  public static final double L4 = 1.78;
+  public static final double AN = 1.78;
 
   public static final double travel = Units.inchesToMeters(69.0);
   public static final double mass = Units.lbsToKilograms(25.1);

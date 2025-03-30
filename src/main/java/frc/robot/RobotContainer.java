@@ -17,6 +17,7 @@ import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
+import edu.wpi.first.math.geometry.Transform2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -25,9 +26,12 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
+import frc.robot.FieldConstants.Reef;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.AlgaeTarget;
 import frc.robot.subsystems.Superstructure.CoralTarget;
+import frc.robot.subsystems.autoalign.AutoAlign;
+import frc.robot.subsystems.autoalign.AutoAlignConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
 import frc.robot.subsystems.climb.ClimbIOSim;
@@ -41,6 +45,7 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
@@ -266,7 +271,7 @@ public class RobotContainer {
     autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
 
     // RobotModeTriggers.autonomous()
-    //     .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));
+    // .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));
 
     climb.setCoastOverride(() -> superstructureCoastOverride);
 
@@ -305,6 +310,35 @@ public class RobotContainer {
 
     driver.povRight().onTrue(Commands.runOnce(() -> climb.resetEncoder()));
 
+    driver
+        .rightBumper()
+        .or(driver.leftBumper())
+        .and(superstructure::isCoral)
+        .whileTrue(
+            Commands.parallel(
+                AutoAlign.autoAimWithIntermediatePose(
+                    drive,
+                    () -> {
+                      Pose2d bestFace =
+                          AutoAlign.bestFace(
+                              drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
+                      Pose2d selected =
+                          (driver.leftBumper().getAsBoolean())
+                              ? (Reef.branchesLeft[
+                                  Arrays.asList(Reef.centerFaces).indexOf(bestFace)])
+                              : Reef.branchesRight[
+                                  Arrays.asList(Reef.centerFaces).indexOf(bestFace)];
+                      Logger.recordOutput("AutoAlign/Active", selected);
+                      return selected;
+                    },
+                    // Keeps the robot off the reef wall until it's aligned side-side
+                    new Transform2d(AutoAlignConstants.offsetReefKeepOff, 0.0, Rotation2d.kZero)),
+                Commands.waitUntil(
+                        () ->
+                            AutoAlign.isInToleranceCoral(
+                                drive.getPose(), -driver.getLeftY(), -driver.getLeftX()))
+                    .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
+
     operator
         .y()
         .onTrue(
@@ -336,12 +370,12 @@ public class RobotContainer {
                   algaeTarget = AlgaeTarget.AP;
                 }));
 
-    // operator.y().onTrue(elevator.setExtension(() -> ElevatorConstants.L4));
-    // operator.x().onTrue(elevator.setExtension(() -> ElevatorConstants.L3));
-    // operator.b().onTrue(elevator.setExtension(() -> ElevatorConstants.L2));
-    // operator.a().onTrue(elevator.setExtension(() -> ElevatorConstants.L1));
-    // operator.povDown().onTrue(elevator.setExtension(() -> 0));
-    // operator.povUp().onTrue(elevator.setExtension(() -> ElevatorConstants.intake));
+    operator.y().onTrue(elevator.setExtension(() -> ElevatorConstants.L4));
+    operator.x().onTrue(elevator.setExtension(() -> ElevatorConstants.L3));
+    operator.b().onTrue(elevator.setExtension(() -> ElevatorConstants.L2));
+    operator.a().onTrue(elevator.setExtension(() -> ElevatorConstants.L1));
+    operator.povDown().onTrue(elevator.setExtension(() -> 0));
+    operator.povUp().onTrue(elevator.setExtension(() -> ElevatorConstants.intake));
     // operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
     operator
         .leftBumper()

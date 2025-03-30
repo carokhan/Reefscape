@@ -24,7 +24,8 @@ public class HopperIOSpark implements HopperIO {
     sparkConfig
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(HopperConstants.current)
-        .voltageCompensation(12.0);
+        .voltageCompensation(12.0)
+        .inverted(true);
 
     SparkUtil.tryUntilOk(
         spark,

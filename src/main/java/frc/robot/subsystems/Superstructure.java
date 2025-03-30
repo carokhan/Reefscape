@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.subsystems.autoalign.AutoAlign;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbConstants;
 import frc.robot.subsystems.elevator.Elevator;
@@ -310,6 +311,8 @@ public class Superstructure {
                 hopper.setVoltage(() -> 0),
                 this.forceState(State.CORAL_READY)));
 
+    // CORAL_READY -> CORAL_PRESCORE
+
     if (Constants.currentMode == Mode.SIM) {
       stateTriggers
           .get(State.CORAL_PREINTAKE)
@@ -372,6 +375,9 @@ public class Superstructure {
 
   /** This file is not a subsystem, so this MUST be called manually. */
   public void periodic() {
+
+    AutoAlign.bestFace(pose.get(), driverX.getAsDouble(), driverY.getAsDouble());
+
     hopperLigament.setColor(
         Math.signum(hopper.getVoltage()) == -1.0
             ? Constants.visualizerNegative
@@ -408,5 +414,14 @@ public class Superstructure {
               this.state = nextState;
             })
         .ignoringDisable(true);
+  }
+
+  public boolean isCoral() {
+    return this.state == State.CORAL_CONFIRM_L1
+        || this.state == State.CORAL_CONFIRM_L2
+        || this.state == State.CORAL_CONFIRM_L3
+        || this.state == State.CORAL_CONFIRM_L4
+        || this.state == State.CORAL_PRESCORE
+        || this.state == State.CORAL_READY;
   }
 }

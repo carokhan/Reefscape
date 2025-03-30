@@ -77,6 +77,8 @@ public class FieldConstants {
     public static final List<Map<ReefLevel, Pose3d>> branchPositions =
         new ArrayList<>(); // Starting at the right branch facing the driver station in clockwise
     public static final List<Map<ReefLevel, Pose2d>> branchPositions2d = new ArrayList<>();
+    public static final Pose2d[] branchesLeft = new Pose2d[6];
+    public static final Pose2d[] branchesRight = new Pose2d[6];
 
     static {
       // Initialize faces
@@ -127,7 +129,8 @@ public class FieldConstants {
                       0,
                       Units.degreesToRadians(level.pitch),
                       poseDirection.getRotation().getRadians()));
-
+          branchesLeft[face] = leftBranchPose.toPose2d();
+          branchesRight[face] = rightBranchPose.toPose2d();
           fillRight.put(level, rightBranchPose);
           fillLeft.put(level, leftBranchPose);
           fillRight2d.put(level, rightBranchPose.toPose2d());
