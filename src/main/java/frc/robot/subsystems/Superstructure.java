@@ -323,9 +323,7 @@ public class Superstructure {
 
       stateTriggers
           .get(State.CORAL_TRANSFER)
-          .onTrue(
-              Commands.sequence(
-                  Commands.waitSeconds(0.5), outtake.setSimDetected(true)));
+          .onTrue(Commands.sequence(Commands.waitSeconds(0.5), outtake.setSimDetected(true)));
     }
 
     // CORAL -> IDLE
