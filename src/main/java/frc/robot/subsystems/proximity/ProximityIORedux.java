@@ -53,4 +53,6 @@ public class ProximityIORedux implements ProximityIO {
     inputs.detected = canandcolor.digout1().getValue();
     inputs.tempCelsius = canandcolor.getTemperature();
   }
+
+  public void setSimDetected(boolean detected) {}
 }

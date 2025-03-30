@@ -12,6 +12,7 @@ import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
+import frc.robot.Constants.Mode;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbConstants;
 import frc.robot.subsystems.elevator.Elevator;
@@ -24,6 +25,7 @@ import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -139,6 +141,9 @@ public class Superstructure {
   private final Supplier<CoralTarget> coralTarget;
   private final Supplier<AlgaeTarget> algaeTarget;
 
+  private final DoubleSupplier driverX;
+  private final DoubleSupplier driverY;
+
   @AutoLogOutput(key = "Superstructure/Visualizer")
   private final LoggedMechanism2d mech2d =
       new LoggedMechanism2d(Units.inchesToMeters(48), Units.inchesToMeters(96));
@@ -224,6 +229,8 @@ public class Superstructure {
       Supplier<ChassisSpeeds> velocity,
       Supplier<CoralTarget> coralTarget,
       Supplier<AlgaeTarget> algaeTarget,
+      DoubleSupplier driverX,
+      DoubleSupplier driverY,
       Trigger scoreRequest,
       Trigger coralIntakeRequest,
       Trigger algaeIntakeRequest,
@@ -243,6 +250,9 @@ public class Superstructure {
     this.velocity = velocity;
     this.coralTarget = coralTarget;
     this.algaeTarget = algaeTarget;
+
+    this.driverX = driverX;
+    this.driverY = driverY;
 
     this.scoreRequest = scoreRequest;
     this.coralIntakeRequest = coralIntakeRequest;
@@ -288,13 +298,35 @@ public class Superstructure {
         .and(hopper::getDetected)
         .onTrue(this.forceState(State.CORAL_TRANSFER));
 
-    // CORAL_TRANSFER -> CORAL_PRESCORE
+    // CORAL_TRANSFER -> CORAL_READY
     stateTriggers
         .get(State.CORAL_TRANSFER)
         .whileTrue(outtake.index())
         .whileTrue(hopper.setVoltage(() -> 6.0))
         .and(outtake::getDetected)
-        .onTrue(this.forceState(State.CORAL_READY));
+        .onTrue(
+            Commands.parallel(
+                outtake.setVoltage(() -> 0),
+                hopper.setVoltage(() -> 0),
+                this.forceState(State.CORAL_READY)));
+
+    if (Constants.currentMode == Mode.SIM) {
+      stateTriggers
+          .get(State.CORAL_PREINTAKE)
+          .and(
+              () ->
+                  (AutoAlign.bestLoader(pose.get())
+                          .getTranslation()
+                          .getDistance(pose.get().getTranslation())
+                      < 0.75))
+          .onTrue(Commands.sequence(Commands.waitSeconds(1), hopper.setSimDetected(true)));
+
+      stateTriggers
+          .get(State.CORAL_TRANSFER)
+          .onTrue(
+              Commands.sequence(
+                  Commands.waitSeconds(0.5), outtake.setSimDetected(true)));
+    }
 
     // CORAL -> IDLE
     stateTriggers
@@ -342,8 +374,6 @@ public class Superstructure {
 
   /** This file is not a subsystem, so this MUST be called manually. */
   public void periodic() {
-    Logger.recordOutput("Superstructure/Superstructure State", state);
-
     hopperLigament.setColor(
         Math.signum(hopper.getVoltage()) == -1.0
             ? Constants.visualizerNegative

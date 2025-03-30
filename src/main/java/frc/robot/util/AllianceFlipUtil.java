@@ -35,10 +35,6 @@ public class AllianceFlipUtil {
     return shouldFlip() ? rotation.rotateBy(Rotation2d.kPi) : rotation;
   }
 
-  public static Rotation2d gyroApply(Rotation2d rotation) {
-    return shouldFlip() ? rotation.rotateBy(Rotation2d.kPi) : rotation;
-  }
-
   public static Rotation2d dontApply(Rotation2d rotation) {
     return rotation;
   }
@@ -58,11 +54,6 @@ public class AllianceFlipUtil {
   public static boolean shouldFlip() {
     return DriverStation.getAlliance().isPresent()
         && DriverStation.getAlliance().get() == DriverStation.Alliance.Red;
-  }
-
-  public static boolean shouldGyroFlip() {
-    return DriverStation.getAlliance().isPresent()
-        && DriverStation.getAlliance().get() == DriverStation.Alliance.Blue;
   }
 
   public static Command apply(Command ifFlip, Command otherwise) {

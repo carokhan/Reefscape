@@ -46,4 +46,11 @@ public class Hopper extends SubsystemBase {
   public double getVoltage() {
     return inputs.motorAppliedVolts;
   }
+
+  public Command setSimDetected(boolean detected) {
+    return this.runOnce(
+        () -> {
+          proximityIO.setSimDetected(detected);
+        });
+  }
 }

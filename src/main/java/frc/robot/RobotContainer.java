@@ -173,10 +173,10 @@ public class RobotContainer {
                 new ModuleIOSim(TunerConstants.FrontRight),
                 new ModuleIOSim(TunerConstants.BackLeft),
                 new ModuleIOSim(TunerConstants.BackRight));
-        hopper = new Hopper(new HopperIOSim(), new ProximityIOSim());
+        hopper = new Hopper(new HopperIOSim(), new ProximityIOSim(0.1));
         elevator = new Elevator(new ElevatorIOSim());
-        outtake = new Outtake(new OuttakeIOSim(), new ProximityIOSim(), new ProximityIOSim());
-        gripper = new Gripper(new GripperIOSim(), new ProximityIOSim());
+        outtake = new Outtake(new OuttakeIOSim(), new ProximityIOSim(0.1), new ProximityIO() {});
+        gripper = new Gripper(new GripperIOSim(), new ProximityIOSim(0.1));
         climb = new Climb(new ClimbIOSim());
         led = new LED(new LEDIOSim());
         vision =
@@ -219,6 +219,8 @@ public class RobotContainer {
             drive::getVelocityFieldRelative,
             () -> coralTarget,
             () -> algaeTarget,
+            () -> -driver.getLeftY(),
+            () -> -driver.getLeftX(),
             driver.rightTrigger(),
             driver.leftTrigger(),
             driver.leftTrigger(),

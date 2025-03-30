@@ -12,4 +12,6 @@ public interface ProximityIO {
   }
 
   public default void updateInputs(final ProximityIOInputsAutoLogged inputs) {}
+
+  public default void setSimDetected(boolean detected) {}
 }

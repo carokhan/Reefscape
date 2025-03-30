@@ -39,4 +39,6 @@ public class ProximityIOGrapple implements ProximityIO {
             && (measurement.distance_mm < threshold);
     inputs.tempCelsius = 20.0;
   }
+
+  public void setSimDetected(boolean detected) {}
 }
