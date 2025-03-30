@@ -20,7 +20,6 @@ import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
-import edu.wpi.first.wpilibj.smartdashboard.SmartDashboard;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
@@ -42,7 +41,6 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
@@ -74,7 +72,6 @@ import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.CommandXboxControllerSubsystem;
 import java.util.Arrays;
-import java.util.Set;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -266,8 +263,8 @@ public class RobotContainer {
         "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
     autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
 
-    RobotModeTriggers.autonomous()
-        .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));
+    // RobotModeTriggers.autonomous()
+    //     .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));
 
     climb.setCoastOverride(() -> superstructureCoastOverride);
 
@@ -306,44 +303,44 @@ public class RobotContainer {
 
     driver.povRight().onTrue(Commands.runOnce(() -> climb.resetEncoder()));
 
-    // operator
-    // .y()
-    // .onTrue(
-    // Commands.runOnce(
-    // () -> {
-    // coralTarget = CoralTarget.L4;
-    // algaeTarget = AlgaeTarget.AN;
-    // }));
-    // operator
-    // .x()
-    // .onTrue(
-    // Commands.runOnce(
-    // () -> {
-    // coralTarget = CoralTarget.L3;
-    // }));
-    // operator
-    // .b()
-    // .onTrue(
-    // Commands.runOnce(
-    // () -> {
-    // coralTarget = CoralTarget.L2;
-    // }));
-    // operator
-    // .a()
-    // .onTrue(
-    // Commands.runOnce(
-    // () -> {
-    // coralTarget = CoralTarget.L1;
-    // algaeTarget = AlgaeTarget.AP;
-    // }));
+    operator
+        .y()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  coralTarget = CoralTarget.L4;
+                  algaeTarget = AlgaeTarget.AN;
+                }));
+    operator
+        .x()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  coralTarget = CoralTarget.L3;
+                }));
+    operator
+        .b()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  coralTarget = CoralTarget.L2;
+                }));
+    operator
+        .a()
+        .onTrue(
+            Commands.runOnce(
+                () -> {
+                  coralTarget = CoralTarget.L1;
+                  algaeTarget = AlgaeTarget.AP;
+                }));
 
-    operator.y().onTrue(elevator.setExtension(() -> ElevatorConstants.L4));
-    operator.x().onTrue(elevator.setExtension(() -> ElevatorConstants.L3));
-    operator.b().onTrue(elevator.setExtension(() -> ElevatorConstants.L2));
-    operator.a().onTrue(elevator.setExtension(() -> ElevatorConstants.L1));
-    operator.povDown().onTrue(elevator.setExtension(() -> 0));
-    operator.povUp().onTrue(elevator.setExtension(() -> ElevatorConstants.intake));
-    operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
+    // operator.y().onTrue(elevator.setExtension(() -> ElevatorConstants.L4));
+    // operator.x().onTrue(elevator.setExtension(() -> ElevatorConstants.L3));
+    // operator.b().onTrue(elevator.setExtension(() -> ElevatorConstants.L2));
+    // operator.a().onTrue(elevator.setExtension(() -> ElevatorConstants.L1));
+    // operator.povDown().onTrue(elevator.setExtension(() -> 0));
+    // operator.povUp().onTrue(elevator.setExtension(() -> ElevatorConstants.intake));
+    // operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
     operator
         .leftBumper()
         .onTrue(
@@ -395,7 +392,7 @@ public class RobotContainer {
                 .withTimeout(0.9)
                 .withName("Controller Endgame Alert 2")); // Rumble three times
 
-    SmartDashboard.putData("Run Elevator Sysid", elevator.runSysid());
+    // SmartDashboard.putData("Run Elevator Sysid", elevator.runSysid());
   }
 
   /**
