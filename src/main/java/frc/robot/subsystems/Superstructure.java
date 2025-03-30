@@ -11,6 +11,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Command.InterruptionBehavior;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
+import frc.robot.Constants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbConstants;
 import frc.robot.subsystems.elevator.Elevator;
@@ -343,31 +344,31 @@ public class Superstructure {
   public void periodic() {
     Logger.recordOutput("Superstructure/Superstructure State", state);
 
-    // hopperLigament.setColor(
-    //     Math.signum(hopper.getVoltage()) == -1.0
-    //         ? new Color8Bit(Color.kRed)
-    //         : Math.signum(hopper.getVoltage()) == 1.0
-    //             ? new Color8Bit(Color.kGreen)
-    //             : new Color8Bit(Color.kOrange));
-    // outtakeLigament.setColor(
-    //     Math.signum(outtake.getVoltage()) == -1.0
-    //         ? new Color8Bit(Color.kRed)
-    //         : Math.signum(hopper.getVoltage()) == 1.0
-    //             ? new Color8Bit(Color.kGreen)
-    //             : new Color8Bit(Color.kOrange));
-    // gripperLigament.setColor(
-    //     Math.signum(gripper.getVoltage()) == -1.0
-    //         ? new Color8Bit(Color.kRed)
-    //         : Math.signum(hopper.getVoltage()) == 1.0
-    //             ? new Color8Bit(Color.kGreen)
-    //             : new Color8Bit(Color.kGray));
+    hopperLigament.setColor(
+        Math.signum(hopper.getVoltage()) == -1.0
+            ? Constants.visualizerNegative
+            : Math.signum(hopper.getVoltage()) == 1.0
+                ? Constants.visualizerPositive
+                : Constants.visualizerNeutral);
+    outtakeLigament.setColor(
+        Math.signum(hopper.getVoltage()) == -1.0
+            ? Constants.visualizerNegative
+            : Math.signum(hopper.getVoltage()) == 1.0
+                ? Constants.visualizerPositive
+                : Constants.visualizerNeutral);
+    gripperLigament.setColor(
+        Math.signum(gripper.getVoltage()) == -1.0
+            ? Constants.visualizerNegative
+            : Math.signum(gripper.getVoltage()) == 1.0
+                ? Constants.visualizerPositive
+                : Constants.visualizerNeutral);
 
-    // elevatorLigament.setLength(elevator.getExtensionMeters() + Units.inchesToMeters(8.5));
-    // elevatorTargetLigament.setLength(elevator.getSetpoint() + Units.inchesToMeters(8.5));
+    elevatorLigament.setLength(elevator.getExtensionMeters() + ElevatorConstants.visualizerOffset);
+    elevatorTargetLigament.setLength(elevator.getSetpoint() + ElevatorConstants.visualizerOffset);
 
-    // climbLigament.setAngle(climb.getPositionRad());
-    // climbTargetLigament.setAngle(climb.getTargetPositionRad());
-    // Logger.recordOutput("Superstructure/Mech2d", mech2d);
+    climbLigament.setAngle(climb.getPositionRad());
+    climbTargetLigament.setAngle(climb.getTargetPositionRad());
+    Logger.recordOutput("Superstructure/Mech2d", mech2d);
   }
 
   private Command forceState(State nextState) {

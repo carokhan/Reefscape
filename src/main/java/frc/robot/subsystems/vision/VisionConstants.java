@@ -13,7 +13,7 @@ public class VisionConstants {
   public static AprilTagFieldLayout aprilTagLayout =
       AprilTagFieldLayout.loadField(
           //   AprilTagFields.k2025ReefscapeAndyMark
-          AprilTagFields.k2025ReefscapeAndyMark); // TODO: change the field type at comp
+          AprilTagFields.k2025ReefscapeAndyMark);
 
   public static List<Pose2d> blueReefTagPoses =
       List.of(
@@ -43,13 +43,13 @@ public class VisionConstants {
           Units.inchesToMeters(12.066),
           Units.inchesToMeters(11.906),
           Units.inchesToMeters(8.355),
-          new Rotation3d(0.0, Units.degreesToRadians(13.125000), Units.degreesToRadians(30)));
+          new Rotation3d(0.0, -Units.degreesToRadians(13.125000), Units.degreesToRadians(-30)));
   public static Transform3d robotToRightCam =
       new Transform3d(
           Units.inchesToMeters(12.066),
           Units.inchesToMeters(-11.906),
           Units.inchesToMeters(8.355),
-          new Rotation3d(0.0, Units.degreesToRadians(13.125000), Units.degreesToRadians(-30)));
+          new Rotation3d(0.0, -Units.degreesToRadians(13.125000), Units.degreesToRadians(30)));
   // Basic filtering thresholds
   public static double maxSingleTagAmbiguity = 0.4;
   public static double maxZErrorMeters = 0.1;

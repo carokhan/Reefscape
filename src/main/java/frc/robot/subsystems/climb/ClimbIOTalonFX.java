@@ -110,5 +110,8 @@ public class ClimbIOTalonFX implements ClimbIO {
     talon.setPosition(position);
   }
 
-  // TODO: add set brake mode
+  @Override
+  public void setBrakeMode(boolean enabled) {
+    talon.setNeutralMode(enabled ? NeutralModeValue.Brake : NeutralModeValue.Coast);
+  }
 }

@@ -50,5 +50,5 @@ public class ElevatorConstants {
   public static final double maxAcceleration = // 0.3;
       10.0; // 70.2
 
-  public static final double visualizerOffset = 0.0;
+  public static final double visualizerOffset = Units.inchesToMeters(8.5);
 }

@@ -37,7 +37,7 @@ public class ClimbIOSim implements ClimbIO {
 
     inputs.motorVelocityRadPerSec =
         RadiansPerSecond.of(armSim.getVelocityRadPerSec()).in(RotationsPerSecond);
-    inputs.motorPositionRad = armSim.getAngleRads(); // TODO fix
+    inputs.motorPositionRad = armSim.getAngleRads();
     inputs.motorStatorCurrentAmps = armSim.getCurrentDrawAmps();
     inputs.motorSupplyCurrentAmps = 0.0;
     inputs.motorTempCelsius = 0.0;

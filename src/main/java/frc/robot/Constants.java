@@ -14,6 +14,8 @@
 package frc.robot;
 
 import edu.wpi.first.wpilibj.RobotBase;
+import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj.util.Color8Bit;
 
 /**
  * This class defines the runtime mode used by AdvantageKit. The mode is always "real" when running
@@ -37,4 +39,8 @@ public final class Constants {
     /** Replaying from a log file. */
     REPLAY
   }
+
+  public static final Color8Bit visualizerNegative = new Color8Bit(Color.kRed);
+  public static final Color8Bit visualizerPositive = new Color8Bit(Color.kGreen);
+  public static final Color8Bit visualizerNeutral = new Color8Bit(Color.kGray);
 }

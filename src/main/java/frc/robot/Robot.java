@@ -16,18 +16,17 @@ package frc.robot;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
+import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.drive.TunerConstants;
-import frc.robot.util.Tracer;
+import frc.robot.subsystems.vision.VisionConstants;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.util.Arrays;
-import java.util.HashMap;
-import java.util.function.BiConsumer;
 import org.littletonrobotics.junction.LogFileUtil;
 import org.littletonrobotics.junction.LoggedRobot;
 import org.littletonrobotics.junction.Logger;
@@ -73,7 +72,6 @@ public class Robot extends LoggedRobot {
         Logger.recordMetadata("GitDirty", "Unknown");
         break;
     }
-    initializeTracerLogging();
 
     // Set up data receivers & replay source
     switch (Constants.currentMode) {
@@ -123,33 +121,6 @@ public class Robot extends LoggedRobot {
     // CameraServer.startAutomaticCapture();
   }
 
-  @Override
-  public void loopFunc() {
-    Tracer.trace("Robot/LoopFunc", super::loopFunc);
-  }
-
-  private void initializeTracerLogging() {
-    HashMap<String, Integer> commandCounts = new HashMap<>();
-    final BiConsumer<Command, Boolean> logCommandFunction =
-        (Command command, Boolean active) -> {
-          String name = command.getName();
-          int count = commandCounts.getOrDefault(name, 0) + (active ? 1 : -1);
-          commandCounts.put(name, count);
-          if (Constants.currentMode != Constants.Mode.REAL)
-            Logger.recordOutput(
-                "Commands/CommandsUnique/" + name + "_" + Integer.toHexString(command.hashCode()),
-                active.booleanValue());
-          if (Constants.currentMode != Constants.Mode.REAL)
-            Logger.recordOutput("Commands/CommandsAll/" + name, count > 0);
-        };
-
-    var scheduler = CommandScheduler.getInstance();
-
-    scheduler.onCommandInitialize(c -> logCommandFunction.accept(c, true));
-    scheduler.onCommandFinish(c -> logCommandFunction.accept(c, false));
-    scheduler.onCommandInterrupt(c -> logCommandFunction.accept(c, false));
-  }
-
   /** This function is called periodically during all modes. */
   @Override
   public void robotPeriodic() {
@@ -162,16 +133,14 @@ public class Robot extends LoggedRobot {
     // This must be called from the robot's periodic block in order for anything in
     // the Command-based framework to work.
 
-    // Logger.recordOutput(
-    // "Camera0Pos",
-    // new
-    // Pose3d(robotContainer.drive.getPose()).transformBy(VisionConstants.robotToCamera0));
-    // Logger.recordOutput(
-    // "Camera1Pos",
-    // new
-    // Pose3d(robotContainer.drive.getPose()).transformBy(VisionConstants.robotToCamera1));
+    Logger.recordOutput(
+        "Camera0Pos",
+        new Pose3d(robotContainer.drive.getPose()).transformBy(VisionConstants.robotToLeftCam));
+    Logger.recordOutput(
+        "Camera1Pos",
+        new Pose3d(robotContainer.drive.getPose()).transformBy(VisionConstants.robotToRightCam));
     CommandScheduler.getInstance().run();
-    // RobotContainer.superstructure.periodic();
+    RobotContainer.superstructure.periodic();
 
     // Return to normal thread priority
     Threads.setCurrentThreadPriority(false, 10);
