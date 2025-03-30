@@ -109,4 +109,6 @@ public class ClimbIOTalonFX implements ClimbIO {
   public void resetEncoder(double position) {
     talon.setPosition(position);
   }
+
+  // TODO: add set brake mode
 }

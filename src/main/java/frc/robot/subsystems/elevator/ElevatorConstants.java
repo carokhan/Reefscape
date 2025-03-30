@@ -24,31 +24,31 @@ public class ElevatorConstants {
   public static final double carriageTravel = Units.inchesToMeters(21);
 
   public static final double drumRadius = 5.0 / 1000.0 * 36 / (2.0 * Math.PI);
-  public static final double gearing = (9.0 / 1.0);
+  public static final double gearing = (5.0 / 1.0);
   public static final double positionConversionFactor = drumRadius * 2 * Math.PI / gearing;
   public static final double tolerance = .005;
 
-  public static final int statorCurrent = 60;
-  public static final int supplyCurrent = 70;
+  public static final int statorCurrent = 120;
+  public static final int supplyCurrent = 80;
   public static final int supplyCurrentLow = 40;
 
-  public static final double[] kS = {0.4, 0.4, 0.6};
-  public static final double[] kG = {0.54, 0.43, 0.32};
-  public static final double kV = 0.584;
+  public static final double[] kS = {0.74, 0.74, 0.74}; // 0.2
+  public static final double[] kG = {0.459, 0.459, 0.459};
+  public static final double kV = 3.122;
   public static final double kVExpo = 1.9;
   public static final double kA = 0.0;
   public static final double kAExpo = 0.1189;
 
-  public static final double kP = 5.0;
+  public static final double kP = 45.0;
   public static final double kI = 0.0;
   public static final double kD = 0.0;
 
   public static final double rampPeriod = 0.1;
 
   public static final double maxVelocity = // 0.3;
-      0.3; // 3.5
+      3.5; // 3.5
   public static final double maxAcceleration = // 0.3;
-      0.3; // 70.2
+      10.0; // 70.2
 
   public static final double visualizerOffset = 0.0;
 }

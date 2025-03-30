@@ -19,7 +19,7 @@ public class Climb extends SubsystemBase {
 
   private BooleanSupplier coastOverride = () -> false;
 
-  @AutoLogOutput(key = "Climber/BrakeModeEnabled")
+  @AutoLogOutput(key = "Climb/BrakeModeEnabled")
   private boolean brakeModeEnabled = true;
 
   public Climb(ClimbIO io) {
@@ -31,7 +31,7 @@ public class Climb extends SubsystemBase {
   @Override
   public void periodic() {
     io.updateInputs(inputs);
-    Logger.processInputs("Climber", inputs);
+    Logger.processInputs("Climb", inputs);
 
     climbDisconnected.set(!inputs.motorConnected);
 
@@ -42,7 +42,7 @@ public class Climb extends SubsystemBase {
 
     boolean coast = coastOverride.getAsBoolean() && DriverStation.isDisabled();
     setBrakeMode(!coast);
-    Logger.recordOutput("Climber/CoastOverride", !coast);
+    Logger.recordOutput("Climb/CoastOverride", !coast);
   }
 
   public Command setPosition(Rotation2d position) {

@@ -3,8 +3,10 @@ package frc.robot.subsystems.elevator;
 import static edu.wpi.first.units.Units.Volts;
 
 import edu.wpi.first.math.MathUtil;
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.math.filter.LinearFilter;
 import edu.wpi.first.math.util.Units;
+import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
@@ -14,6 +16,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine.Mechanism;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.function.DoubleSupplier;
 import java.util.function.Function;
+import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
 
 public class Elevator extends SubsystemBase {
@@ -28,6 +31,10 @@ public class Elevator extends SubsystemBase {
   private double setpoint = 0.0;
 
   private final SysIdRoutine voltageSysid;
+
+  @AutoLogOutput private boolean homed = false;
+
+  private Debouncer homingDebouncer = new Debouncer(0.2);
 
   private static final LoggedTunableNumber kP = new LoggedTunableNumber("Elevator/kP");
   private static final LoggedTunableNumber kD = new LoggedTunableNumber("Elevator/kD");
@@ -94,6 +101,7 @@ public class Elevator extends SubsystemBase {
   public Command setExtension(DoubleSupplier meters) {
     return this.run(
         () -> {
+          inputs.targetPositionMeters = meters.getAsDouble();
           io.setTarget(meters.getAsDouble());
           setpoint = meters.getAsDouble();
         });
@@ -130,7 +138,7 @@ public class Elevator extends SubsystemBase {
             Commands.sequence(
                 routine
                     .quasistatic(SysIdRoutine.Direction.kForward)
-                    .until(() -> inputs.positionMeters > Units.inchesToMeters(50.0)),
+                    .until(() -> inputs.positionMeters > Units.inchesToMeters(60.0)),
                 Commands.waitUntil(() -> inputs.velocityMetersPerSec < 0.1),
                 routine
                     .quasistatic(SysIdRoutine.Direction.kReverse)
@@ -138,12 +146,19 @@ public class Elevator extends SubsystemBase {
                 Commands.waitUntil(() -> Math.abs(inputs.velocityMetersPerSec) < 0.1),
                 routine
                     .dynamic(SysIdRoutine.Direction.kForward)
-                    .until(() -> inputs.positionMeters > Units.inchesToMeters(50.0)),
+                    .until(() -> inputs.positionMeters > Units.inchesToMeters(60.0)),
                 Commands.waitUntil(() -> inputs.velocityMetersPerSec < 0.1),
                 routine
                     .dynamic(SysIdRoutine.Direction.kReverse)
                     .until(() -> inputs.positionMeters < Units.inchesToMeters(10.0)));
     return Commands.sequence(runCurrentZeroing(), runSysid.apply(voltageSysid));
+  }
+
+  public Command reset() {
+    return this.run(
+        () -> {
+          inputs.targetPositionMeters = 0.0;
+        });
   }
 
   public Command setVoltage(double voltage) {
@@ -171,5 +186,49 @@ public class Elevator extends SubsystemBase {
 
   public boolean isNearExtension(double expected, double toleranceMeters) {
     return MathUtil.isNear(expected, inputs.positionMeters, toleranceMeters);
+  }
+
+  public Command homingSequence() {
+    return Commands.startRun(
+            () -> {
+              homed = false;
+              homingDebouncer = new Debouncer(0.2);
+              homingDebouncer.calculate(false);
+            },
+            () -> {
+              io.setVoltage(-2);
+              homed = homingDebouncer.calculate(Math.abs(inputs.velocityMetersPerSec) <= 0.2);
+            })
+        .until(() -> homed)
+        .andThen(
+            () -> {
+              io.resetEncoder();
+              homed = true;
+            });
+  }
+
+  public Command staticCharacterization(double outputRampRate) {
+    final StaticCharacterizationState state = new StaticCharacterizationState();
+    Timer timer = new Timer();
+    return Commands.startRun(
+            () -> {
+              timer.restart();
+            },
+            () -> {
+              state.characterizationOutput = outputRampRate * timer.get();
+              io.setVoltage(state.characterizationOutput);
+              Logger.recordOutput(
+                  "Elevator/StaticCharacterizationOutput", state.characterizationOutput);
+            })
+        .until(() -> inputs.velocityMetersPerSec >= 0.2)
+        .finallyDo(
+            () -> {
+              timer.stop();
+              Logger.recordOutput("Elevator/CharacterizationOutput", state.characterizationOutput);
+            });
+  }
+
+  private static class StaticCharacterizationState {
+    public double characterizationOutput = 0.0;
   }
 }
