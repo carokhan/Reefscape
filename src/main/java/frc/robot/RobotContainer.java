@@ -26,7 +26,6 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
-import frc.robot.FieldConstants.Reef;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.AlgaeTarget;
 import frc.robot.subsystems.Superstructure.CoralTarget;
@@ -157,11 +156,11 @@ public class RobotContainer {
             new Vision(
                 drive::addVisionMeasurement,
                 new VisionIOPhotonVision(
-                    VisionConstants.CAM_FL_NAME,
+                    VisionConstants.CAM_FR_NAME,
                     VisionConstants.robotToLeftCam,
                     drive::getRotation),
                 new VisionIOPhotonVision(
-                    VisionConstants.CAM_FR_NAME,
+                    VisionConstants.CAM_FL_NAME,
                     VisionConstants.robotToRightCam,
                     drive::getRotation));
         // vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new
@@ -322,14 +321,14 @@ public class RobotContainer {
                       Pose2d bestFace =
                           AutoAlign.bestFace(
                               drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
-                      Pose2d selected =
-                          (driver.leftBumper().getAsBoolean())
-                              ? (Reef.branchesLeft[
-                                  Arrays.asList(Reef.centerFaces).indexOf(bestFace)])
-                              : Reef.branchesRight[
-                                  Arrays.asList(Reef.centerFaces).indexOf(bestFace)];
-                      Logger.recordOutput("AutoAlign/Active", selected);
-                      return selected;
+                      //   Pose2d selected =
+                      //       (driver.leftBumper().getAsBoolean())
+                      //           ? (Reef.branchesLeft[
+                      //               Arrays.asList(Reef.centerFaces).indexOf(bestFace)])
+                      //           : Reef.branchesRight[
+                      //               Arrays.asList(Reef.centerFaces).indexOf(bestFace)];
+                      //   Logger.recordOutput("AutoAlign/Active", selected);
+                      return bestFace;
                     },
                     // Keeps the robot off the reef wall until it's aligned side-side
                     new Transform2d(AutoAlignConstants.offsetReefKeepOff, 0.0, Rotation2d.kZero)),

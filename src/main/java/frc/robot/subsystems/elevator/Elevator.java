@@ -103,7 +103,6 @@ public class Elevator extends SubsystemBase {
         () -> {
           inputs.targetPositionMeters = meters.getAsDouble();
           io.setTarget(meters.getAsDouble());
-          setpoint = meters.getAsDouble();
         });
   }
 
@@ -176,8 +175,8 @@ public class Elevator extends SubsystemBase {
     return inputs.positionMeters;
   }
 
-  public double getSetpoint() {
-    return setpoint;
+  public double getTargetExtensionMeters() {
+    return inputs.targetPositionMeters;
   }
 
   public boolean isNearExtension(double expected) {

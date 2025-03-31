@@ -39,6 +39,10 @@ public class Hopper extends SubsystemBase {
     return this.setVoltage(() -> voltage);
   }
 
+  public boolean getConnected() {
+    return proximityInputs.connected;
+  }
+
   public boolean getDetected() {
     return proximityInputs.detected;
   }

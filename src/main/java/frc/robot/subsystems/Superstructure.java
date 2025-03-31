@@ -296,7 +296,14 @@ public class Superstructure {
         .whileTrue(elevator.setExtension(ElevatorConstants.intake))
         .whileTrue(outtake.index())
         .whileTrue(hopper.setVoltage(() -> 6.0))
-        .and(hopper::getDetected)
+        .and(
+            () -> {
+              if (hopper.getConnected()) {
+                return hopper.getDetected();
+              } else {
+                return true;
+              }
+            })
         .onTrue(this.forceState(State.CORAL_TRANSFER));
 
     // CORAL_TRANSFER -> CORAL_READY
@@ -398,7 +405,8 @@ public class Superstructure {
                 : Constants.visualizerNeutral);
 
     elevatorLigament.setLength(elevator.getExtensionMeters() + ElevatorConstants.visualizerOffset);
-    elevatorTargetLigament.setLength(elevator.getSetpoint() + ElevatorConstants.visualizerOffset);
+    elevatorTargetLigament.setLength(
+        elevator.getTargetExtensionMeters() + ElevatorConstants.visualizerOffset);
 
     climbLigament.setAngle(climb.getPositionRad());
     climbTargetLigament.setAngle(climb.getTargetPositionRad());
