@@ -24,6 +24,7 @@ import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class AutoAlign {
+
   public static Pose2d bestLoader(Pose2d currentPose) {
     Pose2d loader =
         AllianceFlipUtil.apply(currentPose).getY() > (FieldConstants.fieldWidth / 2)
@@ -132,13 +133,13 @@ public class AutoAlign {
     final Pose2d cachedTarget[] = {new Pose2d()};
     final ProfiledPIDController headingController =
         // assume we can accelerate to max in 2/3 of a second
-        new ProfiledPIDController(6.0, 0.0, 0.0, constraints);
+        new ProfiledPIDController(8.0, 0.0, 0.0, constraints);
     headingController.enableContinuousInput(-Math.PI, Math.PI);
     final ProfiledPIDController vxController =
-        new ProfiledPIDController(10.0, 0.01, 0.02, constraints);
+        new ProfiledPIDController(8.0, 0.01, 0.02, constraints);
     final ProfiledPIDController vyController =
         new ProfiledPIDController(
-            10.0,
+            8.0,
             0.01,
             0.02,
             new TrapezoidProfile.Constraints(
@@ -148,7 +149,7 @@ public class AutoAlign {
               cachedTarget[0] = target.get();
               final var diff = drive.getPose().minus(cachedTarget[0]);
               if (Constants.currentMode == Mode.SIM)
-                Logger.recordOutput("AutoAim/Cached Target", cachedTarget[0]);
+                Logger.recordOutput("AutoAlign/Cached Target", cachedTarget[0]);
               headingController.reset(
                   drive.getPose().getRotation().getRadians(),
                   drive.getVelocityFieldRelative().omegaRadiansPerSecond);
@@ -180,13 +181,13 @@ public class AutoAlign {
                               .plus(speedsModifier.get());
                   if (Constants.currentMode == Mode.SIM)
                     Logger.recordOutput(
-                        "AutoAim/Target Pose",
+                        "AutoAlign/Target Pose",
                         new Pose2d(
                             vxController.getSetpoint().position,
                             vyController.getSetpoint().position,
                             Rotation2d.fromRadians(headingController.getSetpoint().position)));
                   if (Constants.currentMode == Mode.SIM)
-                    Logger.recordOutput("AutoAim/Target Speeds", speeds);
+                    Logger.recordOutput("AutoAlign/Target Speeds", speeds);
                   return speeds;
                 }));
   }
@@ -215,7 +216,7 @@ public class AutoAlign {
             () -> {
               cachedTarget[0] = new Pose2d(x.getAsDouble(), 0, headingTarget.get());
               if (Constants.currentMode == Mode.SIM)
-                Logger.recordOutput("AutoAim/Cached Target", cachedTarget[0]);
+                Logger.recordOutput("AutoAlign/Cached Target", cachedTarget[0]);
               headingController.reset(drive.getPose().getRotation().getRadians(), 0.0);
               vxController.reset(drive.getPose().getX(), 0.0);
             })
@@ -239,13 +240,13 @@ public class AutoAlign {
                                   + headingController.getSetpoint().velocity);
                   if (Constants.currentMode == Mode.SIM)
                     Logger.recordOutput(
-                        "AutoAim/Target Pose",
+                        "AutoAlign/Target Pose",
                         new Pose2d(
                             vxController.getSetpoint().position,
                             0,
                             Rotation2d.fromRadians(headingController.getSetpoint().position)));
                   if (Constants.currentMode == Mode.SIM)
-                    Logger.recordOutput("AutoAim/Target Speeds", speeds);
+                    Logger.recordOutput("AutoAlign/Target Speeds", speeds);
                   return speeds;
                 }));
   }
@@ -289,5 +290,22 @@ public class AutoAlign {
             0.0, Math.hypot(diff.getX(), diff.getY()), AutoAlignConstants.linearTolerance)
         && MathUtil.isNear(
             0.0, diff.getRotation().getRadians(), AutoAlignConstants.angularTolerance);
+  }
+
+  public enum IntakeLocation {
+    REEF,
+    SOURCE
+  }
+
+  public static IntakeLocation closerIntake(Pose2d pose, double x, double y) {
+    Pose2d nearestReef = Reef.centerFaces[bestFace(pose, x, y)];
+    Pose2d nearestSource = bestLoader(pose);
+
+    double distanceToReef = pose.getTranslation().getDistance(nearestReef.getTranslation());
+    double distanceToSource = pose.getTranslation().getDistance(nearestSource.getTranslation());
+    Logger.recordOutput(
+        "AutoAlign/CloserIntake",
+        distanceToReef <= distanceToSource ? IntakeLocation.REEF : IntakeLocation.SOURCE);
+    return distanceToReef <= distanceToSource ? IntakeLocation.REEF : IntakeLocation.SOURCE;
   }
 }

@@ -31,6 +31,7 @@ import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.AlgaeTarget;
 import frc.robot.subsystems.Superstructure.CoralTarget;
 import frc.robot.subsystems.autoalign.AutoAlign;
+import frc.robot.subsystems.autoalign.AutoAlign.IntakeLocation;
 import frc.robot.subsystems.autoalign.AutoAlignConstants;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbIO;
@@ -45,7 +46,6 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.elevator.Elevator;
-import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
@@ -227,8 +227,20 @@ public class RobotContainer {
             () -> -driver.getLeftY(),
             () -> -driver.getLeftX(),
             driver.rightTrigger(),
-            driver.leftTrigger(),
-            driver.leftTrigger(),
+            driver
+                .leftTrigger()
+                .and(
+                    () ->
+                        (AutoAlign.closerIntake(
+                                drive.getPose(), -driver.getLeftY(), -driver.getLeftX())
+                            == IntakeLocation.SOURCE)),
+            driver
+                .leftTrigger()
+                .and(
+                    () ->
+                        (AutoAlign.closerIntake(
+                                drive.getPose(), -driver.getLeftY(), -driver.getLeftX())
+                            == IntakeLocation.REEF)),
             driver.a(),
             driver.rightTrigger(),
             driver.rightBumper(),
@@ -298,7 +310,7 @@ public class RobotContainer {
             () -> -driver.getRightX(),
             () -> OperatorConstants.deadband,
             () -> 1));
-    driver
+    driver // TODO: TEST IF YOU CAN RESET GYRO ON INIT.
         .y()
         .onTrue(
             Commands.runOnce(
@@ -317,20 +329,26 @@ public class RobotContainer {
         .whileTrue(
             Commands.parallel(
                 AutoAlign.autoAimWithIntermediatePose(
-                    drive,
-                    () -> {
-                      int bestFace =
-                          AutoAlign.bestFace(
-                              drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
-                      Pose2d selected =
-                          (driver.leftBumper().getAsBoolean())
-                              ? (Reef.branchesLeft[bestFace])
-                              : Reef.branchesRight[bestFace];
-                      Logger.recordOutput("AutoAlign/Active", selected);
-                      return selected;
-                    },
-                    // Keeps the robot off the reef wall until it's aligned side-side
-                    new Transform2d(AutoAlignConstants.offsetReefKeepOff, 0.0, Rotation2d.kZero)),
+                        drive,
+                        () -> {
+                          int bestFace =
+                              AutoAlign.bestFace(
+                                  drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
+                          Pose2d selected =
+                              AllianceFlipUtil.apply(
+                                  (driver.leftBumper().getAsBoolean())
+                                      ? (Reef.robotLeft[bestFace])
+                                      : Reef.robotRight[bestFace]);
+                          Logger.recordOutput("AutoAlign/Active", selected);
+                          return selected;
+                        },
+                        // Keeps the robot off the reef wall until it's aligned side-side
+                        new Transform2d(
+                            AutoAlignConstants.offsetReefKeepOff
+                                * Math.signum(drive.getVelocityFieldRelative().vyMetersPerSecond),
+                            0.0,
+                            Rotation2d.kZero))
+                    .andThen(drive.stopWithXCmd()),
                 Commands.waitUntil(
                         () ->
                             AutoAlign.isInToleranceCoral(
@@ -368,13 +386,13 @@ public class RobotContainer {
                   algaeTarget = AlgaeTarget.AP;
                 }));
 
-    operator.y().onTrue(elevator.setExtension(() -> ElevatorConstants.L4));
-    operator.x().onTrue(elevator.setExtension(() -> ElevatorConstants.L3));
-    operator.b().onTrue(elevator.setExtension(() -> ElevatorConstants.L2));
-    operator.a().onTrue(elevator.setExtension(() -> ElevatorConstants.L1));
-    operator.povDown().onTrue(elevator.setExtension(() -> 0));
-    operator.povUp().onTrue(elevator.setExtension(() -> ElevatorConstants.intake));
-    // operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
+    // operator.y().onTrue(elevator.setExtension(() -> ElevatorConstants.L4));
+    // operator.x().onTrue(elevator.setExtension(() -> ElevatorConstants.L3));
+    // operator.b().onTrue(elevator.setExtension(() -> ElevatorConstants.L2));
+    // operator.a().onTrue(elevator.setExtension(() -> ElevatorConstants.L1));
+    // operator.povDown().onTrue(elevator.setExtension(() -> 0));
+    // operator.povUp().onTrue(elevator.setExtension(() -> ElevatorConstants.intake));
+    operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
     operator
         .leftBumper()
         .onTrue(

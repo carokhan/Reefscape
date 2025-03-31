@@ -16,13 +16,11 @@ package frc.robot;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.DriveMotorArrangement;
 import com.ctre.phoenix6.swerve.SwerveModuleConstants.SteerMotorArrangement;
-import edu.wpi.first.math.geometry.Pose3d;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.Threads;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.CommandScheduler;
 import frc.robot.subsystems.drive.TunerConstants;
-import frc.robot.subsystems.vision.VisionConstants;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
@@ -133,12 +131,6 @@ public class Robot extends LoggedRobot {
     // This must be called from the robot's periodic block in order for anything in
     // the Command-based framework to work.
 
-    Logger.recordOutput(
-        "Camera0Pos",
-        new Pose3d(robotContainer.drive.getPose()).transformBy(VisionConstants.robotToLeftCam));
-    Logger.recordOutput(
-        "Camera1Pos",
-        new Pose3d(robotContainer.drive.getPose()).transformBy(VisionConstants.robotToRightCam));
     CommandScheduler.getInstance().run();
     RobotContainer.superstructure.periodic();
 
@@ -179,6 +171,8 @@ public class Robot extends LoggedRobot {
     if (autonomousCommand != null) {
       autonomousCommand.cancel();
     }
+
+    robotContainer.elevator.homingSequence();
   }
 
   /** This function is called periodically during operator control. */

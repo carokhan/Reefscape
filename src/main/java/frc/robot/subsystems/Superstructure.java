@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.FieldConstants.Reef;
 import frc.robot.subsystems.autoalign.AutoAlign;
 import frc.robot.subsystems.climb.Climb;
 import frc.robot.subsystems.climb.ClimbConstants;
@@ -24,6 +25,7 @@ import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
+import frc.robot.util.AllianceFlipUtil;
 import java.util.HashMap;
 import java.util.Map;
 import java.util.function.DoubleSupplier;
@@ -73,14 +75,7 @@ public class Superstructure {
     CORAL_READY,
     CORAL_OUTTAKE,
     CORAL_PRESCORE,
-    CORAL_CONFIRM_L1,
-    CORAL_CONFIRM_L2,
-    CORAL_CONFIRM_L3,
-    CORAL_CONFIRM_L4,
-    CORAL_SCORE_L1,
-    CORAL_SCORE_L2,
-    CORAL_SCORE_L3,
-    CORAL_SCORE_L4,
+    CORAL_CONFIRM,
     ALGAE_INTAKE_A2,
     ALGAE_INTAKE_A3,
     ALGAE_READY,
@@ -264,14 +259,32 @@ public class Superstructure {
     this.homeRequest = homeRequest;
     this.superstructureCoastRequest = superstructureCoastRequest;
 
-    for (var state : State.values()) {
+    for (State state : State.values()) {
       stateTriggers.put(state, new Trigger(() -> this.state == state && DriverStation.isEnabled()));
     }
+
+    // IDLE -> CORAL_READY
+    stateTriggers
+        .get(State.IDLE)
+        .and(outtake::getDetected)
+        .onTrue(Commands.parallel(outtake.setVoltage(0), this.forceState(State.CORAL_READY)));
+
+    // IDLE -> ALGAE_READY
+    stateTriggers
+        .get(State.IDLE)
+        .and(gripper::getDetected)
+        .onTrue(this.forceState(State.ALGAE_READY));
 
     // IDLE -> CORAL_PREINTAKE
     stateTriggers
         .get(State.IDLE)
         .and(coralIntakeRequest)
+        .or(
+            () ->
+                (pose.get()
+                        .getTranslation()
+                        .getDistance(AutoAlign.bestLoader(pose.get()).getTranslation()))
+                    < 0.3)
         .onTrue(this.forceState(State.CORAL_PREINTAKE));
 
     // IDLE -> ALGAE_INTAKE_[LEVEL]
@@ -318,8 +331,31 @@ public class Superstructure {
                 hopper.setVoltage(() -> 0),
                 this.forceState(State.CORAL_READY)));
 
-    // CORAL_READY -> CORAL_PRESCORE
+    // CORAL_READY -> CORAL_CONFIRM_[LEVEL]
+    stateTriggers
+        .get(State.CORAL_READY)
+        .and(
+            () ->
+                (pose.get().getTranslation().getDistance(AllianceFlipUtil.apply(Reef.center))
+                    < 1.5))
+        .onTrue(
+            Commands.parallel(
+                elevator.setExtension(ElevatorConstants.targetToCoral.get(coralTarget.get())),
+                this.forceState(State.CORAL_CONFIRM)));
 
+    stateTriggers
+        .get(State.CORAL_CONFIRM)
+        .and(scoreRequest)
+        .onTrue(
+            Commands.parallel(
+                outtake.setVoltage(OuttakeConstants.targetToCoral.get(coralTarget.get())),
+                Commands.waitSeconds(1)
+                    .andThen(
+                        elevator
+                            .setExtension(ElevatorConstants.intake)
+                            .andThen(this.forceState(State.IDLE)))));
+
+    // SIM INPUTS
     if (Constants.currentMode == Mode.SIM) {
       stateTriggers
           .get(State.CORAL_PREINTAKE)
@@ -340,14 +376,7 @@ public class Superstructure {
     stateTriggers
         .get(State.CORAL_READY)
         .or(stateTriggers.get(State.CORAL_PRESCORE))
-        .or(stateTriggers.get(State.CORAL_CONFIRM_L1))
-        .or(stateTriggers.get(State.CORAL_CONFIRM_L2))
-        .or(stateTriggers.get(State.CORAL_CONFIRM_L3))
-        .or(stateTriggers.get(State.CORAL_CONFIRM_L4))
-        .or(stateTriggers.get(State.CORAL_SCORE_L1))
-        .or(stateTriggers.get(State.CORAL_SCORE_L2))
-        .or(stateTriggers.get(State.CORAL_SCORE_L3))
-        .or(stateTriggers.get(State.CORAL_SCORE_L4))
+        .or(stateTriggers.get(State.CORAL_CONFIRM))
         .and(() -> !outtake.getDetected())
         .onTrue(this.forceState(State.IDLE));
 
@@ -411,6 +440,13 @@ public class Superstructure {
     climbLigament.setAngle(climb.getPositionRad());
     climbTargetLigament.setAngle(climb.getTargetPositionRad());
     Logger.recordOutput("Superstructure/Mech2d", mech2d);
+
+    Logger.recordOutput("Superstructure/CoralTarget", coralTarget.get());
+    Logger.recordOutput("Superstructure/AlgaeTarget", algaeTarget.get());
+
+    Logger.recordOutput(
+        "AutoAlign/DistanceToReef",
+        pose.get().getTranslation().getDistance(AllianceFlipUtil.apply(Reef.center)));
   }
 
   private Command forceState(State nextState) {
@@ -425,10 +461,7 @@ public class Superstructure {
   }
 
   public boolean isCoral() {
-    return this.state == State.CORAL_CONFIRM_L1
-        || this.state == State.CORAL_CONFIRM_L2
-        || this.state == State.CORAL_CONFIRM_L3
-        || this.state == State.CORAL_CONFIRM_L4
+    return this.state == State.CORAL_CONFIRM
         || this.state == State.CORAL_PRESCORE
         || this.state == State.CORAL_READY;
   }

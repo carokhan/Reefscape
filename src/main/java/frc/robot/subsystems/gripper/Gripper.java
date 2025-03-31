@@ -42,4 +42,8 @@ public class Gripper extends SubsystemBase {
   public double getVoltage() {
     return inputs.motorAppliedVolts;
   }
+
+  public boolean getDetected() {
+    return proximityInputs.detected;
+  }
 }

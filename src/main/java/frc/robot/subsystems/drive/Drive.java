@@ -40,8 +40,8 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
-import frc.robot.FieldConstants;
 import frc.robot.Constants.Mode;
+import frc.robot.FieldConstants;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
@@ -195,6 +195,7 @@ public class Drive extends SubsystemBase {
       }
 
       Logger.recordOutput("Drive/BranchesLeft", FieldConstants.Reef.robotLeft);
+      Logger.recordOutput("Drive/BranchesRight", FieldConstants.Reef.robotRight);
     }
 
     // Update gyro alert
@@ -260,6 +261,10 @@ public class Drive extends SubsystemBase {
     }
     kinematics.resetHeadings(headings);
     stop();
+  }
+
+  public Command stopWithXCmd() {
+    return this.run(() -> stopWithX());
   }
 
   /** Returns a command to run a quasistatic test in the specified direction. */

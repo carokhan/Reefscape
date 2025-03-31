@@ -37,6 +37,8 @@ public class Vision extends SubsystemBase {
 
   public static boolean blind = false;
 
+  private Pose2d lastPose;
+
   public Vision(VisionConsumer consumer, VisionIO... io) {
     this.consumer = consumer;
     this.io = io;
@@ -146,6 +148,7 @@ public class Vision extends SubsystemBase {
             "Vision/Camera" + Integer.toString(cameraIndex) + "/xythetaStdDevs",
             new double[] {linearStdDev, linearStdDev, angularStdDev});
 
+        lastPose = observation.pose().toPose2d();
         // Send vision observation
         consumer.accept(
             observation.pose().toPose2d(),
@@ -191,5 +194,9 @@ public class Vision extends SubsystemBase {
         Pose2d visionRobotPoseMeters,
         double timestampSeconds,
         Matrix<N3, N1> visionMeasurementStdDevs);
+  }
+
+  public Pose2d getInitPose() {
+    return lastPose;
   }
 }

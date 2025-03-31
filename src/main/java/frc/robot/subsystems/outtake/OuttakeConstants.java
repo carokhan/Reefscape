@@ -2,6 +2,8 @@ package frc.robot.subsystems.outtake;
 
 import au.grapplerobotics.interfaces.LaserCanInterface.RangingMode;
 import au.grapplerobotics.interfaces.LaserCanInterface.RegionOfInterest;
+import frc.robot.subsystems.Superstructure.CoralTarget;
+import java.util.Map;
 
 public class OuttakeConstants {
   public static final int talon = 20;
@@ -19,8 +21,15 @@ public class OuttakeConstants {
   public static final int laserBaseLeft = 24;
   public static final int laserBaseRight = 25;
 
-  public static final double L1 = 0.1;
-  public static final double L234 = 0.5;
+  public static final double L1 = 4;
+  public static final double L234 = 4;
+
+  public static final Map<CoralTarget, Double> targetToCoral =
+      Map.of(
+          CoralTarget.L1, L1,
+          CoralTarget.L2, L234,
+          CoralTarget.L3, L234,
+          CoralTarget.L4, L234);
 
   public static final double gearing = 20.0 / 12.0;
   public static final double moi = 0.004;
