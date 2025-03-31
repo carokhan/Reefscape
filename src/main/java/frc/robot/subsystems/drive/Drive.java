@@ -40,6 +40,7 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
+import frc.robot.FieldConstants;
 import frc.robot.Constants.Mode;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.Arrays;
@@ -192,6 +193,8 @@ public class Drive extends SubsystemBase {
       if (headingkP.hasChanged(hashCode())) {
         autoHeadingPID.setP(headingkP.get());
       }
+
+      Logger.recordOutput("Drive/BranchesLeft", FieldConstants.Reef.robotLeft);
     }
 
     // Update gyro alert

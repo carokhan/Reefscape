@@ -80,6 +80,9 @@ public class FieldConstants {
     public static final Pose2d[] branchesLeft = new Pose2d[6];
     public static final Pose2d[] branchesRight = new Pose2d[6];
 
+    public static final Pose2d[] robotLeft = new Pose2d[6];
+    public static final Pose2d[] robotRight = new Pose2d[6];
+
     static {
       // Initialize faces
       var aprilTagLayout = AprilTagLayoutType.OFFICIAL.getLayout();
@@ -97,7 +100,7 @@ public class FieldConstants {
         Map<ReefLevel, Pose2d> fillRight2d = new HashMap<>();
         Map<ReefLevel, Pose2d> fillLeft2d = new HashMap<>();
         for (var level : ReefLevel.values()) {
-          Pose2d poseDirection = new Pose2d(center, Rotation2d.fromDegrees(180 - (60 * face)));
+          Pose2d poseDirection = new Pose2d(center, Rotation2d.fromDegrees((180 - (60 * face))));
           double adjustX = Units.inchesToMeters(30.738);
           double adjustY = Units.inchesToMeters(6.469);
 
@@ -135,11 +138,14 @@ public class FieldConstants {
           fillLeft.put(level, leftBranchPose);
           fillRight2d.put(level, rightBranchPose.toPose2d());
           fillLeft2d.put(level, leftBranchPose.toPose2d());
+          robotLeft[face] = leftBranchPose.toPose2d().rotateAround(leftBranchPose.getTranslation().toTranslation2d(), new Rotation2d(Math.PI));
+          robotRight[face] = rightBranchPose.toPose2d().rotateAround(leftBranchPose.getTranslation().toTranslation2d(), new Rotation2d(Math.PI));
         }
         branchPositions.add(fillRight);
         branchPositions.add(fillLeft);
         branchPositions2d.add(fillRight2d);
         branchPositions2d.add(fillLeft2d);
+      
       }
     }
   }

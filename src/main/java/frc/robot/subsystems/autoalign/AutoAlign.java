@@ -38,7 +38,7 @@ public class AutoAlign {
     return loader;
   }
 
-  public static Pose2d bestFace(Pose2d currentPose, double x, double y) {
+  public static int bestFace(Pose2d currentPose, double x, double y) {
     int bestIndex = 0;
     double bestScore = Double.POSITIVE_INFINITY;
     for (int i = 0; i < 6; i++) {
@@ -74,7 +74,8 @@ public class AutoAlign {
         "Drive/BestReefDistance",
         bestFace.getTranslation().getDistance(currentPose.getTranslation()));
 
-    return bestFace;
+    // return bestFace;
+    return bestIndex;
   }
 
   public static Command translateToPose(Drive drive, Supplier<Pose2d> target) {
@@ -283,7 +284,7 @@ public class AutoAlign {
   }
 
   public static boolean isInToleranceCoral(Pose2d pose, double x, double y) {
-    final var diff = pose.minus(bestFace(pose, x, y));
+    final Transform2d diff = pose.minus(Reef.centerFaces[bestFace(pose, x, y)]);
     return MathUtil.isNear(
             0.0, Math.hypot(diff.getX(), diff.getY()), AutoAlignConstants.linearTolerance)
         && MathUtil.isNear(
