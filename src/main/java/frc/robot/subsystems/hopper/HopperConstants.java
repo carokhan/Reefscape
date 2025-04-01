@@ -8,4 +8,8 @@ public class HopperConstants {
 
   public static final double gearing = 28.0 / 12.0;
   public static final double moi = 0.004;
+
+  public static final double intake = 8.0;
+
+  public static final double enableDistanceToLoader = 0.6;
 }

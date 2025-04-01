@@ -13,8 +13,6 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
-import frc.robot.FieldConstants.AprilTagLayoutType;
-import frc.robot.FieldConstants.FieldType;
 import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.util.AllianceFlipUtil;
 import java.io.IOException;
@@ -22,8 +20,7 @@ import java.nio.file.Path;
 import java.util.*;
 
 /**
- * Contains various field dimensions and useful reference points. All units are
- * in meters and poses
+ * Contains various field dimensions and useful reference points. All units are in meters and poses
  * have a blue alliance origin.
  */
 public class FieldConstants {
@@ -31,23 +28,28 @@ public class FieldConstants {
 
   public static final double fieldLength = AprilTagLayoutType.OFFICIAL.getLayout().getFieldLength();
   public static final double fieldWidth = AprilTagLayoutType.OFFICIAL.getLayout().getFieldWidth();
-  public static final double startingLineX = Units.inchesToMeters(299.438); // Measured from the inside of starting line
+  public static final double startingLineX =
+      Units.inchesToMeters(299.438); // Measured from the inside of starting line
   public static final double algaeDiameter = Units.inchesToMeters(16);
 
   public static class Processor {
-    public static final Pose2d centerFace = new Pose2d(
-        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(16).get().getX(),
-        0,
-        Rotation2d.fromDegrees(90));
+    public static final Pose2d centerFace =
+        new Pose2d(
+            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(16).get().getX(),
+            0,
+            Rotation2d.fromDegrees(90));
+
+    public static final Pose2d robotProcess =
+        centerFace.transformBy(new Transform2d(Units.inchesToMeters(20), 0.0, new Rotation2d()));
   }
 
   public static class Barge {
-    public static final Translation2d farCage = new Translation2d(Units.inchesToMeters(345.428),
-        Units.inchesToMeters(286.779));
-    public static final Translation2d middleCage = new Translation2d(Units.inchesToMeters(345.428),
-        Units.inchesToMeters(242.855));
-    public static final Translation2d closeCage = new Translation2d(Units.inchesToMeters(345.428),
-        Units.inchesToMeters(199.947));
+    public static final Translation2d farCage =
+        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(286.779));
+    public static final Translation2d middleCage =
+        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(242.855));
+    public static final Translation2d closeCage =
+        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(199.947));
 
     // Measured from floor to bottom of cage
     public static final double deepHeight = Units.inchesToMeters(3.125);
@@ -56,14 +58,16 @@ public class FieldConstants {
 
   public static class CoralStation {
     public static final double stationLength = Units.inchesToMeters(79.750);
-    public static final Pose2d rightCenterFace = new Pose2d(
-        Units.inchesToMeters(33.526),
-        Units.inchesToMeters(25.824),
-        Rotation2d.fromDegrees(144.011 - 90));
-    public static final Pose2d leftCenterFace = new Pose2d(
-        rightCenterFace.getX(),
-        fieldWidth - rightCenterFace.getY(),
-        Rotation2d.fromRadians(-rightCenterFace.getRotation().getRadians()));
+    public static final Pose2d rightCenterFace =
+        new Pose2d(
+            Units.inchesToMeters(33.526),
+            Units.inchesToMeters(25.824),
+            Rotation2d.fromDegrees(144.011 - 90));
+    public static final Pose2d leftCenterFace =
+        new Pose2d(
+            rightCenterFace.getX(),
+            fieldWidth - rightCenterFace.getY(),
+            Rotation2d.fromRadians(-rightCenterFace.getRotation().getRadians()));
   }
 
   public static class Reef {
@@ -71,15 +75,19 @@ public class FieldConstants {
     public static final Translation2d center =
         new Translation2d(Units.inchesToMeters(176.746), fieldWidth / 2.0);
     public static final double faceToZoneLine =
-        Units.inchesToMeters(12); // Side of the reef to the inside of the reef zone line
+        Units.inchesToMeters(12); // Side of the reef to the inside of the reef
+    // zone line
 
     public static final Pose2d[] centerFaces =
         new Pose2d[6]; // Starting facing the driver station in clockwise order
     public static final List<Map<ReefLevel, Pose3d>> branchPositions =
-        new ArrayList<>(); // Starting at the right branch facing the driver station in clockwise
+        new ArrayList<>(); // Starting at the right
+    // branch facing the driver
+    // station in clockwise
     public static final List<Map<ReefLevel, Pose2d>> branchPositions2d = new ArrayList<>();
     public static final Pose2d[] branchesLeft = new Pose2d[6];
     public static final Pose2d[] branchesRight = new Pose2d[6];
+    public static final Pose2d[] algaePoses = new Pose2d[6];
 
     public static final Pose2d[] robotLeft = new Pose2d[6];
     public static final Pose2d[] robotRight = new Pose2d[6];
@@ -103,7 +111,7 @@ public class FieldConstants {
         for (var level : ReefLevel.values()) {
           Pose2d poseDirection = new Pose2d(center, Rotation2d.fromDegrees((180 - (60 * face))));
           double adjustX = Units.inchesToMeters(57.738);
-          double adjustY = Units.inchesToMeters(5.569);
+          double adjustY = Units.inchesToMeters(6.769);
 
           var rightBranchPose =
               new Pose3d(
@@ -135,6 +143,11 @@ public class FieldConstants {
                       poseDirection.getRotation().getRadians()));
           branchesLeft[face] = leftBranchPose.toPose2d();
           branchesRight[face] = rightBranchPose.toPose2d();
+          algaePoses[face] =
+              new Pose2d(
+                  (branchesLeft[face].getX() + branchesRight[face].getX()) / 2,
+                  (branchesLeft[face].getY() + branchesRight[face].getY()) / 2,
+                  branchesLeft[face].getRotation().plus(Rotation2d.k180deg));
           fillRight.put(level, rightBranchPose);
           fillLeft.put(level, leftBranchPose);
           fillRight2d.put(level, rightBranchPose.toPose2d());
@@ -157,22 +170,21 @@ public class FieldConstants {
       }
     }
 
-public static final Map<Pose2d, Double> reefAlgae =
-    Map.ofEntries(
-        Map.entry(centerFaces[0], ElevatorConstants.A3),
-        Map.entry(centerFaces[1], ElevatorConstants.A2),
-        Map.entry(centerFaces[2], ElevatorConstants.A3),
-        Map.entry(centerFaces[3], ElevatorConstants.A2),
-        Map.entry(centerFaces[4], ElevatorConstants.A3),
-        Map.entry(centerFaces[5], ElevatorConstants.A2),
-        Map.entry(AllianceFlipUtil.flip(centerFaces[0]), ElevatorConstants.A3),
-        Map.entry(AllianceFlipUtil.flip(centerFaces[1]), ElevatorConstants.A2),
-        Map.entry(AllianceFlipUtil.flip(centerFaces[2]), ElevatorConstants.A3),
-        Map.entry(AllianceFlipUtil.flip(centerFaces[3]), ElevatorConstants.A2),
-        Map.entry(AllianceFlipUtil.flip(centerFaces[4]), ElevatorConstants.A3),
-        Map.entry(AllianceFlipUtil.flip(centerFaces[5]), ElevatorConstants.A2)
-    );
-
+    public static final Map<Pose2d, Double> algaeHeights =
+        Map.ofEntries(
+            Map.entry(centerFaces[0], ElevatorConstants.A3),
+            Map.entry(centerFaces[1], ElevatorConstants.A2),
+            Map.entry(centerFaces[2], ElevatorConstants.A3),
+            Map.entry(centerFaces[3], ElevatorConstants.A2),
+            Map.entry(centerFaces[4], ElevatorConstants.A3),
+            Map.entry(centerFaces[5], ElevatorConstants.A2),
+            Map.entry(AllianceFlipUtil.flip(centerFaces[0]), ElevatorConstants.A3),
+            Map.entry(AllianceFlipUtil.flip(centerFaces[1]), ElevatorConstants.A2),
+            Map.entry(AllianceFlipUtil.flip(centerFaces[2]), ElevatorConstants.A3),
+            Map.entry(AllianceFlipUtil.flip(centerFaces[3]), ElevatorConstants.A2),
+            Map.entry(AllianceFlipUtil.flip(centerFaces[4]), ElevatorConstants.A3),
+            Map.entry(AllianceFlipUtil.flip(centerFaces[5]), ElevatorConstants.A2));
+  }
 
   public static class StagingPositions {
     // Measured from the center of the ice cream

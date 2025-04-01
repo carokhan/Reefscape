@@ -31,9 +31,9 @@ public class AutoAlign {
             ? AllianceFlipUtil.apply(CoralStation.leftCenterFace)
             : AllianceFlipUtil.apply(CoralStation.rightCenterFace);
 
-    Logger.recordOutput("Drive/BestLoader", loader);
+    Logger.recordOutput("AutoAlign/BestLoader", loader);
     Logger.recordOutput(
-        "Drive/BestLoaderDistance",
+        "AutoAlign/BestLoaderDistance",
         loader.getTranslation().getDistance(currentPose.getTranslation()));
 
     return loader;
@@ -59,10 +59,10 @@ public class AutoAlign {
         driverInputScore = driverControlAngle.minus(robotToFaceAngle).getCos() * 2;
       }
 
-      Logger.recordOutput("Drive/Reef/Face " + i + "/Distance", faceDistanceScore);
-      Logger.recordOutput("Drive/Reef/Face " + i + "/Input", driverInputScore);
+      Logger.recordOutput("AutoAlign/Reef/Face " + i + "/Distance", faceDistanceScore);
+      Logger.recordOutput("AutoAlign/Reef/Face " + i + "/Input", driverInputScore);
       double faceScore = faceDistanceScore - driverInputScore;
-      Logger.recordOutput("Drive/Reef/Face " + i + "/Score", faceScore);
+      Logger.recordOutput("AutoAlign/Reef/Face " + i + "/Score", faceScore);
 
       if (faceScore < bestScore) {
         bestIndex = i;
@@ -70,9 +70,9 @@ public class AutoAlign {
       }
     }
     Pose2d bestFace = AllianceFlipUtil.apply(Reef.centerFaces[bestIndex]);
-    Logger.recordOutput("Drive/BestReef", bestFace);
+    Logger.recordOutput("AutoAlign/BestReef", bestFace);
     Logger.recordOutput(
-        "Drive/BestReefDistance",
+        "AutoAlign/BestReefDistance",
         bestFace.getTranslation().getDistance(currentPose.getTranslation()));
 
     // return bestFace;
@@ -99,9 +99,9 @@ public class AutoAlign {
 
   public static Command autoAimWithIntermediatePose(
       Drive drive, Supplier<Pose2d> intermediate, Supplier<Pose2d> end, Constraints constraints) {
-    return translateToPose(drive, intermediate, ChassisSpeeds::new, constraints)
+    return translateToPose(drive, intermediate, ChassisSpeeds::new)
         .until(() -> isInTolerance(drive.getPose(), intermediate.get()))
-        .andThen(translateToPose(drive, end, ChassisSpeeds::new, constraints));
+        .andThen(translateToPose(drive, end, ChassisSpeeds::new));
   }
 
   /** Transforms the end pose by translationToIntermediate to get the intermediate pose */
@@ -116,27 +116,25 @@ public class AutoAlign {
 
   public static Command translateToPose(
       Drive drive, Supplier<Pose2d> target, Supplier<ChassisSpeeds> speedsModifier) {
-    return translateToPose(
-        drive,
-        target,
-        speedsModifier,
-        new Constraints(AutoAlignConstants.maxLinearSpeed, AutoAlignConstants.maxLinearSpeed));
-  }
-
-  public static Command translateToPose(
-      Drive drive,
-      Supplier<Pose2d> target,
-      Supplier<ChassisSpeeds> speedsModifier,
-      Constraints constraints) {
     // This feels like a horrible way of getting around lambda final requirements
     // Is there a cleaner way of doing this?
     final Pose2d cachedTarget[] = {new Pose2d()};
     final ProfiledPIDController headingController =
         // assume we can accelerate to max in 2/3 of a second
-        new ProfiledPIDController(8.0, 0.0, 0.0, constraints);
+        new ProfiledPIDController(
+            10.0,
+            0.0,
+            0.0,
+            new TrapezoidProfile.Constraints(
+                AutoAlignConstants.maxLinearSpeed, AutoAlignConstants.maxLinearAccel));
     headingController.enableContinuousInput(-Math.PI, Math.PI);
     final ProfiledPIDController vxController =
-        new ProfiledPIDController(8.0, 0.01, 0.02, constraints);
+        new ProfiledPIDController(
+            8.0,
+            0.01,
+            0.02,
+            new TrapezoidProfile.Constraints(
+                AutoAlignConstants.maxLinearSpeed, AutoAlignConstants.maxLinearAccel));
     final ProfiledPIDController vyController =
         new ProfiledPIDController(
             8.0,
@@ -298,14 +296,14 @@ public class AutoAlign {
   }
 
   public static IntakeLocation closerIntake(Pose2d pose, double x, double y) {
-    Pose2d nearestReef = Reef.centerFaces[bestFace(pose, x, y)];
+    Pose2d nearestReef = AllianceFlipUtil.apply(Reef.centerFaces[bestFace(pose, x, y)]);
     Pose2d nearestSource = bestLoader(pose);
 
     double distanceToReef = pose.getTranslation().getDistance(nearestReef.getTranslation());
     double distanceToSource = pose.getTranslation().getDistance(nearestSource.getTranslation());
-    Logger.recordOutput(
-        "AutoAlign/CloserIntake",
-        distanceToReef <= distanceToSource ? IntakeLocation.REEF : IntakeLocation.SOURCE);
-    return distanceToReef <= distanceToSource ? IntakeLocation.REEF : IntakeLocation.SOURCE;
+    IntakeLocation closest =
+        distanceToReef <= distanceToSource ? IntakeLocation.REEF : IntakeLocation.SOURCE;
+    Logger.recordOutput("AutoAlign/CloserIntake", closest);
+    return closest;
   }
 }

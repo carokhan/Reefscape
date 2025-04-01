@@ -39,7 +39,7 @@ public class Outtake extends SubsystemBase {
 
   public Command index() {
     return Commands.sequence(
-        setVoltage(1.0)
+        setVoltage(OuttakeConstants.index)
             .until(() -> coralProximityInputs.detected)
             .unless(() -> coralProximityInputs.detected),
         setVoltage(0));
@@ -70,6 +70,10 @@ public class Outtake extends SubsystemBase {
 
   public Command setVoltage(double voltage) {
     return this.setVoltage(() -> voltage);
+  }
+
+  public boolean getConnected() {
+    return coralProximityInputs.connected;
   }
 
   public boolean getDetected() {

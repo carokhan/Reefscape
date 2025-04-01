@@ -28,7 +28,6 @@ import edu.wpi.first.wpilibj2.command.button.Trigger;
 import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.FieldConstants.Reef;
 import frc.robot.subsystems.Superstructure;
-import frc.robot.subsystems.Superstructure.AlgaeTarget;
 import frc.robot.subsystems.Superstructure.CoralTarget;
 import frc.robot.subsystems.autoalign.AutoAlign;
 import frc.robot.subsystems.autoalign.AutoAlign.IntakeLocation;
@@ -113,9 +112,6 @@ public class RobotContainer {
 
   private final AutoFactory autoFactory;
   private final LoggedDashboardChooser<Command> autoChooser;
-
-  private CoralTarget coralTarget = CoralTarget.L4;
-  private AlgaeTarget algaeTarget = AlgaeTarget.AN;
 
   private boolean superstructureCoastOverride = false;
 
@@ -222,8 +218,7 @@ public class RobotContainer {
             led,
             drive::getPose,
             drive::getVelocityFieldRelative,
-            () -> coralTarget,
-            () -> algaeTarget,
+            CoralTarget.L4,
             () -> -driver.getLeftY(),
             () -> -driver.getLeftX(),
             driver.rightTrigger(),
@@ -247,7 +242,8 @@ public class RobotContainer {
             driver.rightTrigger(),
             driver.rightBumper(),
             operator.leftTrigger(),
-            operator.leftBumper());
+            operator.leftBumper(),
+            driver.povLeft());
 
     autoFactory =
         new AutoFactory(
@@ -327,7 +323,7 @@ public class RobotContainer {
     driver
         .rightBumper()
         .or(driver.leftBumper())
-        .and(superstructure::isCoral)
+        .and(outtake::getDetected)
         .whileTrue(
             Commands.parallel(
                 AutoAlign.autoAimWithIntermediatePose(
@@ -357,41 +353,131 @@ public class RobotContainer {
                                 drive.getPose(), -driver.getLeftY(), -driver.getLeftX()))
                     .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
 
-    operator
-        .y()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  coralTarget = CoralTarget.L4;
-                }));
-    operator
-        .x()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  coralTarget = CoralTarget.L3;
-                }));
-    operator
-        .b()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  coralTarget = CoralTarget.L2;
-                }));
-    operator
-        .a()
-        .onTrue(
-            Commands.runOnce(
-                () -> {
-                  coralTarget = CoralTarget.L1;
-                }));
+    driver
+        .leftTrigger()
+        .and(() -> !outtake.getDetected())
+        .and(
+            () ->
+                gripper.getDetected()
+                    || (AutoAlign.closerIntake(
+                            drive.getPose(), -driver.getLeftY(), -driver.getLeftX())
+                        == IntakeLocation.SOURCE))
+        .whileTrue(
+            Commands.parallel(
+                AutoAlign.autoAimWithIntermediatePose(
+                        drive,
+                        () -> {
+                          Pose2d bestLoader = AutoAlign.bestLoader(drive.getPose());
+                          Pose2d selected = bestLoader;
+                          Logger.recordOutput("AutoAlign/Active", selected);
+                          return selected;
+                        },
+                        // Keeps the robot off the reef wall until it's aligned side-side
+                        new Transform2d(0.0, 0.0, Rotation2d.kZero))
+                    .andThen(drive.stopWithXCmd()),
+                Commands.waitUntil(
+                        () ->
+                            AutoAlign.isInTolerance(
+                                drive.getPose(), AutoAlign.bestLoader(drive.getPose())))
+                    .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
+
+    driver
+        .leftTrigger()
+        .and(() -> !gripper.getDetected())
+        .and(
+            () ->
+                outtake.getDetected()
+                    || (AutoAlign.closerIntake(
+                            drive.getPose(), -driver.getLeftY(), -driver.getLeftX())
+                        == IntakeLocation.REEF))
+        .whileTrue(
+            Commands.parallel(
+                AutoAlign.autoAimWithIntermediatePose(
+                        drive,
+                        () -> {
+                          int bestFace =
+                              AutoAlign.bestFace(
+                                  drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
+                          Pose2d selected = AllianceFlipUtil.apply(Reef.algaePoses[bestFace]);
+                          Logger.recordOutput("AutoAlign/Active", selected);
+                          return selected;
+                        },
+                        // Keeps the robot off the reef wall until it's aligned side-side
+                        new Transform2d(
+                            AutoAlignConstants.offsetReefKeepOff
+                                * Math.signum(drive.getVelocityFieldRelative().vyMetersPerSecond),
+                            0.0,
+                            Rotation2d.kZero))
+                    .andThen(drive.stopWithXCmd()),
+                Commands.waitUntil(
+                        () ->
+                            AutoAlign.isInToleranceCoral(
+                                drive.getPose(), -driver.getLeftY(), -driver.getLeftX()))
+                    .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
+
+    // driver
+    // .povUp()
+    // .and(gripper::getDetected)
+    // .whileTrue(
+    // Commands.parallel(
+    // AutoAlign.translateToXCoord(
+    // drive,
+    // () ->
+    // Math.abs(drive.getPose().getX() - AutoAim.BLUE_NET_X)
+    // > Math.abs(drive.getPose().getX() - AutoAim.RED_NET_X)
+    // ? AutoAim.RED_NET_X
+    // : AutoAim.BLUE_NET_X,
+    // () ->
+    // modifyJoystick(driver.getLeftX())
+    // * ROBOT_HARDWARE.swerveConstants.getMaxLinearSpeed(),
+    // () ->
+    // Math.abs(drive.getPose().getX() - AutoAim.BLUE_NET_X)
+    // > Math.abs(swerve.getPose().getX() - AutoAim.RED_NET_X)
+    // ? Rotation2d.kZero
+    // : Rotation2d.k180deg),
+    // Commands.waitUntil(
+    // () -> {
+    // final var diff =
+    // drive
+    // .getPose()
+    // .minus(AlgaeIntakeTargets.getClosestTargetPose(swerve.getPose()));
+    // return MathUtil.isNear(0.0, diff.getX(), Units.inchesToMeters(1.0))
+    // && MathUtil.isNear(0.0, diff.getY(), Units.inchesToMeters(1.0))
+    // && MathUtil.isNear(0.0, diff.getRotation().getDegrees(), 2.0);
+    // })
+    // .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
+
+    driver
+        .rightBumper()
+        .or(driver.povDown())
+        .and(gripper::getDetected)
+        .whileTrue(
+            Commands.parallel(
+                AutoAlign.autoAimWithIntermediatePose(
+                        drive,
+                        () -> AllianceFlipUtil.apply(FieldConstants.Processor.robotProcess),
+                        // Keeps the robot off the reef wall until it's aligned side-side
+                        new Transform2d(0.0, 0.0, Rotation2d.kZero))
+                    .andThen(drive.stopWithXCmd()),
+                Commands.waitUntil(
+                        () ->
+                            AutoAlign.isInTolerance(
+                                AllianceFlipUtil.apply(FieldConstants.Processor.robotProcess),
+                                drive.getPose()))
+                    .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
+
+    operator.y().onTrue(superstructure.setCoralTarget(CoralTarget.L4));
+    operator.x().onTrue(superstructure.setCoralTarget(CoralTarget.L3));
+    operator.b().onTrue(superstructure.setCoralTarget(CoralTarget.L2));
+    operator.a().onTrue(superstructure.setCoralTarget(CoralTarget.L1));
 
     // operator.y().onTrue(elevator.setExtension(() -> ElevatorConstants.L4));
     // operator.x().onTrue(elevator.setExtension(() -> ElevatorConstants.L3));
     // operator.b().onTrue(elevator.setExtension(() -> ElevatorConstants.L2));
     // operator.a().onTrue(elevator.setExtension(() -> ElevatorConstants.L1));
     // operator.povDown().onTrue(elevator.setExtension(() -> 0));
-    // operator.povUp().onTrue(elevator.setExtension(() -> ElevatorConstants.intake));
+    // operator.povUp().onTrue(elevator.setExtension(() ->
+    // ElevatorConstants.intake));
     operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
     operator
         .leftBumper()

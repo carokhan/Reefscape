@@ -1,7 +1,6 @@
 package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.math.util.Units;
-import frc.robot.subsystems.Superstructure.AlgaeTarget;
 import frc.robot.subsystems.Superstructure.CoralTarget;
 import java.util.Map;
 
@@ -9,14 +8,14 @@ public class ElevatorConstants {
   public static final int talon = 10;
   public static final int followerTalon = 11;
 
-  public static final double intake = 0.012;
+  public static final double intake = 0.014;
   public static final double AP = 0.05;
   public static final double L1 = 0.33;
-  public static final double A2 = 0.48;
-  public static final double L2 = 0.63;
+  public static final double A2 = 0.36;
+  public static final double L2 = 0.66;
   public static final double A3 = 0.81;
-  public static final double L3 = 1.05;
-  public static final double L4 = 1.75;
+  public static final double L3 = 1.1;
+  public static final double L4 = 1.76;
   public static final double AN = 1.78;
 
   public static final Map<CoralTarget, Double> targetToCoral =
@@ -26,12 +25,12 @@ public class ElevatorConstants {
           CoralTarget.L3, L3,
           CoralTarget.L4, L4);
 
-  public static final Map<AlgaeTarget, Double> targetToAlgae =
-      Map.of(
-          AlgaeTarget.AP, AP,
-          AlgaeTarget.A2, A2,
-          AlgaeTarget.A3, A3,
-          AlgaeTarget.AN, AN);
+  public static final double confirmTimeout = 0.5;
+
+  public static final double reefRaiseDistance = 1.5;
+  public static final double processRaiseDistance = 0.5;
+  public static final double netRaiseDistanceLower = 0.75;
+  public static final double netRaiseDistanceUpper = 1;
 
   public static final double travel = Units.inchesToMeters(69.0);
   public static final double mass = Units.lbsToKilograms(25.1);

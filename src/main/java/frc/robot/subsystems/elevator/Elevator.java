@@ -101,6 +101,7 @@ public class Elevator extends SubsystemBase {
   public Command setExtension(DoubleSupplier meters) {
     return this.run(
         () -> {
+          Logger.recordOutput("AutoAlign/ElevState", meters.getAsDouble());
           inputs.targetPositionMeters = meters.getAsDouble();
           io.setTarget(meters.getAsDouble());
         });
@@ -195,7 +196,7 @@ public class Elevator extends SubsystemBase {
               homingDebouncer.calculate(false);
             },
             () -> {
-              io.setVoltage(-2);
+              io.setVoltage(-6);
               homed = homingDebouncer.calculate(Math.abs(inputs.velocityMetersPerSec) <= 0.2);
             })
         .until(() -> homed)

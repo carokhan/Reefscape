@@ -2,6 +2,7 @@ package frc.robot.subsystems.led;
 
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
+import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import org.littletonrobotics.junction.Logger;
 
@@ -11,6 +12,7 @@ public class LED extends SubsystemBase {
 
   public LED(LEDIO io) {
     this.io = io;
+    solid(Color.kAliceBlue);
   }
 
   @Override
@@ -77,5 +79,12 @@ public class LED extends SubsystemBase {
       double blue = (c1.blue * (1 - ratio)) + (c2.blue * ratio);
       setIndex(i, new Color(red, green, blue));
     }
+  }
+
+  public Command setColor(Color color) {
+    return this.run(
+        () -> {
+          solid(color);
+        });
   }
 }

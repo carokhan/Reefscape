@@ -15,7 +15,7 @@ public class ProximityIORedux implements ProximityIO {
     canandcolor = new Canandcolor(id);
     canandcolor.resetFactoryDefaults();
     settings = canandcolor.getSettings();
-    settings.setProximityFramePeriod(0.5);
+    settings.setProximityFramePeriod(0.05);
     settings.setDigoutFramePeriod(0.5);
     settings.setStatusFramePeriod(0.5);
     settings.setProximityIntegrationPeriod(ProximityPeriod.k5ms);
@@ -31,7 +31,7 @@ public class ProximityIORedux implements ProximityIO {
     canandcolor = new Canandcolor(id);
     canandcolor.resetFactoryDefaults();
     settings = canandcolor.getSettings();
-    settings.setProximityFramePeriod(0.5);
+    settings.setProximityFramePeriod(0.05);
     settings.setDigoutFramePeriod(0.5);
     settings.setStatusFramePeriod(0.5);
     settings.setProximityIntegrationPeriod(ProximityPeriod.k5ms);

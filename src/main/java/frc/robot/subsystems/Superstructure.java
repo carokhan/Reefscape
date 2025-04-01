@@ -13,6 +13,7 @@ import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
+import frc.robot.FieldConstants;
 import frc.robot.FieldConstants.Reef;
 import frc.robot.subsystems.autoalign.AutoAlign;
 import frc.robot.subsystems.climb.Climb;
@@ -22,7 +23,9 @@ import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.gripper.Gripper;
 import frc.robot.subsystems.gripper.GripperConstants;
 import frc.robot.subsystems.hopper.Hopper;
+import frc.robot.subsystems.hopper.HopperConstants;
 import frc.robot.subsystems.led.LED;
+import frc.robot.subsystems.led.LEDConstants;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
 import frc.robot.util.AllianceFlipUtil;
@@ -53,38 +56,17 @@ public class Superstructure {
     }
   }
 
-  public static enum AlgaeTarget {
-    IDLE(0, 0),
-    AP(ElevatorConstants.AP, GripperConstants.AP),
-    A2(ElevatorConstants.A2, GripperConstants.A23),
-    A3(ElevatorConstants.A3, GripperConstants.A23),
-    AN(ElevatorConstants.AN, GripperConstants.AN);
-
-    public final double elevatorHeight;
-    public final double gripperSpeed;
-
-    private AlgaeTarget(double elevatorHeight, double gripperSpeed) {
-      this.elevatorHeight = elevatorHeight;
-      this.gripperSpeed = gripperSpeed;
-    }
-  }
-
   public enum State {
     CORAL_PREINTAKE,
-    CORAL_TRANSFER,
-    CORAL_READY,
     CORAL_OUTTAKE,
-    CORAL_PRESCORE,
+    CORAL_READY,
     CORAL_CONFIRM,
     ALGAE_INTAKE,
     ALGAE_READY,
-    ALGAE_OUTTAKE,
     ALGAE_PRESCORE_AP,
     ALGAE_PRESCORE_AN,
     ALGAE_CONFIRM_AP,
     ALGAE_CONFIRM_AN,
-    ALGAE_SCORE_AP,
-    ALGAE_SCORE_AN,
     CLIMB_PREPULL,
     CLIMB_PULL,
     IDLE
@@ -123,6 +105,9 @@ public class Superstructure {
   @AutoLogOutput(key = "Superstructure/Coast Request")
   private final Trigger superstructureCoastRequest;
 
+  @AutoLogOutput(key = "Superstructure/Cancel Request")
+  private final Trigger cancelRequest;
+
   @AutoLogOutput(key = "Superstructure/State")
   private State state = State.IDLE;
 
@@ -139,11 +124,10 @@ public class Superstructure {
   private final Climb climb;
   private final LED led;
 
-  private final Supplier<CoralTarget> coralTarget;
-  private final Supplier<AlgaeTarget> algaeTarget;
-
   private final DoubleSupplier driverX;
   private final DoubleSupplier driverY;
+
+  private CoralTarget coralTarget;
 
   @AutoLogOutput(key = "Superstructure/Visualizer")
   private final LoggedMechanism2d mech2d =
@@ -228,8 +212,7 @@ public class Superstructure {
       LED led,
       Supplier<Pose2d> pose,
       Supplier<ChassisSpeeds> velocity,
-      Supplier<CoralTarget> coralTarget,
-      Supplier<AlgaeTarget> algaeTarget,
+      CoralTarget initCoralTarget,
       DoubleSupplier driverX,
       DoubleSupplier driverY,
       Trigger scoreRequest,
@@ -241,7 +224,8 @@ public class Superstructure {
       Trigger climbRequest,
       Trigger cancelClimbRequest,
       Trigger homeRequest,
-      Trigger superstructureCoastRequest) {
+      Trigger superstructureCoastRequest,
+      Trigger cancelRequest) {
     this.hopper = hopper;
     this.elevator = elevator;
     this.outtake = outtake;
@@ -251,8 +235,7 @@ public class Superstructure {
 
     this.pose = pose;
     this.velocity = velocity;
-    this.coralTarget = coralTarget;
-    this.algaeTarget = algaeTarget;
+    this.coralTarget = initCoralTarget;
 
     this.driverX = driverX;
     this.driverY = driverY;
@@ -267,143 +250,151 @@ public class Superstructure {
     this.cancelClimbRequest = cancelClimbRequest;
     this.homeRequest = homeRequest;
     this.superstructureCoastRequest = superstructureCoastRequest;
+    this.cancelRequest = cancelRequest;
 
     for (State state : State.values()) {
       stateTriggers.put(state, new Trigger(() -> this.state == state && DriverStation.isEnabled()));
     }
 
-    // IDLE -> CORAL_READY
+    cancelRequest.onTrue(
+        Commands.parallel(
+            elevator.setExtension(ElevatorConstants.intake),
+            outtake.setVoltage(0),
+            hopper.setVoltage(0),
+            gripper.setVoltage(0),
+            this.forceState(State.IDLE)));
+
+    // IDLE State Transitions (Starts: Robot idle, Ends: Various transitions based
+    // on detections and requests)
+    stateTriggers
+        .get(State.IDLE)
+        .onTrue(
+            Commands.parallel(
+                elevator.homingSequence().andThen(elevator.reset()), gripper.setVoltage(0)));
+
     stateTriggers
         .get(State.IDLE)
         .and(outtake::getDetected)
-        .onTrue(Commands.parallel(outtake.setVoltage(0), this.forceState(State.CORAL_READY)));
+        .onTrue(
+            Commands.parallel(
+                led.setColor(LEDConstants.Mode.CORAL_READY.color),
+                outtake.setVoltage(0),
+                this.forceState(State.CORAL_READY)));
 
-    // IDLE -> ALGAE_READY
     stateTriggers
         .get(State.IDLE)
-        .and(gripper::getDetected)
-        .onTrue(this.forceState(State.ALGAE_READY));
+        .and(gripper::getCurrentDetected)
+        .onTrue(
+            Commands.parallel(
+                gripper.setVoltage(GripperConstants.hold), this.forceState(State.ALGAE_READY)));
 
-    // IDLE -> CORAL_PREINTAKE
     stateTriggers
         .get(State.IDLE)
+        .or(stateTriggers.get(State.ALGAE_INTAKE))
+        .or(stateTriggers.get(State.ALGAE_READY))
         .and(coralIntakeRequest)
         .or(
             () ->
                 (pose.get()
                         .getTranslation()
                         .getDistance(AutoAlign.bestLoader(pose.get()).getTranslation()))
-                    < 0.3)
+                    < HopperConstants.enableDistanceToLoader)
         .onTrue(this.forceState(State.CORAL_PREINTAKE));
 
-    // IDLE -> ALGAE_INTAKE
     stateTriggers
         .get(State.IDLE)
+        .or(stateTriggers.get(State.CORAL_PREINTAKE))
         .or(stateTriggers.get(State.CORAL_READY))
         .and(algaeIntakeRequest)
         .onTrue(
             Commands.parallel(
-                elevator.setExtension(ElevatorConstants.targetToAlgae.get(algaeTarget.get())),
-                elevator.setExtension(ElevatorConstants.targetToAlgae.get(algaeTarget.get())),
+                elevator.setExtension(
+                    FieldConstants.Reef.algaeHeights.get(
+                        FieldConstants.Reef.centerFaces[
+                            AutoAlign.bestFace(
+                                pose.get(), driverX.getAsDouble(), driverY.getAsDouble())])),
                 gripper.setVoltage(GripperConstants.A23),
                 this.forceState(State.ALGAE_INTAKE)));
 
-    // ALGAE_INTAKE -> ALGAE_READY
-    stateTriggers
-        .get(State.ALGAE_INTAKE)
-        .and(gripper::getDetected)
-        .onTrue(
-            Commands.parallel(
-                gripper.setVoltage(GripperConstants.hold),
-                elevator.setExtension(ElevatorConstants.intake),
-                this.forceState(State.ALGAE_READY)));
-
-    // ALGAE_READY -> ALGAE_CONFIRM
-    // stateTriggers.get(State.ALGAE_READY).and(
-    //     () -> (pose.get().getTranslation().getDistance(AllianceFlipUtil.apply(algaeTarget.get()))
-    // < 1.5))
-
-    // IDLE -> CLIMB_PREPULL
     preClimbRequest.onTrue(this.forceState(State.CLIMB_PREPULL));
 
-    // CORAL_PREINTAKE -> CORAL_TRANSFER
+    // CORAL State Transitions (Starts: Coral handling, Ends: Scoring or reset)
     stateTriggers
         .get(State.CORAL_PREINTAKE)
         .whileTrue(elevator.setExtension(ElevatorConstants.intake))
         .whileTrue(outtake.index())
-        .whileTrue(hopper.setVoltage(() -> 6.0))
-        .and(
-            () -> {
-              if (hopper.getConnected()) {
-                return hopper.getDetected();
-              } else {
-                return true;
-              }
-            })
-        .onTrue(this.forceState(State.CORAL_TRANSFER));
-
-    // CORAL_TRANSFER -> CORAL_READY
-    stateTriggers
-        .get(State.CORAL_TRANSFER)
-        .whileTrue(outtake.index())
-        .whileTrue(hopper.setVoltage(() -> 6.0))
-        .and(outtake::getDetected)
+        .whileTrue(hopper.setVoltage(() -> HopperConstants.intake))
+        .and(() -> outtake.getConnected() ? outtake.getDetected() : true)
         .onTrue(
             Commands.parallel(
                 outtake.setVoltage(() -> 0),
                 hopper.setVoltage(() -> 0),
                 this.forceState(State.CORAL_READY)));
 
-    // CORAL_READY -> CORAL_CONFIRM_[LEVEL]
     stateTriggers
         .get(State.CORAL_READY)
         .and(
             () ->
                 (pose.get().getTranslation().getDistance(AllianceFlipUtil.apply(Reef.center))
-                    < 1.5))
+                    < ElevatorConstants.reefRaiseDistance))
+        .and(() -> (this.getCoralTarget().equals(CoralTarget.L4)))
         .onTrue(
             Commands.parallel(
-                elevator.setExtension(ElevatorConstants.targetToCoral.get(coralTarget.get())),
-                this.forceState(State.CORAL_CONFIRM)));
+                elevator.setExtension(ElevatorConstants.L4), this.forceState(State.CORAL_CONFIRM)));
+
+    stateTriggers
+        .get(State.CORAL_READY)
+        .and(
+            () ->
+                (pose.get().getTranslation().getDistance(AllianceFlipUtil.apply(Reef.center))
+                    < ElevatorConstants.reefRaiseDistance))
+        .and(() -> (this.getCoralTarget().equals(CoralTarget.L3)))
+        .onTrue(
+            Commands.parallel(
+                elevator.setExtension(ElevatorConstants.L3), this.forceState(State.CORAL_CONFIRM)));
+
+    stateTriggers
+        .get(State.CORAL_READY)
+        .and(
+            () ->
+                (pose.get().getTranslation().getDistance(AllianceFlipUtil.apply(Reef.center))
+                    < ElevatorConstants.reefRaiseDistance))
+        .and(() -> (this.getCoralTarget().equals(CoralTarget.L2)))
+        .onTrue(
+            Commands.parallel(
+                elevator.setExtension(ElevatorConstants.L2), this.forceState(State.CORAL_CONFIRM)));
+
+    stateTriggers
+        .get(State.CORAL_READY)
+        .and(
+            () ->
+                (pose.get().getTranslation().getDistance(AllianceFlipUtil.apply(Reef.center))
+                    < ElevatorConstants.reefRaiseDistance))
+        .and(() -> (this.getCoralTarget().equals(CoralTarget.L1)))
+        .onTrue(
+            Commands.parallel(
+                elevator.setExtension(ElevatorConstants.L1), this.forceState(State.CORAL_CONFIRM)));
 
     stateTriggers
         .get(State.CORAL_CONFIRM)
         .and(scoreRequest)
         .onTrue(
             Commands.parallel(
-                outtake.setVoltage(OuttakeConstants.targetToCoral.get(coralTarget.get())),
-                Commands.waitSeconds(1)
+                outtake.setVoltage(OuttakeConstants.targetToCoral.get(coralTarget)),
+                Commands.waitUntil(() -> !outtake.getDetected())
                     .andThen(
-                        elevator
-                            .setExtension(ElevatorConstants.intake)
-                            .andThen(this.forceState(State.IDLE)))));
+                        Commands.waitSeconds(ElevatorConstants.confirmTimeout)
+                            .andThen(
+                                elevator
+                                    .setExtension(ElevatorConstants.intake)
+                                    .andThen(this.forceState(State.IDLE))))));
 
-    // SIM INPUTS
-    if (Constants.currentMode == Mode.SIM) {
-      stateTriggers
-          .get(State.CORAL_PREINTAKE)
-          .and(
-              () ->
-                  (AutoAlign.bestLoader(pose.get())
-                          .getTranslation()
-                          .getDistance(pose.get().getTranslation())
-                      < 0.75))
-          .onTrue(Commands.sequence(Commands.waitSeconds(1), hopper.setSimDetected(true)));
-
-      stateTriggers
-          .get(State.CORAL_TRANSFER)
-          .onTrue(Commands.sequence(Commands.waitSeconds(0.5), outtake.setSimDetected(true)));
-    }
-
-    // CORAL -> IDLE
     stateTriggers
         .get(State.CORAL_READY)
-        .or(stateTriggers.get(State.CORAL_PRESCORE))
         .or(stateTriggers.get(State.CORAL_CONFIRM))
         .and(() -> !outtake.getDetected())
         .onTrue(this.forceState(State.IDLE));
 
-    // CORAL_OUTTAKE -> IDLE
     stateTriggers
         .get(State.CORAL_OUTTAKE)
         .whileTrue(outtake.setVoltage(OuttakeConstants.L234))
@@ -411,7 +402,77 @@ public class Superstructure {
         .and(preClimbRequest.negate())
         .onTrue(this.forceState(State.IDLE));
 
-    // CLIMB_PREPULL -> CLIMB_PULL
+    // ALGAE State Transitions (Starts: Algae handling, Ends: Scoring or reset)
+    stateTriggers
+        .get(State.ALGAE_INTAKE)
+        .and(gripper::getCurrentDetected)
+        .onTrue(
+            Commands.parallel(
+                gripper.setVoltage(GripperConstants.hold),
+                Commands.waitUntil(
+                        () ->
+                            (pose.get()
+                                    .getTranslation()
+                                    .getDistance(AllianceFlipUtil.apply(Reef.center)))
+                                > ElevatorConstants.reefRaiseDistance)
+                    .andThen(this.forceState(State.ALGAE_READY))));
+
+    stateTriggers
+        .get(State.ALGAE_READY)
+        .and(algaeNetRequest)
+        .and(
+            () ->
+                (Math.abs(pose.get().getX() - FieldConstants.fieldLength / 2)
+                        < ElevatorConstants.netRaiseDistanceUpper)
+                    && (Math.abs(pose.get().getX() - FieldConstants.fieldLength / 2)
+                        > ElevatorConstants.netRaiseDistanceLower))
+        .and(() -> AllianceFlipUtil.applyY(pose.get().getY()) > FieldConstants.fieldWidth / 2)
+        .onTrue(
+            Commands.parallel(
+                elevator.setExtension(ElevatorConstants.AN),
+                this.forceState(State.ALGAE_CONFIRM_AN)));
+
+    stateTriggers
+        .get(State.ALGAE_READY)
+        .and(algaeProcessRequest)
+        .and(
+            () ->
+                (pose.get()
+                        .getTranslation()
+                        .getDistance(
+                            AllianceFlipUtil.apply(FieldConstants.Processor.centerFace)
+                                .getTranslation())
+                    < ElevatorConstants.processRaiseDistance))
+        .onTrue(
+            Commands.parallel(
+                elevator.setExtension(ElevatorConstants.AP),
+                this.forceState(State.ALGAE_CONFIRM_AP)));
+
+    stateTriggers
+        .get(State.ALGAE_CONFIRM_AN)
+        .and(scoreRequest)
+        .onTrue(
+            Commands.parallel(
+                gripper.setVoltage(GripperConstants.AN),
+                Commands.waitSeconds(1)
+                    .andThen(
+                        elevator
+                            .setExtension(ElevatorConstants.intake)
+                            .andThen(this.forceState(State.IDLE)))));
+
+    stateTriggers
+        .get(State.ALGAE_CONFIRM_AP)
+        .and(scoreRequest)
+        .onTrue(
+            Commands.parallel(
+                gripper.setVoltage(GripperConstants.AP),
+                Commands.waitSeconds(ElevatorConstants.confirmTimeout)
+                    .andThen(
+                        elevator
+                            .setExtension(ElevatorConstants.intake)
+                            .andThen(this.forceState(State.IDLE)))));
+
+    // CLIMB State Transitions (Starts: Climb initiation, Ends: Climbing or reset)
     stateTriggers
         .get(State.CLIMB_PREPULL)
         .whileTrue(climb.setPosition(ClimbConstants.ready))
@@ -425,16 +486,59 @@ public class Superstructure {
                 .setPosition(ClimbConstants.climbed)
                 .withInterruptBehavior(InterruptionBehavior.kCancelIncoming));
 
-    // CLIMB_PULL -> CLIMB_PREPULL
     stateTriggers
         .get(State.CLIMB_PULL)
         .and(cancelClimbRequest)
         .onTrue(this.forceState(State.CLIMB_PREPULL));
+
+    // SIM Inputs (Starts: Simulation conditions, Ends: Simulated state triggers)
+    if (Constants.currentMode == Mode.SIM) {
+      stateTriggers
+          .get(State.CORAL_PREINTAKE)
+          .and(
+              () ->
+                  (AutoAlign.bestLoader(pose.get())
+                          .getTranslation()
+                          .getDistance(pose.get().getTranslation())
+                      < 0.75))
+          .onTrue(
+              Commands.sequence(
+                  Commands.waitSeconds(0.5),
+                  Commands.parallel(hopper.setSimDetected(true), outtake.setSimDetected(true))));
+
+      stateTriggers
+          .get(State.ALGAE_INTAKE)
+          .and(
+              () ->
+                  (Reef.centerFaces[
+                          AutoAlign.bestFace(
+                              pose.get(), driverX.getAsDouble(), driverY.getAsDouble())]
+                          .getTranslation()
+                          .getDistance(pose.get().getTranslation())
+                      < 0.75))
+          .onTrue(Commands.sequence(Commands.waitSeconds(0.5), hopper.setSimDetected(true)));
+
+      stateTriggers
+          .get(State.CORAL_CONFIRM)
+          .and(scoreRequest)
+          .onTrue(Commands.sequence(Commands.waitSeconds(0.5), outtake.setSimDetected(false)));
+
+      stateTriggers
+          .get(State.ALGAE_INTAKE)
+          .and(
+              () ->
+                  (FieldConstants.Reef.algaePoses[
+                          AutoAlign.bestFace(
+                              pose.get(), driverX.getAsDouble(), driverY.getAsDouble())]
+                          .getTranslation()
+                          .getDistance(pose.get().getTranslation())
+                      < 0.75))
+          .onTrue(Commands.sequence(Commands.waitSeconds(0.5), gripper.setSimDetected(true)));
+    }
   }
 
   /** This file is not a subsystem, so this MUST be called manually. */
   public void periodic() {
-
     AutoAlign.bestFace(pose.get(), driverX.getAsDouble(), driverY.getAsDouble());
 
     hopperLigament.setColor(
@@ -464,8 +568,7 @@ public class Superstructure {
     climbTargetLigament.setAngle(climb.getTargetPositionRad());
     Logger.recordOutput("Superstructure/Mech2d", mech2d);
 
-    Logger.recordOutput("Superstructure/CoralTarget", coralTarget.get());
-    Logger.recordOutput("Superstructure/AlgaeTarget", algaeTarget.get());
+    Logger.recordOutput("Superstructure/CoralTarget", coralTarget);
 
     Logger.recordOutput(
         "AutoAlign/DistanceToReef",
@@ -484,8 +587,18 @@ public class Superstructure {
   }
 
   public boolean isCoral() {
-    return this.state == State.CORAL_CONFIRM
-        || this.state == State.CORAL_PRESCORE
-        || this.state == State.CORAL_READY;
+    return this.state == State.CORAL_CONFIRM || this.state == State.CORAL_READY;
+  }
+
+  public Command setCoralTarget(CoralTarget coralTarget) {
+    return Commands.runOnce(
+        () -> {
+          this.coralTarget = coralTarget;
+        });
+  }
+
+  public CoralTarget getCoralTarget() {
+    // Commands.print(this.coralTarget);
+    return this.coralTarget;
   }
 }

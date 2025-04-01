@@ -21,7 +21,8 @@ public class OuttakeConstants {
   public static final int laserBaseLeft = 24;
   public static final int laserBaseRight = 25;
 
-  public static final double L1 = 4;
+  public static final double index = 3;
+  public static final double L1 = 2;
   public static final double L234 = 4;
 
   public static final Map<CoralTarget, Double> targetToCoral =

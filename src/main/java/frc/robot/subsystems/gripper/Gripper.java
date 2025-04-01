@@ -46,4 +46,15 @@ public class Gripper extends SubsystemBase {
   public boolean getDetected() {
     return proximityInputs.detected;
   }
+
+  public boolean getCurrentDetected() {
+    return (inputs.motorCurrentAmps > 15) && (inputs.motorVelocityRPM > -3);
+  }
+
+  public Command setSimDetected(boolean detected) {
+    return this.runOnce(
+        () -> {
+          proximityIO.setSimDetected(detected);
+        });
+  }
 }
