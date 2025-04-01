@@ -76,8 +76,7 @@ public class Superstructure {
     CORAL_OUTTAKE,
     CORAL_PRESCORE,
     CORAL_CONFIRM,
-    ALGAE_INTAKE_A2,
-    ALGAE_INTAKE_A3,
+    ALGAE_INTAKE,
     ALGAE_READY,
     ALGAE_OUTTAKE,
     ALGAE_PRESCORE_AP,
@@ -102,6 +101,12 @@ public class Superstructure {
 
   @AutoLogOutput(key = "Superstructure/Algae Intake")
   private final Trigger algaeIntakeRequest;
+
+  @AutoLogOutput(key = "Superstructure/Algae Net")
+  private final Trigger algaeNetRequest;
+
+  @AutoLogOutput(key = "Superstructure/Algae Process")
+  private final Trigger algaeProcessRequest;
 
   @AutoLogOutput(key = "Superstructure/Pre Climb")
   private final Trigger preClimbRequest;
@@ -230,6 +235,8 @@ public class Superstructure {
       Trigger scoreRequest,
       Trigger coralIntakeRequest,
       Trigger algaeIntakeRequest,
+      Trigger algaeNetRequest,
+      Trigger algaeProcessRequest,
       Trigger preClimbRequest,
       Trigger climbRequest,
       Trigger cancelClimbRequest,
@@ -253,6 +260,8 @@ public class Superstructure {
     this.scoreRequest = scoreRequest;
     this.coralIntakeRequest = coralIntakeRequest;
     this.algaeIntakeRequest = algaeIntakeRequest;
+    this.algaeNetRequest = algaeNetRequest;
+    this.algaeProcessRequest = algaeProcessRequest;
     this.preClimbRequest = preClimbRequest;
     this.climbRequest = climbRequest;
     this.cancelClimbRequest = cancelClimbRequest;
@@ -287,18 +296,32 @@ public class Superstructure {
                     < 0.3)
         .onTrue(this.forceState(State.CORAL_PREINTAKE));
 
-    // IDLE -> ALGAE_INTAKE_[LEVEL]
+    // IDLE -> ALGAE_INTAKE
     stateTriggers
         .get(State.IDLE)
+        .or(stateTriggers.get(State.CORAL_READY))
         .and(algaeIntakeRequest)
-        .and(() -> (algaeTarget.get() == AlgaeTarget.A2))
-        .onTrue(this.forceState(State.ALGAE_INTAKE_A2));
+        .onTrue(
+            Commands.parallel(
+                elevator.setExtension(ElevatorConstants.targetToAlgae.get(algaeTarget.get())),
+                elevator.setExtension(ElevatorConstants.targetToAlgae.get(algaeTarget.get())),
+                gripper.setVoltage(GripperConstants.A23),
+                this.forceState(State.ALGAE_INTAKE)));
 
+    // ALGAE_INTAKE -> ALGAE_READY
     stateTriggers
-        .get(State.IDLE)
-        .and(algaeIntakeRequest)
-        .and(() -> (algaeTarget.get() == AlgaeTarget.A3))
-        .onTrue(this.forceState(State.ALGAE_INTAKE_A3));
+        .get(State.ALGAE_INTAKE)
+        .and(gripper::getDetected)
+        .onTrue(
+            Commands.parallel(
+                gripper.setVoltage(GripperConstants.hold),
+                elevator.setExtension(ElevatorConstants.intake),
+                this.forceState(State.ALGAE_READY)));
+
+    // ALGAE_READY -> ALGAE_CONFIRM
+    // stateTriggers.get(State.ALGAE_READY).and(
+    //     () -> (pose.get().getTranslation().getDistance(AllianceFlipUtil.apply(algaeTarget.get()))
+    // < 1.5))
 
     // IDLE -> CLIMB_PREPULL
     preClimbRequest.onTrue(this.forceState(State.CLIMB_PREPULL));

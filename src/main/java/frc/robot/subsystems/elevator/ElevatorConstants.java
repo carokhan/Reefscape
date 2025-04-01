@@ -1,6 +1,7 @@
 package frc.robot.subsystems.elevator;
 
 import edu.wpi.first.math.util.Units;
+import frc.robot.subsystems.Superstructure.AlgaeTarget;
 import frc.robot.subsystems.Superstructure.CoralTarget;
 import java.util.Map;
 
@@ -24,6 +25,13 @@ public class ElevatorConstants {
           CoralTarget.L2, L2,
           CoralTarget.L3, L3,
           CoralTarget.L4, L4);
+
+  public static final Map<AlgaeTarget, Double> targetToAlgae =
+      Map.of(
+          AlgaeTarget.AP, AP,
+          AlgaeTarget.A2, A2,
+          AlgaeTarget.A3, A3,
+          AlgaeTarget.AN, AN);
 
   public static final double travel = Units.inchesToMeters(69.0);
   public static final double mass = Units.lbsToKilograms(25.1);

@@ -13,12 +13,17 @@ import edu.wpi.first.apriltag.AprilTagFieldLayout;
 import edu.wpi.first.math.geometry.*;
 import edu.wpi.first.math.util.Units;
 import edu.wpi.first.wpilibj.Filesystem;
+import frc.robot.FieldConstants.AprilTagLayoutType;
+import frc.robot.FieldConstants.FieldType;
+import frc.robot.subsystems.elevator.ElevatorConstants;
+import frc.robot.util.AllianceFlipUtil;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.*;
 
 /**
- * Contains various field dimensions and useful reference points. All units are in meters and poses
+ * Contains various field dimensions and useful reference points. All units are
+ * in meters and poses
  * have a blue alliance origin.
  */
 public class FieldConstants {
@@ -26,25 +31,23 @@ public class FieldConstants {
 
   public static final double fieldLength = AprilTagLayoutType.OFFICIAL.getLayout().getFieldLength();
   public static final double fieldWidth = AprilTagLayoutType.OFFICIAL.getLayout().getFieldWidth();
-  public static final double startingLineX =
-      Units.inchesToMeters(299.438); // Measured from the inside of starting line
+  public static final double startingLineX = Units.inchesToMeters(299.438); // Measured from the inside of starting line
   public static final double algaeDiameter = Units.inchesToMeters(16);
 
   public static class Processor {
-    public static final Pose2d centerFace =
-        new Pose2d(
-            AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(16).get().getX(),
-            0,
-            Rotation2d.fromDegrees(90));
+    public static final Pose2d centerFace = new Pose2d(
+        AprilTagLayoutType.OFFICIAL.getLayout().getTagPose(16).get().getX(),
+        0,
+        Rotation2d.fromDegrees(90));
   }
 
   public static class Barge {
-    public static final Translation2d farCage =
-        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(286.779));
-    public static final Translation2d middleCage =
-        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(242.855));
-    public static final Translation2d closeCage =
-        new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(199.947));
+    public static final Translation2d farCage = new Translation2d(Units.inchesToMeters(345.428),
+        Units.inchesToMeters(286.779));
+    public static final Translation2d middleCage = new Translation2d(Units.inchesToMeters(345.428),
+        Units.inchesToMeters(242.855));
+    public static final Translation2d closeCage = new Translation2d(Units.inchesToMeters(345.428),
+        Units.inchesToMeters(199.947));
 
     // Measured from floor to bottom of cage
     public static final double deepHeight = Units.inchesToMeters(3.125);
@@ -53,16 +56,14 @@ public class FieldConstants {
 
   public static class CoralStation {
     public static final double stationLength = Units.inchesToMeters(79.750);
-    public static final Pose2d rightCenterFace =
-        new Pose2d(
-            Units.inchesToMeters(33.526),
-            Units.inchesToMeters(25.824),
-            Rotation2d.fromDegrees(144.011 - 90));
-    public static final Pose2d leftCenterFace =
-        new Pose2d(
-            rightCenterFace.getX(),
-            fieldWidth - rightCenterFace.getY(),
-            Rotation2d.fromRadians(-rightCenterFace.getRotation().getRadians()));
+    public static final Pose2d rightCenterFace = new Pose2d(
+        Units.inchesToMeters(33.526),
+        Units.inchesToMeters(25.824),
+        Rotation2d.fromDegrees(144.011 - 90));
+    public static final Pose2d leftCenterFace = new Pose2d(
+        rightCenterFace.getX(),
+        fieldWidth - rightCenterFace.getY(),
+        Rotation2d.fromRadians(-rightCenterFace.getRotation().getRadians()));
   }
 
   public static class Reef {
@@ -155,7 +156,23 @@ public class FieldConstants {
         branchPositions2d.add(fillLeft2d);
       }
     }
-  }
+
+public static final Map<Pose2d, Double> reefAlgae =
+    Map.ofEntries(
+        Map.entry(centerFaces[0], ElevatorConstants.A3),
+        Map.entry(centerFaces[1], ElevatorConstants.A2),
+        Map.entry(centerFaces[2], ElevatorConstants.A3),
+        Map.entry(centerFaces[3], ElevatorConstants.A2),
+        Map.entry(centerFaces[4], ElevatorConstants.A3),
+        Map.entry(centerFaces[5], ElevatorConstants.A2),
+        Map.entry(AllianceFlipUtil.flip(centerFaces[0]), ElevatorConstants.A3),
+        Map.entry(AllianceFlipUtil.flip(centerFaces[1]), ElevatorConstants.A2),
+        Map.entry(AllianceFlipUtil.flip(centerFaces[2]), ElevatorConstants.A3),
+        Map.entry(AllianceFlipUtil.flip(centerFaces[3]), ElevatorConstants.A2),
+        Map.entry(AllianceFlipUtil.flip(centerFaces[4]), ElevatorConstants.A3),
+        Map.entry(AllianceFlipUtil.flip(centerFaces[5]), ElevatorConstants.A2)
+    );
+
 
   public static class StagingPositions {
     // Measured from the center of the ice cream

@@ -241,6 +241,8 @@ public class RobotContainer {
                         (AutoAlign.closerIntake(
                                 drive.getPose(), -driver.getLeftY(), -driver.getLeftX())
                             == IntakeLocation.REEF)),
+            driver.povUp(),
+            driver.povDown(),
             driver.a(),
             driver.rightTrigger(),
             driver.rightBumper(),
@@ -361,7 +363,6 @@ public class RobotContainer {
             Commands.runOnce(
                 () -> {
                   coralTarget = CoralTarget.L4;
-                  algaeTarget = AlgaeTarget.AN;
                 }));
     operator
         .x()
@@ -383,7 +384,6 @@ public class RobotContainer {
             Commands.runOnce(
                 () -> {
                   coralTarget = CoralTarget.L1;
-                  algaeTarget = AlgaeTarget.AP;
                 }));
 
     // operator.y().onTrue(elevator.setExtension(() -> ElevatorConstants.L4));
