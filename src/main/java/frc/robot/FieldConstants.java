@@ -111,7 +111,7 @@ public class FieldConstants {
         for (var level : ReefLevel.values()) {
           Pose2d poseDirection = new Pose2d(center, Rotation2d.fromDegrees((180 - (60 * face))));
           double adjustX = Units.inchesToMeters(57.738);
-          double adjustY = Units.inchesToMeters(6.769);
+          double adjustY = Units.inchesToMeters(6.269);
 
           var rightBranchPose =
               new Pose3d(

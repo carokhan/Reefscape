@@ -138,8 +138,8 @@ public class AutoAlign {
     final ProfiledPIDController vyController =
         new ProfiledPIDController(
             8.0,
+            0.03,
             0.01,
-            0.02,
             new TrapezoidProfile.Constraints(
                 AutoAlignConstants.maxLinearSpeed, AutoAlignConstants.maxLinearAccel));
     return Commands.runOnce(

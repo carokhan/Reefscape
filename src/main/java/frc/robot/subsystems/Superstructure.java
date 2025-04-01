@@ -376,6 +376,19 @@ public class Superstructure {
                 elevator.setExtension(ElevatorConstants.L1), this.forceState(State.CORAL_CONFIRM)));
 
     stateTriggers
+        .get(State.CORAL_READY)
+        .and(
+            () ->
+                (pose.get().getTranslation().getDistance(AllianceFlipUtil.apply(Reef.center))
+                    < ElevatorConstants.reefRaiseDistance))
+        .and(
+            () ->
+                (!this.getCoralTarget().equals(CoralTarget.L1)
+                    && !this.getCoralTarget().equals(CoralTarget.L2)
+                    && !this.getCoralTarget().equals(CoralTarget.L3)
+                    && !this.getCoralTarget().equals(CoralTarget.L4)));
+
+    stateTriggers
         .get(State.CORAL_CONFIRM)
         .and(scoreRequest)
         .onTrue(
