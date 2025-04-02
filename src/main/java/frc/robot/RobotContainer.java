@@ -13,7 +13,6 @@
 
 package frc.robot;
 
-import choreo.auto.AutoFactory;
 import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
@@ -25,7 +24,6 @@ import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
-import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.FieldConstants.Reef;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.Superstructure.CoralTarget;
@@ -49,6 +47,7 @@ import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
 import frc.robot.subsystems.gripper.Gripper;
+import frc.robot.subsystems.gripper.GripperConstants;
 import frc.robot.subsystems.gripper.GripperIO;
 import frc.robot.subsystems.gripper.GripperIOSim;
 import frc.robot.subsystems.gripper.GripperIOTalonFX;
@@ -58,7 +57,6 @@ import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.hopper.HopperIOSpark;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.led.LEDIO;
-import frc.robot.subsystems.led.LEDIOReal;
 import frc.robot.subsystems.led.LEDIOSim;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
@@ -75,7 +73,6 @@ import frc.robot.subsystems.vision.VisionIOPhotonVision;
 import frc.robot.subsystems.vision.VisionIOPhotonVisionSim;
 import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.CommandXboxControllerSubsystem;
-import java.util.Arrays;
 import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
@@ -110,8 +107,8 @@ public class RobotContainer {
   private final CommandXboxControllerSubsystem driver = new CommandXboxControllerSubsystem(0);
   private final CommandXboxControllerSubsystem operator = new CommandXboxControllerSubsystem(1);
 
-  private final AutoFactory autoFactory;
   private final LoggedDashboardChooser<Command> autoChooser;
+  private final AutoRoutines autoRoutines;
 
   private boolean superstructureCoastOverride = false;
 
@@ -146,9 +143,9 @@ public class RobotContainer {
             new Gripper(
                 new GripperIOTalonFX(),
                 // new ProximityIOGrapple(GripperConstants.laser, null,
-                new ProximityIO() {});
+                new ProximityIORedux(GripperConstants.laser, GripperConstants.proximityThreshold));
         climb = new Climb(new ClimbIOTalonFX());
-        led = new LED(new LEDIOReal());
+        led = new LED(new LEDIO() {});
         vision =
             new Vision(
                 drive::addVisionMeasurement,
@@ -245,40 +242,32 @@ public class RobotContainer {
             operator.leftBumper(),
             driver.povLeft());
 
-    autoFactory =
-        new AutoFactory(
-            drive::getPose,
-            drive::setPose,
-            drive::followTrajectory,
-            true,
-            drive,
-            (sample, isStart) -> {
-              Logger.recordOutput(
-                  "ActiveTrajectory",
-                  Arrays.stream(sample.getPoses())
-                      .map(AllianceFlipUtil::apply)
-                      .toArray(Pose2d[]::new));
-            });
-
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
+    autoRoutines = new AutoRoutines(drive, superstructure);
 
     // Set up SysId routines
-    autoChooser.addOption(
-        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
-    autoChooser.addOption(
-        "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Forward)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Quasistatic Reverse)",
-        drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    autoChooser.addOption(
-        "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-    autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
+    // autoChooser.addOption(
+    //     "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+    // autoChooser.addOption(
+    //     "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+    // autoChooser.addOption(
+    //     "Drive SysId (Quasistatic Forward)",
+    //     drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Drive SysId (Quasistatic Reverse)",
+    //     drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption(
+    //     "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    // autoChooser.addOption(
+    //     "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
+
+    autoChooser.addOption("LM to H", autoRoutines.LMtoH());
+    autoChooser.addOption("RO to E", autoRoutines.ROtoE());
+    autoChooser.addOption("LO to I", autoRoutines.LOtoI());
+    autoChooser.addOption("LO to J", autoRoutines.LOtoJ());
+    autoChooser.addOption("LO to K", autoRoutines.LOtoItoPLOtoK());
 
     // RobotModeTriggers.autonomous()
     // .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));
@@ -330,7 +319,7 @@ public class RobotContainer {
                         drive,
                         () -> {
                           int bestFace =
-                              AutoAlign.bestFace(
+                              AutoAlign.getBestFace(
                                   drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
                           Pose2d selected =
                               AllianceFlipUtil.apply(
@@ -367,7 +356,7 @@ public class RobotContainer {
                 AutoAlign.autoAimWithIntermediatePose(
                         drive,
                         () -> {
-                          Pose2d bestLoader = AutoAlign.bestLoader(drive.getPose());
+                          Pose2d bestLoader = AutoAlign.getBestLoader(drive.getPose());
                           Pose2d selected = bestLoader;
                           Logger.recordOutput("AutoAlign/Active", selected);
                           return selected;
@@ -378,7 +367,7 @@ public class RobotContainer {
                 Commands.waitUntil(
                         () ->
                             AutoAlign.isInTolerance(
-                                drive.getPose(), AutoAlign.bestLoader(drive.getPose())))
+                                drive.getPose(), AutoAlign.getBestLoader(drive.getPose())))
                     .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
 
     driver
@@ -396,7 +385,7 @@ public class RobotContainer {
                         drive,
                         () -> {
                           int bestFace =
-                              AutoAlign.bestFace(
+                              AutoAlign.getBestFace(
                                   drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
                           Pose2d selected = AllianceFlipUtil.apply(Reef.algaePoses[bestFace]);
                           Logger.recordOutput("AutoAlign/Active", selected);
@@ -415,41 +404,8 @@ public class RobotContainer {
                                 drive.getPose(), -driver.getLeftY(), -driver.getLeftX()))
                     .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
 
-    // driver
-    // .povUp()
-    // .and(gripper::getDetected)
-    // .whileTrue(
-    // Commands.parallel(
-    // AutoAlign.translateToXCoord(
-    // drive,
-    // () ->
-    // Math.abs(drive.getPose().getX() - AutoAim.BLUE_NET_X)
-    // > Math.abs(drive.getPose().getX() - AutoAim.RED_NET_X)
-    // ? AutoAim.RED_NET_X
-    // : AutoAim.BLUE_NET_X,
-    // () ->
-    // modifyJoystick(driver.getLeftX())
-    // * ROBOT_HARDWARE.swerveConstants.getMaxLinearSpeed(),
-    // () ->
-    // Math.abs(drive.getPose().getX() - AutoAim.BLUE_NET_X)
-    // > Math.abs(swerve.getPose().getX() - AutoAim.RED_NET_X)
-    // ? Rotation2d.kZero
-    // : Rotation2d.k180deg),
-    // Commands.waitUntil(
-    // () -> {
-    // final var diff =
-    // drive
-    // .getPose()
-    // .minus(AlgaeIntakeTargets.getClosestTargetPose(swerve.getPose()));
-    // return MathUtil.isNear(0.0, diff.getX(), Units.inchesToMeters(1.0))
-    // && MathUtil.isNear(0.0, diff.getY(), Units.inchesToMeters(1.0))
-    // && MathUtil.isNear(0.0, diff.getRotation().getDegrees(), 2.0);
-    // })
-    // .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
-
     driver
-        .rightBumper()
-        .or(driver.povDown())
+        .povDown()
         .and(gripper::getDetected)
         .whileTrue(
             Commands.parallel(
@@ -471,13 +427,6 @@ public class RobotContainer {
     operator.b().onTrue(superstructure.setCoralTarget(CoralTarget.L2));
     operator.a().onTrue(superstructure.setCoralTarget(CoralTarget.L1));
 
-    // operator.y().onTrue(elevator.setExtension(() -> ElevatorConstants.L4));
-    // operator.x().onTrue(elevator.setExtension(() -> ElevatorConstants.L3));
-    // operator.b().onTrue(elevator.setExtension(() -> ElevatorConstants.L2));
-    // operator.a().onTrue(elevator.setExtension(() -> ElevatorConstants.L1));
-    // operator.povDown().onTrue(elevator.setExtension(() -> 0));
-    // operator.povUp().onTrue(elevator.setExtension(() ->
-    // ElevatorConstants.intake));
     operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
     operator
         .leftBumper()

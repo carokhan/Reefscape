@@ -180,8 +180,12 @@ public class Elevator extends SubsystemBase {
     return inputs.targetPositionMeters;
   }
 
+  public boolean isNearExtension() {
+    return MathUtil.isNear(inputs.targetPositionMeters, inputs.positionMeters, 0.1);
+  }
+
   public boolean isNearExtension(double expected) {
-    return MathUtil.isNear(expected, inputs.positionMeters, 0.05);
+    return MathUtil.isNear(expected, inputs.positionMeters, 0.1);
   }
 
   public boolean isNearExtension(double expected, double toleranceMeters) {

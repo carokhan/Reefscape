@@ -19,13 +19,14 @@ import frc.robot.FieldConstants.CoralStation;
 import frc.robot.FieldConstants.Reef;
 import frc.robot.subsystems.drive.Drive;
 import frc.robot.util.AllianceFlipUtil;
+import java.util.Arrays;
 import java.util.function.DoubleSupplier;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.Logger;
 
 public class AutoAlign {
 
-  public static Pose2d bestLoader(Pose2d currentPose) {
+  public static Pose2d getBestLoader(Pose2d currentPose) {
     Pose2d loader =
         AllianceFlipUtil.apply(currentPose).getY() > (FieldConstants.fieldWidth / 2)
             ? AllianceFlipUtil.apply(CoralStation.leftCenterFace)
@@ -39,7 +40,7 @@ public class AutoAlign {
     return loader;
   }
 
-  public static int bestFace(Pose2d currentPose, double x, double y) {
+  public static int getBestFace(Pose2d currentPose, double x, double y) {
     int bestIndex = 0;
     double bestScore = Double.POSITIVE_INFINITY;
     for (int i = 0; i < 6; i++) {
@@ -79,7 +80,19 @@ public class AutoAlign {
     return bestIndex;
   }
 
+  public static Pose2d getBestBranch(Pose2d currentPose) {
+    int bestFace = getBestFace(currentPose, 0, 0);
+    Pose2d nearest =
+        currentPose.nearest(
+            Arrays.asList(
+                AllianceFlipUtil.apply(Reef.branchesLeft[bestFace]),
+                AllianceFlipUtil.apply(Reef.branchesRight[bestFace])));
+    Logger.recordOutput("AutoAlign/BestBranch", nearest);
+    return nearest;
+  }
+
   public static Command translateToPose(Drive drive, Supplier<Pose2d> target) {
+    Logger.recordOutput("AutoAlign/Raw Raw Target", target.get());
     return translateToPose(drive, target, () -> new ChassisSpeeds());
   }
 
@@ -118,6 +131,8 @@ public class AutoAlign {
       Drive drive, Supplier<Pose2d> target, Supplier<ChassisSpeeds> speedsModifier) {
     // This feels like a horrible way of getting around lambda final requirements
     // Is there a cleaner way of doing this?
+    Logger.recordOutput("AutoAlign/Raw Target", target.get());
+
     final Pose2d cachedTarget[] = {new Pose2d()};
     final ProfiledPIDController headingController =
         // assume we can accelerate to max in 2/3 of a second
@@ -130,22 +145,22 @@ public class AutoAlign {
     headingController.enableContinuousInput(-Math.PI, Math.PI);
     final ProfiledPIDController vxController =
         new ProfiledPIDController(
-            8.0,
-            0.01,
+            11.0,
+            0.03,
             0.02,
             new TrapezoidProfile.Constraints(
                 AutoAlignConstants.maxLinearSpeed, AutoAlignConstants.maxLinearAccel));
     final ProfiledPIDController vyController =
         new ProfiledPIDController(
-            8.0,
+            11.0,
             0.03,
-            0.01,
+            0.02,
             new TrapezoidProfile.Constraints(
                 AutoAlignConstants.maxLinearSpeed, AutoAlignConstants.maxLinearAccel));
     return Commands.runOnce(
             () -> {
               cachedTarget[0] = target.get();
-              final var diff = drive.getPose().minus(cachedTarget[0]);
+              final Transform2d diff = drive.getPose().minus(cachedTarget[0]);
               if (Constants.currentMode == Mode.SIM)
                 Logger.recordOutput("AutoAlign/Cached Target", cachedTarget[0]);
               headingController.reset(
@@ -159,8 +174,8 @@ public class AutoAlign {
         .andThen(
             drive.driveVelocityFieldRelative(
                 () -> {
-                  final var diff = drive.getPose().minus(cachedTarget[0]);
-                  final var speeds =
+                  final Transform2d diff = drive.getPose().minus(cachedTarget[0]);
+                  final ChassisSpeeds speeds =
                       MathUtil.isNear(0.0, diff.getX(), Units.inchesToMeters(0.75))
                               && MathUtil.isNear(0.0, diff.getY(), Units.inchesToMeters(0.75))
                               && MathUtil.isNear(0.0, diff.getRotation().getDegrees(), 0.5)
@@ -221,8 +236,8 @@ public class AutoAlign {
         .andThen(
             drive.driveVelocityFieldRelative(
                 () -> {
-                  final var diff = drive.getPose().minus(cachedTarget[0]);
-                  final var speeds =
+                  final Transform2d diff = drive.getPose().minus(cachedTarget[0]);
+                  final ChassisSpeeds speeds =
                       MathUtil.isNear(0.0, diff.getX(), Units.inchesToMeters(0.25))
                               && MathUtil.isNear(0.0, diff.getY(), Units.inchesToMeters(0.25))
                               && MathUtil.isNear(0.0, diff.getRotation().getDegrees(), 0.5)
@@ -250,11 +265,14 @@ public class AutoAlign {
   }
 
   public static boolean isInTolerance(Pose2d pose, Pose2d pose2) {
-    final var diff = pose.minus(pose2);
-    return MathUtil.isNear(
-            0.0, Math.hypot(diff.getX(), diff.getY()), AutoAlignConstants.linearTolerance)
-        && MathUtil.isNear(
-            0.0, diff.getRotation().getRadians(), AutoAlignConstants.angularTolerance);
+    final Transform2d diff = pose.minus(pose2);
+    boolean threshold =
+        MathUtil.isNear(
+                0.0, Math.hypot(diff.getX(), diff.getY()), AutoAlignConstants.linearTolerance)
+            && MathUtil.isNear(
+                0.0, diff.getRotation().getRadians(), AutoAlignConstants.angularTolerance);
+    Logger.recordOutput("AutoAlign/isInTolerance", threshold);
+    return threshold;
   }
 
   public static boolean isInTolerance(Pose2d pose1, Pose2d pose2, ChassisSpeeds speeds) {
@@ -272,7 +290,7 @@ public class AutoAlign {
       ChassisSpeeds speeds,
       double translationTolerance,
       double rotationTolerance) {
-    final var diff = pose1.minus(pose2);
+    final Transform2d diff = pose1.minus(pose2);
     return MathUtil.isNear(0.0, Math.hypot(diff.getX(), diff.getY()), translationTolerance)
         && MathUtil.isNear(0.0, diff.getRotation().getRadians(), rotationTolerance)
         && MathUtil.isNear(
@@ -283,7 +301,7 @@ public class AutoAlign {
   }
 
   public static boolean isInToleranceCoral(Pose2d pose, double x, double y) {
-    final Transform2d diff = pose.minus(Reef.centerFaces[bestFace(pose, x, y)]);
+    final Transform2d diff = pose.minus(Reef.centerFaces[getBestFace(pose, x, y)]);
     return MathUtil.isNear(
             0.0, Math.hypot(diff.getX(), diff.getY()), AutoAlignConstants.linearTolerance)
         && MathUtil.isNear(
@@ -296,8 +314,8 @@ public class AutoAlign {
   }
 
   public static IntakeLocation closerIntake(Pose2d pose, double x, double y) {
-    Pose2d nearestReef = AllianceFlipUtil.apply(Reef.centerFaces[bestFace(pose, x, y)]);
-    Pose2d nearestSource = bestLoader(pose);
+    Pose2d nearestReef = AllianceFlipUtil.apply(Reef.centerFaces[getBestFace(pose, x, y)]);
+    Pose2d nearestSource = getBestLoader(pose);
 
     double distanceToReef = pose.getTranslation().getDistance(nearestReef.getTranslation());
     double distanceToSource = pose.getTranslation().getDistance(nearestSource.getTranslation());

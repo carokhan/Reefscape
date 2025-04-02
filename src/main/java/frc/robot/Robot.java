@@ -46,7 +46,7 @@ public class Robot extends LoggedRobot {
 
   private static final boolean IS_PRACTICE = !DriverStation.isFMSAttached();
   ;
-  private static final String LOG_DIRECTORY = "/home/lvuser/logs";
+  private static final String LOG_DIRECTORY = "/media/sda1";
   private static final long MIN_FREE_SPACE =
       IS_PRACTICE
           ? 100000000
@@ -201,7 +201,7 @@ public class Robot extends LoggedRobot {
 
   void setupLog() {
     // Check if the log directory exists
-    var directory = new File(LOG_DIRECTORY);
+    File directory = new File(LOG_DIRECTORY);
     if (!directory.exists()) {
       directory.mkdir();
     }
@@ -209,7 +209,7 @@ public class Robot extends LoggedRobot {
     // ensure that there is enough space on the roboRIO to log data
     if (directory.getFreeSpace() < MIN_FREE_SPACE) {
       System.out.println("ERROR: out of space!");
-      var files = directory.listFiles();
+      File[] files = directory.listFiles();
       if (files == null) {
         System.out.println("ERROR: Cannot delete, Files are NULL!");
       } else {

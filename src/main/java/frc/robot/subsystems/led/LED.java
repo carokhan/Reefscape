@@ -48,7 +48,7 @@ public class LED extends SubsystemBase {
     double red = (c1.red * (1 - ratio)) + (c2.red * ratio);
     double green = (c1.green * (1 - ratio)) + (c2.green * ratio);
     double blue = (c1.blue * (1 - ratio)) + (c2.blue * ratio);
-    var color = new Color(red, green, blue);
+    Color color = new Color(red, green, blue);
     return color;
   }
 

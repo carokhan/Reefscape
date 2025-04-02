@@ -23,14 +23,15 @@ public class OuttakeConstants {
 
   public static final double index = 3;
   public static final double L1 = 2;
-  public static final double L234 = 4;
+  public static final double L23 = 4;
+  public static final double L4 = 2;
 
   public static final Map<CoralTarget, Double> targetToCoral =
       Map.of(
           CoralTarget.L1, L1,
-          CoralTarget.L2, L234,
-          CoralTarget.L3, L234,
-          CoralTarget.L4, L234);
+          CoralTarget.L2, L23,
+          CoralTarget.L3, L23,
+          CoralTarget.L4, L4);
 
   public static final double gearing = 20.0 / 12.0;
   public static final double moi = 0.004;

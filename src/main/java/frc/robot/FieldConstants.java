@@ -63,11 +63,12 @@ public class FieldConstants {
             Units.inchesToMeters(33.526),
             Units.inchesToMeters(25.824),
             Rotation2d.fromDegrees(144.011 - 90));
+
     public static final Pose2d leftCenterFace =
         new Pose2d(
-            rightCenterFace.getX(),
-            fieldWidth - rightCenterFace.getY(),
-            Rotation2d.fromRadians(-rightCenterFace.getRotation().getRadians()));
+            Units.inchesToMeters(33.526),
+            Units.inchesToMeters(291.176),
+            Rotation2d.fromDegrees(90 - 144.011));
   }
 
   public static class Reef {
@@ -94,7 +95,7 @@ public class FieldConstants {
 
     static {
       // Initialize faces
-      var aprilTagLayout = AprilTagLayoutType.OFFICIAL.getLayout();
+      AprilTagFieldLayout aprilTagLayout = AprilTagLayoutType.OFFICIAL.getLayout();
       centerFaces[0] = aprilTagLayout.getTagPose(18).get().toPose2d();
       centerFaces[1] = aprilTagLayout.getTagPose(19).get().toPose2d();
       centerFaces[2] = aprilTagLayout.getTagPose(20).get().toPose2d();
@@ -108,12 +109,12 @@ public class FieldConstants {
         Map<ReefLevel, Pose3d> fillLeft = new HashMap<>();
         Map<ReefLevel, Pose2d> fillRight2d = new HashMap<>();
         Map<ReefLevel, Pose2d> fillLeft2d = new HashMap<>();
-        for (var level : ReefLevel.values()) {
+        for (ReefLevel level : ReefLevel.values()) {
           Pose2d poseDirection = new Pose2d(center, Rotation2d.fromDegrees((180 - (60 * face))));
           double adjustX = Units.inchesToMeters(57.738);
           double adjustY = Units.inchesToMeters(6.269);
 
-          var rightBranchPose =
+          Pose3d rightBranchPose =
               new Pose3d(
                   new Translation3d(
                       poseDirection
@@ -127,7 +128,7 @@ public class FieldConstants {
                       0,
                       Units.degreesToRadians(level.pitch),
                       poseDirection.getRotation().getRadians()));
-          var leftBranchPose =
+          Pose3d leftBranchPose =
               new Pose3d(
                   new Translation3d(
                       poseDirection

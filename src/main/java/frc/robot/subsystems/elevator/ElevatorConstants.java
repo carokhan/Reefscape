@@ -11,11 +11,11 @@ public class ElevatorConstants {
   public static final double intake = 0.014;
   public static final double AP = 0.05;
   public static final double L1 = 0.33;
-  public static final double A2 = 0.36;
-  public static final double L2 = 0.66;
+  public static final double A2 = 0.28;
+  public static final double L2 = 0.7;
   public static final double A3 = 0.81;
-  public static final double L3 = 1.1;
-  public static final double L4 = 1.76;
+  public static final double L3 = 1.2;
+  public static final double L4 = 1.77;
   public static final double AN = 1.78;
 
   public static final Map<CoralTarget, Double> targetToCoral =

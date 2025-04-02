@@ -25,6 +25,8 @@ import java.util.function.Supplier;
 import org.photonvision.PhotonCamera;
 import org.photonvision.PhotonPoseEstimator;
 import org.photonvision.PhotonPoseEstimator.PoseStrategy;
+import org.photonvision.targeting.PhotonPipelineResult;
+import org.photonvision.targeting.PhotonTrackedTarget;
 
 /** IO implementation for real PhotonVision hardware. */
 public class VisionIOPhotonVision implements VisionIO {
@@ -60,7 +62,7 @@ public class VisionIOPhotonVision implements VisionIO {
     // Read new camera observations
     Set<Short> tagIds = new HashSet<>();
     List<PoseObservation> poseObservations = new LinkedList<>();
-    for (var result : camera.getAllUnreadResults()) {
+    for (PhotonPipelineResult result : camera.getAllUnreadResults()) {
       poseEstimator.addHeadingData(result.getTimestampSeconds(), rotationSupplier.get());
       // Update latest target observation
       if (result.hasTargets()) {
@@ -89,7 +91,7 @@ public class VisionIOPhotonVision implements VisionIO {
                   if (isMultiTag) {
                     // Calculate average tag distance
                     double totalTagDistance = 0;
-                    for (var target : robotPoseEst.targetsUsed) {
+                    for (PhotonTrackedTarget target : robotPoseEst.targetsUsed) {
                       totalTagDistance += target.bestCameraToTarget.getTranslation().getNorm();
                     }
 
@@ -108,7 +110,7 @@ public class VisionIOPhotonVision implements VisionIO {
                                 / robotPoseEst.targetsUsed.size(), // Average tag distance
                             PoseObservationType.PHOTONVISION_MULTITAG)); // Observation type
                   } else {
-                    var target = robotPoseEst.targetsUsed.get(0);
+                    PhotonTrackedTarget target = robotPoseEst.targetsUsed.get(0);
 
                     // Add tag ID
                     tagIds.add((short) robotPoseEst.targetsUsed.get(0).fiducialId);

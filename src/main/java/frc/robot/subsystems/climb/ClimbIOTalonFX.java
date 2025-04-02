@@ -36,7 +36,7 @@ public class ClimbIOTalonFX implements ClimbIO {
   private double targetPositionRad;
 
   public ClimbIOTalonFX() {
-    final var config = new TalonFXConfiguration();
+    final TalonFXConfiguration config = new TalonFXConfiguration();
 
     config.Slot0.kP = ClimbConstants.kPTalon;
 

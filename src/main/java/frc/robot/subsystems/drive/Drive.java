@@ -46,6 +46,7 @@ import frc.robot.util.LoggedTunableNumber;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
 import java.util.concurrent.locks.ReentrantLock;
+import java.util.function.Consumer;
 import java.util.function.Supplier;
 import org.littletonrobotics.junction.AutoLogOutput;
 import org.littletonrobotics.junction.Logger;
@@ -133,14 +134,14 @@ public class Drive extends SubsystemBase {
     odometryLock.lock(); // Prevents odometry updates while reading data
     gyroIO.updateInputs(gyroInputs);
     Logger.processInputs("Drive/Gyro", gyroInputs);
-    for (var module : modules) {
+    for (Module module : modules) {
       module.periodic();
     }
     odometryLock.unlock();
 
     // Stop moving when disabled
     if (DriverStation.isDisabled()) {
-      for (var module : modules) {
+      for (Module module : modules) {
         module.stop();
       }
     }
@@ -229,7 +230,7 @@ public class Drive extends SubsystemBase {
   public Command driveVelocityFieldRelative(Supplier<ChassisSpeeds> speeds) {
     return this.driveVelocity(
         () -> {
-          var speed = ChassisSpeeds.fromFieldRelativeSpeeds(speeds.get(), getRotation());
+          ChassisSpeeds speed = ChassisSpeeds.fromFieldRelativeSpeeds(speeds.get(), getRotation());
           return speed;
         });
   }
@@ -300,13 +301,13 @@ public class Drive extends SubsystemBase {
 
   /** Returns the measured chassis speeds of the robot. */
   @AutoLogOutput(key = "SwerveChassisSpeeds/Measured")
-  private ChassisSpeeds getChassisSpeeds() {
+  public ChassisSpeeds getChassisSpeeds() {
     return kinematics.toChassisSpeeds(getModuleStates());
   }
 
   @AutoLogOutput(key = "Odometry/Velocity Field Relative")
   public ChassisSpeeds getVelocityFieldRelative() {
-    var speeds =
+    ChassisSpeeds speeds =
         kinematics.toChassisSpeeds(
             Arrays.stream(modules).map(m -> m.getState()).toArray(SwerveModuleState[]::new));
     speeds = ChassisSpeeds.fromRobotRelativeSpeeds(speeds, getRotation());
@@ -377,27 +378,33 @@ public class Drive extends SubsystemBase {
     };
   }
 
-  public void followTrajectory(SwerveSample sample) {
-    autoHeadingPID.enableContinuousInput(-Math.PI, Math.PI);
-
-    // Get the current pose of the robot
-    Pose2d pose = getPose();
-
-    // Generate the next speeds for the robot
-    ChassisSpeeds speeds =
-        new ChassisSpeeds(
-            sample.vx + autoXPID.calculate(pose.getX(), sample.x),
-            sample.vy + autoYPID.calculate(pose.getY(), sample.y),
-            sample.omega
-                + autoHeadingPID.calculate(
-                    pose.getRotation().getRadians(),
-                    Rotation2d.fromRadians(sample.heading).getRadians()));
-
-    this.runVelocity(ChassisSpeeds.fromFieldRelativeSpeeds(speeds, this.getRotation()));
-  }
-
   public Rotation2d getReefAngle() {
 
     return new Rotation2d();
+  }
+
+  public Consumer<SwerveSample> choreoDriveController() {
+    final PIDController xController = new PIDController(5.0, 0.0, 0.0);
+    final PIDController yController = new PIDController(5.0, 0.0, 0.0);
+    final PIDController thetaController = new PIDController(10.0, 0.0, 0.0);
+    thetaController.enableContinuousInput(-Math.PI, Math.PI);
+    return (sample) -> {
+      final Pose2d pose = getPose();
+      Logger.recordOutput(
+          "Choreo/Target Pose",
+          new Pose2d(sample.x, sample.y, Rotation2d.fromRadians(sample.heading)));
+      Logger.recordOutput(
+          "Choreo/Target Speeds Field Relative",
+          new ChassisSpeeds(sample.vx, sample.vy, sample.omega));
+      ChassisSpeeds feedback =
+          new ChassisSpeeds(
+              xController.calculate(pose.getX(), sample.x),
+              yController.calculate(pose.getY(), sample.y),
+              thetaController.calculate(pose.getRotation().getRadians(), sample.heading));
+      ChassisSpeeds speeds =
+          ChassisSpeeds.fromFieldRelativeSpeeds(
+              new ChassisSpeeds(sample.vx, sample.vy, sample.omega).plus(feedback), getRotation());
+      this.runVelocity(speeds);
+    };
   }
 }

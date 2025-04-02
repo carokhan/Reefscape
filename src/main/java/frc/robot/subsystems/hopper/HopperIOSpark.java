@@ -20,7 +20,7 @@ public class HopperIOSpark implements HopperIO {
   private final Debouncer currentDebounce = new Debouncer(0.2);
 
   public HopperIOSpark() {
-    var sparkConfig = new SparkMaxConfig();
+    SparkMaxConfig sparkConfig = new SparkMaxConfig();
     sparkConfig
         .idleMode(IdleMode.kBrake)
         .smartCurrentLimit(HopperConstants.current)

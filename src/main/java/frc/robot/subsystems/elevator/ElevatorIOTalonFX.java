@@ -186,7 +186,7 @@ public class ElevatorIOTalonFX implements ElevatorIO {
 
   @Override
   public void setPDFF(int slot, double kP, double kD, double kS, double kG) {
-    var slotConfigs =
+    SlotConfigs slotConfigs =
         new SlotConfigs()
             .withKP(kP)
             .withKI(ElevatorConstants.kI)
