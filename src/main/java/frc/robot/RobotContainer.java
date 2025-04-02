@@ -267,7 +267,7 @@ public class RobotContainer {
     autoChooser.addOption("RO to E", autoRoutines.ROtoE());
     autoChooser.addOption("LO to I", autoRoutines.LOtoI());
     autoChooser.addOption("LO to J", autoRoutines.LOtoJ());
-    autoChooser.addOption("LO to K", autoRoutines.LOtoItoPLOtoK());
+    autoChooser.addOption("LO to L", autoRoutines.LOtoL());
 
     // RobotModeTriggers.autonomous()
     // .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));
@@ -422,10 +422,15 @@ public class RobotContainer {
                                 drive.getPose()))
                     .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
 
-    operator.y().onTrue(superstructure.setCoralTarget(CoralTarget.L4));
-    operator.x().onTrue(superstructure.setCoralTarget(CoralTarget.L3));
-    operator.b().onTrue(superstructure.setCoralTarget(CoralTarget.L2));
-    operator.a().onTrue(superstructure.setCoralTarget(CoralTarget.L1));
+    // operator.y().onTrue(superstructure.setCoralTarget(CoralTarget.L4));
+    // operator.x().onTrue(superstructure.setCoralTarget(CoralTarget.L3));
+    // operator.b().onTrue(superstructure.setCoralTarget(CoralTarget.L2));
+    // operator.a().onTrue(superstructure.setCoralTarget(CoralTarget.L1));
+
+    // operator.y().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L4)));
+    // operator.x().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L3)));
+    // operator.b().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L2)));
+    // operator.a().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L1)));
 
     operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
     operator

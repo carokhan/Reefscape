@@ -54,11 +54,11 @@ public class AutoRoutines {
   public Command LMtoH() {
     superstructure.outtake.setSimDetected(true);
     final var routine = factory.newRoutine("LM to H");
-    final var start = routine.trajectory("LMtoH");
-    routine.active().whileTrue(Commands.sequence(start.resetOdometry(), start.cmd()));
+    final var score = routine.trajectory("LMtoH");
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
 
     routine
-        .observe(start.done())
+        .observe(score.done())
         .onTrue(
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
@@ -76,11 +76,11 @@ public class AutoRoutines {
   public Command ROtoE() {
     superstructure.outtake.setSimDetected(true);
     final var routine = factory.newRoutine("RO to E");
-    final var start = routine.trajectory("ROtoE");
-    routine.active().whileTrue(Commands.sequence(start.resetOdometry(), start.cmd()));
+    final var score = routine.trajectory("ROtoE");
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
 
     routine
-        .observe(start.done())
+        .observe(score.done())
         .onTrue(
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
@@ -98,11 +98,11 @@ public class AutoRoutines {
   public Command LOtoI() {
     superstructure.outtake.setSimDetected(true);
     final var routine = factory.newRoutine("LO to I");
-    final var start = routine.trajectory("LOtoI");
-    routine.active().whileTrue(Commands.sequence(start.resetOdometry(), start.cmd()));
+    final var score = routine.trajectory("LOtoI");
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
 
     routine
-        .observe(start.done())
+        .observe(score.done())
         .onTrue(
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
@@ -138,12 +138,12 @@ public class AutoRoutines {
 
   public Command PLOtoK() {
     final var routine = factory.newRoutine("PLO to K");
-    final var score2 = routine.trajectory("PLOtoK");
+    final var score = routine.trajectory("PLOtoK");
 
-    routine.active().whileTrue(Commands.sequence(score2.resetOdometry(), score2.cmd()));
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
 
     routine
-        .observe(score2.done())
+        .observe(score.done())
         .onTrue(
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
@@ -158,76 +158,66 @@ public class AutoRoutines {
     return routine.cmd();
   }
 
-  public Command LOtoItoPLOtoK() {
+  public Command KtoPLO() {
+    final var routine = factory.newRoutine("K to PLO");
+    final var intake = routine.trajectory("KtoPLO");
+
+    routine.active().whileTrue(Commands.sequence(intake.resetOdometry(), intake.cmd()));
+
+    routine
+        .observe(intake.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.waitUntil(this::atReef)
+                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
+                Commands.waitUntil(this::atScore)
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command PLOtoL() {
+    final var routine = factory.newRoutine("PLO to L");
+    final var score = routine.trajectory("PLOtoL");
+
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.waitUntil(this::atReef)
+                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
+                Commands.waitUntil(this::atScore)
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command LOtoL() {
     return Commands.sequence(
         this.LOtoI().onlyWhile(superstructure.outtake::getDetected),
         this.ItoPLO().onlyWhile(() -> !superstructure.outtake.getDetected()),
-        this.PLOtoK());
-
-    // superstructure.outtake.setSimDetected(true);
-    // final var routine = factory.newRoutine("LO to I to PLO");
-    // final var score1 = routine.trajectory("LOtoI");
-    // final var intake = routine.trajectory("ItoPLO");
-    // final var score2 = routine.trajectory("PLOtoK");
-    // routine.active().whileTrue(Commands.sequence(score1.resetOdometry(),
-    // score1.cmd()));
-
-    // routine
-    // .observe(score1.done())
-    // .onTrue(
-    // Commands.parallel(
-    // Commands.waitUntil(this::atReef)
-    // .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-    // Commands.waitUntil(this::atScore)
-    // .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
-    // AutoAlign.translateToPose(
-    // drive,
-    // () ->
-    // AutoAlign.getBestBranch(drive.getPose())
-    // .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg))))
-    // .onlyWhile(superstructure.outtake::getDetected)
-    // .andThen(
-    // Commands.parallel(
-    // superstructure.elevator.setExtension(ElevatorConstants.intake),
-    // superstructure.hopper.setVoltage(HopperConstants.intake),
-    // superstructure.outtake.index())));
-    // routine.observe(this::readyToIntake).onTrue(intake.cmd());
-    // routine
-    // .observe(intake.done())
-    // .onTrue(
-    // Commands.parallel(
-    // AutoAlign.translateToPose(
-    // drive, () -> AutoAlign.getBestLoader(drive.getPose())),
-    // Commands.waitUntil(superstructure.outtake::getDetected))
-    // .andThen(
-    // Commands.parallel(
-    // superstructure.hopper.setVoltage(0),
-    // superstructure.outtake.setVoltage(0))));
-    // routine.observe(superstructure.outtake::getDetected).onTrue(score2.cmd());
-    // routine
-    // .observe(score2.done())
-    // .onTrue(
-    // Commands.parallel(
-    // Commands.waitUntil(this::atReef)
-    // .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-    // Commands.waitUntil(this::atScore)
-    // .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
-    // AutoAlign.translateToPose(
-    // drive,
-    // () ->
-    // AutoAlign.getBestBranch(drive.getPose())
-    // .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
-
-    // return routine.cmd();
+        this.PLOtoK().onlyWhile(superstructure.outtake::getDetected),
+        this.KtoPLO().onlyWhile(() -> !superstructure.outtake.getDetected()),
+        this.PLOtoL());
   }
 
   public Command LOtoJ() {
     superstructure.outtake.setSimDetected(true);
     final var routine = factory.newRoutine("LO to J");
-    final var start = routine.trajectory("LOtoJ");
-    routine.active().whileTrue(Commands.sequence(start.resetOdometry(), start.cmd()));
+    final var score = routine.trajectory("LOtoJ");
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
     routine
-        .observe(start.done())
+        .observe(score.done())
         .onTrue(
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
