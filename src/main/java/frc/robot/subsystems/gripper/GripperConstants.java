@@ -16,5 +16,5 @@ public class GripperConstants {
   public static final double gearing = 3.0;
   public static final double moi = 0.004;
 
-  public static final double proximityThreshold = 0.15;
+  public static final double proximityThreshold = 0.5;
 }

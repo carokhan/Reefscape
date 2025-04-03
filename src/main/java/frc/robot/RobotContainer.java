@@ -13,7 +13,6 @@
 
 package frc.robot;
 
-import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
@@ -23,6 +22,7 @@ import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import edu.wpi.first.wpilibj2.command.button.CommandXboxController;
 import edu.wpi.first.wpilibj2.command.button.RobotModeTriggers;
 import edu.wpi.first.wpilibj2.command.button.Trigger;
 import frc.robot.FieldConstants.Reef;
@@ -44,6 +44,7 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
@@ -106,7 +107,7 @@ public class RobotContainer {
 
   // Controller
   private final CommandXboxControllerSubsystem driver = new CommandXboxControllerSubsystem(0);
-  private final CommandXboxControllerSubsystem operator = new CommandXboxControllerSubsystem(1);
+  private final CommandXboxController operator = new CommandXboxController(1);
 
   private final LoggedDashboardChooser<Command> autoChooser;
   private final AutoRoutines autoRoutines;
@@ -219,6 +220,7 @@ public class RobotContainer {
             CoralTarget.L4,
             () -> -driver.getLeftY(),
             () -> -driver.getLeftX(),
+            () -> -operator.getRightY(),
             driver.rightTrigger(),
             driver
                 .leftTrigger()
@@ -284,7 +286,6 @@ public class RobotContainer {
     climb.setCoastOverride(() -> superstructureCoastOverride);
 
     driver.setDefaultCommand(driver.rumbleCmd(0.0, 0.0));
-    operator.setDefaultCommand(operator.rumbleCmd(0.0, 0.0));
 
     // Configure the button bindings
     configureButtonBindings();
@@ -483,9 +484,24 @@ public class RobotContainer {
                 .ignoringDisable(true));
     operator
         .rightTrigger()
-        .whileTrue(
-            elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(-operator.getRightY(), 0.05)))
-        .onFalse(elevator.setVoltage(() -> 0));
+        .and(operator.a())
+        .onTrue(superstructure.elevator.setExtension(ElevatorConstants.L1));
+
+    operator
+        .rightTrigger()
+        .and(operator.b())
+        .onTrue(superstructure.elevator.setExtension(ElevatorConstants.L2));
+
+    operator
+        .rightTrigger()
+        .and(operator.x())
+        .onTrue(superstructure.elevator.setExtension(ElevatorConstants.L3));
+
+    operator
+        .rightTrigger()
+        .and(operator.y())
+        .onTrue(superstructure.elevator.setExtension(ElevatorConstants.L4));
+
     RobotModeTriggers.disabled()
         .onFalse(
             Commands.runOnce(
