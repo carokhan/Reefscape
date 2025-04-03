@@ -445,6 +445,7 @@ public class Superstructure {
 
     stateTriggers
         .get(State.ALGAE_READY)
+        .or(stateTriggers.get(State.ALGAE_INTAKE))
         .and(algaeNetRequest)
         .and(
             () ->
@@ -476,6 +477,7 @@ public class Superstructure {
 
     stateTriggers
         .get(State.ALGAE_CONFIRM_AN)
+        .or(stateTriggers.get(State.ALGAE_INTAKE))
         .and(scoreRequest)
         .onTrue(
             Commands.parallel(

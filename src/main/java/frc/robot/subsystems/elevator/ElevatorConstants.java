@@ -11,7 +11,7 @@ public class ElevatorConstants {
   public static final double intake = 0.014;
   public static final double AP = 0.05;
   public static final double L1 = 0.33;
-  public static final double A2 = 0.28;
+  public static final double A2 = 0.25;
   public static final double L2 = 0.7;
   public static final double A3 = 0.81;
   public static final double L3 = 1.2;
@@ -45,8 +45,8 @@ public class ElevatorConstants {
   public static final double tolerance = .005;
 
   public static final int statorCurrent = 120;
-  public static final int supplyCurrent = 80;
-  public static final int supplyCurrentLow = 40;
+  public static final int supplyCurrent = 90;
+  public static final int supplyCurrentLow = 60;
 
   public static final double[] kS = {0.74, 0.74, 0.74}; // 0.2
   public static final double[] kG = {0.459, 0.459, 0.459};
@@ -55,7 +55,7 @@ public class ElevatorConstants {
   public static final double kA = 0.0;
   public static final double kAExpo = 0.1189;
 
-  public static final double kP = 55.0;
+  public static final double kP = 65.0;
   public static final double kI = 0.0;
   public static final double kD = 0.0;
 
