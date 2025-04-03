@@ -17,6 +17,7 @@ import edu.wpi.first.math.MathUtil;
 import edu.wpi.first.math.geometry.Pose2d;
 import edu.wpi.first.math.geometry.Rotation2d;
 import edu.wpi.first.math.geometry.Transform2d;
+import edu.wpi.first.math.trajectory.TrapezoidProfile.Constraints;
 import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.GenericHID;
 import edu.wpi.first.wpilibj.XboxController;
@@ -226,6 +227,8 @@ public class RobotContainer {
                         (AutoAlign.closerIntake(
                                 drive.getPose(), -driver.getLeftY(), -driver.getLeftX())
                             == IntakeLocation.SOURCE)),
+            driver.b(),
+            driver.x(),
             driver
                 .leftTrigger()
                 .and(
@@ -239,6 +242,7 @@ public class RobotContainer {
             driver.rightTrigger(),
             driver.rightBumper(),
             operator.leftTrigger(),
+            operator.rightTrigger(),
             operator.leftBumper(),
             driver.povLeft());
 
@@ -248,20 +252,25 @@ public class RobotContainer {
 
     // Set up SysId routines
     // autoChooser.addOption(
-    //     "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
+    // "Drive Wheel Radius Characterization",
+    // DriveCommands.wheelRadiusCharacterization(drive));
     // autoChooser.addOption(
-    //     "Drive Simple FF Characterization", DriveCommands.feedforwardCharacterization(drive));
+    // "Drive Simple FF Characterization",
+    // DriveCommands.feedforwardCharacterization(drive));
     // autoChooser.addOption(
-    //     "Drive SysId (Quasistatic Forward)",
-    //     drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+    // "Drive SysId (Quasistatic Forward)",
+    // drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
     // autoChooser.addOption(
-    //     "Drive SysId (Quasistatic Reverse)",
-    //     drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+    // "Drive SysId (Quasistatic Reverse)",
+    // drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
     // autoChooser.addOption(
-    //     "Drive SysId (Dynamic Forward)", drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+    // "Drive SysId (Dynamic Forward)",
+    // drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
     // autoChooser.addOption(
-    //     "Drive SysId (Dynamic Reverse)", drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-    // autoChooser.addOption("Elevator static", elevator.staticCharacterization(1.0));
+    // "Drive SysId (Dynamic Reverse)",
+    // drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+    // autoChooser.addOption("Elevator static",
+    // elevator.staticCharacterization(1.0));
 
     autoChooser.addOption("LM to H", autoRoutines.LMtoH());
     autoChooser.addOption("RO to E", autoRoutines.ROtoE());
@@ -387,7 +396,7 @@ public class RobotContainer {
                           int bestFace =
                               AutoAlign.getBestFace(
                                   drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
-                          Pose2d selected = AllianceFlipUtil.apply(Reef.algaePoses[bestFace]);
+                          Pose2d selected = AllianceFlipUtil.apply(Reef.algaeIntake[bestFace]);
                           Logger.recordOutput("AutoAlign/Active", selected);
                           return selected;
                         },
@@ -405,15 +414,38 @@ public class RobotContainer {
                     .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
 
     driver
+        .povUp()
+        .and(gripper::getDualDetected)
+        .whileTrue(
+            Commands.parallel(
+                AutoAlign.autoAimWithIntermediatePose(
+                        drive,
+                        () -> AllianceFlipUtil.apply(FieldConstants.Barge.net),
+                        // Keeps the robot off the reef wall until it's aligned side-side
+                        new Transform2d(0.0, 0.0, Rotation2d.kZero),
+                        new Constraints(
+                            AutoAlignConstants.maxLinearSpeed / 2,
+                            AutoAlignConstants.maxLinearAccel / 2))
+                    .andThen(drive.stopWithXCmd()),
+                Commands.waitUntil(
+                        () ->
+                            AutoAlign.isInTolerance(
+                                AllianceFlipUtil.apply(FieldConstants.Barge.net), drive.getPose()))
+                    .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
+
+    driver
         .povDown()
-        .and(gripper::getDetected)
+        .and(gripper::getDualDetected)
         .whileTrue(
             Commands.parallel(
                 AutoAlign.autoAimWithIntermediatePose(
                         drive,
                         () -> AllianceFlipUtil.apply(FieldConstants.Processor.robotProcess),
                         // Keeps the robot off the reef wall until it's aligned side-side
-                        new Transform2d(0.0, 0.0, Rotation2d.kZero))
+                        new Transform2d(0.0, 0.0, Rotation2d.kZero),
+                        new Constraints(
+                            AutoAlignConstants.maxLinearSpeed / 2,
+                            AutoAlignConstants.maxLinearAccel / 2))
                     .andThen(drive.stopWithXCmd()),
                 Commands.waitUntil(
                         () ->
@@ -422,10 +454,10 @@ public class RobotContainer {
                                 drive.getPose()))
                     .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
 
-    // operator.y().onTrue(superstructure.setCoralTarget(CoralTarget.L4));
-    // operator.x().onTrue(superstructure.setCoralTarget(CoralTarget.L3));
-    // operator.b().onTrue(superstructure.setCoralTarget(CoralTarget.L2));
-    // operator.a().onTrue(superstructure.setCoralTarget(CoralTarget.L1));
+    operator.y().onTrue(superstructure.setCoralTarget(CoralTarget.L4));
+    operator.x().onTrue(superstructure.setCoralTarget(CoralTarget.L3));
+    operator.b().onTrue(superstructure.setCoralTarget(CoralTarget.L2));
+    operator.a().onTrue(superstructure.setCoralTarget(CoralTarget.L1));
 
     // operator.y().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L4)));
     // operator.x().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L3)));

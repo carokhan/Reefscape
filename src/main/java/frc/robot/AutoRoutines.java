@@ -112,6 +112,8 @@ public class AutoRoutines {
                 AutoAlign.translateToPose(
                     drive,
                     () ->
+                        // AllianceFlipUtil.apply(
+                        //     FieldConstants.Reef.branchPositions2d.get(5).get(ReefLevel.L4))
                         AutoAlign.getBestBranch(drive.getPose())
                             .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
     return routine.cmd();
@@ -153,6 +155,8 @@ public class AutoRoutines {
                 AutoAlign.translateToPose(
                     drive,
                     () ->
+                        // AllianceFlipUtil.apply(
+                        //     FieldConstants.Reef.branchPositions2d.get(3).get(ReefLevel.L4))
                         AutoAlign.getBestBranch(drive.getPose())
                             .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
     return routine.cmd();
@@ -197,6 +201,8 @@ public class AutoRoutines {
                 AutoAlign.translateToPose(
                     drive,
                     () ->
+                        // AllianceFlipUtil.apply(
+                        //     FieldConstants.Reef.branchPositions2d.get(2).get(ReefLevel.L4))
                         AutoAlign.getBestBranch(drive.getPose())
                             .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
     return routine.cmd();

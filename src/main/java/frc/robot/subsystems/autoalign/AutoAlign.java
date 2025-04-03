@@ -28,7 +28,7 @@ public class AutoAlign {
 
   public static Pose2d getBestLoader(Pose2d currentPose) {
     Pose2d loader =
-        AllianceFlipUtil.apply(currentPose).getY() > (FieldConstants.fieldWidth / 2)
+        AllianceFlipUtil.applyY(currentPose.getY()) > (FieldConstants.fieldWidth / 2)
             ? AllianceFlipUtil.apply(CoralStation.leftCenterFace)
             : AllianceFlipUtil.apply(CoralStation.rightCenterFace);
 
@@ -145,15 +145,15 @@ public class AutoAlign {
     headingController.enableContinuousInput(-Math.PI, Math.PI);
     final ProfiledPIDController vxController =
         new ProfiledPIDController(
-            12.0,
-            0.03,
+            11.0,
+            0.01,
             0.02,
             new TrapezoidProfile.Constraints(
                 AutoAlignConstants.maxLinearSpeed, AutoAlignConstants.maxLinearAccel));
     final ProfiledPIDController vyController =
         new ProfiledPIDController(
-            12.0,
-            0.03,
+            11.0,
+            0.01,
             0.02,
             new TrapezoidProfile.Constraints(
                 AutoAlignConstants.maxLinearSpeed, AutoAlignConstants.maxLinearAccel));

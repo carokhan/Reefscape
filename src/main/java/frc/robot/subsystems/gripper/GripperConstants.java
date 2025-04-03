@@ -8,8 +8,6 @@ public class GripperConstants {
   public static final double A23 = -6;
   public static final double AN = 12;
 
-  public static final double hold = -1;
-
   public static final double current = 60;
   public static final double currentLower = 40;
   public static final double currentLowerTime = 0.5;

@@ -384,8 +384,8 @@ public class Drive extends SubsystemBase {
   }
 
   public Consumer<SwerveSample> choreoDriveController() {
-    final PIDController xController = new PIDController(5.0, 0.0, 0.0);
-    final PIDController yController = new PIDController(5.0, 0.0, 0.0);
+    final PIDController xController = new PIDController(8.0, 0.0, 0.0);
+    final PIDController yController = new PIDController(8.0, 0.0, 0.0);
     final PIDController thetaController = new PIDController(10.0, 0.0, 0.0);
     thetaController.enableContinuousInput(-Math.PI, Math.PI);
     return (sample) -> {

@@ -80,6 +80,12 @@ public class Superstructure {
   @AutoLogOutput(key = "Superstructure/Coral Intake")
   private final Trigger coralIntakeRequest;
 
+  @AutoLogOutput(key = "Superstructure/Coral Eject")
+  private final Trigger coralEjectRequest;
+
+  @AutoLogOutput(key = "Superstructure/Algae Eject")
+  private final Trigger algaeEjectRequest;
+
   @AutoLogOutput(key = "Superstructure/Algae Intake")
   private final Trigger algaeIntakeRequest;
 
@@ -100,6 +106,9 @@ public class Superstructure {
 
   @AutoLogOutput(key = "Superstructure/Homing Request")
   private final Trigger homeRequest;
+
+  @AutoLogOutput(key = "Superstructure/Elevator Manual Request")
+  private final Trigger elevManualRequest;
 
   @AutoLogOutput(key = "Superstructure/Coast Request")
   private final Trigger superstructureCoastRequest;
@@ -217,6 +226,8 @@ public class Superstructure {
       DoubleSupplier driverY,
       Trigger scoreRequest,
       Trigger coralIntakeRequest,
+      Trigger coralEjectRequest,
+      Trigger algaeEjectRequest,
       Trigger algaeIntakeRequest,
       Trigger algaeNetRequest,
       Trigger algaeProcessRequest,
@@ -224,6 +235,7 @@ public class Superstructure {
       Trigger climbRequest,
       Trigger cancelClimbRequest,
       Trigger homeRequest,
+      Trigger elevManualRequest,
       Trigger superstructureCoastRequest,
       Trigger cancelRequest) {
     this.hopper = hopper;
@@ -242,6 +254,8 @@ public class Superstructure {
 
     this.scoreRequest = scoreRequest;
     this.coralIntakeRequest = coralIntakeRequest;
+    this.coralEjectRequest = coralEjectRequest;
+    this.algaeEjectRequest = algaeEjectRequest;
     this.algaeIntakeRequest = algaeIntakeRequest;
     this.algaeNetRequest = algaeNetRequest;
     this.algaeProcessRequest = algaeProcessRequest;
@@ -249,13 +263,24 @@ public class Superstructure {
     this.climbRequest = climbRequest;
     this.cancelClimbRequest = cancelClimbRequest;
     this.homeRequest = homeRequest;
+    this.elevManualRequest = elevManualRequest;
     this.superstructureCoastRequest = superstructureCoastRequest;
     this.cancelRequest = cancelRequest;
     this.algaeTarget = ElevatorConstants.A3;
 
+    // final Trigger elevatorNetSafety =
+    // new Trigger(
+    // () ->
+    // ((Math.abs(pose.get().getX() - FieldConstants.startingLineX) < 0.625)
+    // && (elevator.getExtensionMeters() > 1)));
+
     for (State state : State.values()) {
       stateTriggers.put(state, new Trigger(() -> this.state == state && DriverStation.isEnabled()));
     }
+
+    // elevatorNetSafety.onTrue(
+    // Commands.parallel(
+    // elevator.setExtension(ElevatorConstants.AP), this.forceState(State.IDLE)));
 
     cancelRequest.onTrue(
         Commands.parallel(
@@ -268,13 +293,33 @@ public class Superstructure {
             gripper.setVoltage(0),
             this.forceState(State.IDLE)));
 
+    coralEjectRequest.onTrue(
+        Commands.parallel(
+                elevator.setExtension(ElevatorConstants.A2),
+                Commands.waitUntil(elevator::isNearExtension)
+                    .andThen(outtake.setVoltage(OuttakeConstants.L23)))
+            .onlyWhile(outtake::getDetected)
+            .andThen(Commands.parallel(outtake.setVoltage(0)), this.forceState(State.IDLE)));
+
+    algaeEjectRequest.onTrue(
+        Commands.parallel(
+                elevator.setExtension(ElevatorConstants.A2),
+                Commands.waitUntil(elevator::isNearExtension)
+                    .andThen(gripper.setVoltage(GripperConstants.AP)))
+            .onlyWhile(gripper::getDetected)
+            .andThen(Commands.parallel(gripper.setVoltage(0)), this.forceState(State.IDLE)));
+
     // IDLE State Transitions (Starts: Robot idle, Ends: Various transitions based
     // on detections and requests)
     stateTriggers
         .get(State.IDLE)
         .onTrue(
             Commands.parallel(
-                elevator.homingSequence().andThen(elevator.reset()), gripper.setVoltage(0)));
+                elevator
+                    .homingSequence()
+                    .andThen(elevator.reset())
+                    .onlyIf(() -> !elevManualRequest.getAsBoolean()),
+                gripper.setVoltage(0)));
 
     stateTriggers
         .get(State.IDLE)
@@ -290,7 +335,7 @@ public class Superstructure {
         .and(gripper::getDetected)
         .onTrue(
             Commands.parallel(
-                gripper.setVoltage(GripperConstants.hold), this.forceState(State.ALGAE_READY)));
+                gripper.setVoltage(GripperConstants.A23), this.forceState(State.ALGAE_READY)));
 
     stateTriggers
         .get(State.IDLE)
@@ -313,9 +358,7 @@ public class Superstructure {
         .and(() -> this.getAlgaeTarget() == ElevatorConstants.A3)
         .onTrue(
             Commands.parallel(
-                elevator.setExtension(ElevatorConstants.A3),
-                gripper.setVoltage(GripperConstants.A23),
-                this.forceState(State.ALGAE_INTAKE)));
+                gripper.setVoltage(GripperConstants.A23), this.forceState(State.ALGAE_INTAKE)));
 
     stateTriggers
         .get(State.IDLE)
@@ -431,33 +474,59 @@ public class Superstructure {
     // ALGAE State Transitions (Starts: Algae handling, Ends: Scoring or reset)
     stateTriggers
         .get(State.ALGAE_INTAKE)
-        .and(gripper::getDetected)
+        .and(scoreRequest)
+        .and(() -> this.getAlgaeTarget() == ElevatorConstants.A3)
+        .onTrue(
+            elevator
+                .setExtension(ElevatorConstants.A3 + .25)
+                .onlyWhile(() -> !gripper.getDualDetected())
+                .andThen(
+                    Commands.waitUntil(
+                            () ->
+                                (pose.get()
+                                        .getTranslation()
+                                        .getDistance(AllianceFlipUtil.apply(Reef.center)))
+                                    > ElevatorConstants.reefRaiseDistance)
+                        .andThen(
+                            Commands.parallel(
+                                elevator.setExtension(ElevatorConstants.intake),
+                                this.forceState(State.ALGAE_READY)))));
+
+    stateTriggers
+        .get(State.ALGAE_INTAKE)
+        .and(scoreRequest)
+        .and(() -> this.getAlgaeTarget() == ElevatorConstants.A2)
         .onTrue(
             Commands.parallel(
-                gripper.setVoltage(GripperConstants.hold),
-                Commands.waitUntil(
-                        () ->
-                            (pose.get()
-                                    .getTranslation()
-                                    .getDistance(AllianceFlipUtil.apply(Reef.center)))
-                                > ElevatorConstants.reefRaiseDistance)
-                    .andThen(this.forceState(State.ALGAE_READY))));
+                elevator
+                    .setExtension(ElevatorConstants.A2 + .25)
+                    .onlyWhile(() -> !gripper.getDualDetected())
+                    .andThen(
+                        Commands.waitUntil(
+                                () ->
+                                    (pose.get()
+                                            .getTranslation()
+                                            .getDistance(AllianceFlipUtil.apply(Reef.center)))
+                                        > ElevatorConstants.reefRaiseDistance)
+                            .andThen(
+                                Commands.parallel(
+                                    elevator.setExtension(ElevatorConstants.intake),
+                                    this.forceState(State.ALGAE_READY))))));
 
     stateTriggers
         .get(State.ALGAE_READY)
-        .or(stateTriggers.get(State.ALGAE_INTAKE))
-        .and(algaeNetRequest)
-        .and(
+        .or(
             () ->
-                (Math.abs(pose.get().getX() - FieldConstants.fieldLength / 2)
-                        < ElevatorConstants.netRaiseDistanceUpper)
-                    && (Math.abs(pose.get().getX() - FieldConstants.fieldLength / 2)
-                        > ElevatorConstants.netRaiseDistanceLower))
-        .and(() -> AllianceFlipUtil.applyY(pose.get().getY()) > FieldConstants.fieldWidth / 2)
-        .onTrue(
-            Commands.parallel(
-                elevator.setExtension(ElevatorConstants.AN),
-                this.forceState(State.ALGAE_CONFIRM_AN)));
+                (stateTriggers.get(State.ALGAE_INTAKE).getAsBoolean() && gripper.getDualDetected()))
+        // .and(
+        // () ->
+        // (Math.abs(pose.get().getX() - FieldConstants.fieldLength / 2)
+        // < ElevatorConstants.netRaiseDistanceUpper)
+        // && (Math.abs(pose.get().getX() - FieldConstants.fieldLength / 2)
+        // > ElevatorConstants.netRaiseDistanceLower))
+        // .and(() -> AllianceFlipUtil.applyY(pose.get().getY()) >
+        // FieldConstants.fieldWidth / 2)
+        .onTrue(this.forceState(State.ALGAE_CONFIRM_AN));
 
     stateTriggers
         .get(State.ALGAE_READY)
@@ -477,16 +546,17 @@ public class Superstructure {
 
     stateTriggers
         .get(State.ALGAE_CONFIRM_AN)
-        .or(stateTriggers.get(State.ALGAE_INTAKE))
         .and(scoreRequest)
         .onTrue(
             Commands.parallel(
-                gripper.setVoltage(GripperConstants.AN),
-                Commands.waitSeconds(1)
-                    .andThen(
-                        elevator
-                            .setExtension(ElevatorConstants.intake)
-                            .andThen(this.forceState(State.IDLE)))));
+                    elevator.setExtension(ElevatorConstants.AN),
+                    Commands.waitUntil(elevator::isNearExtension)
+                        .andThen(gripper.setVoltage(GripperConstants.AN)))
+                .onlyWhile(gripper::getDualDetected)
+                .andThen(
+                    elevator
+                        .setExtension(ElevatorConstants.intake)
+                        .andThen(this.forceState(State.IDLE))));
 
     stateTriggers
         .get(State.ALGAE_CONFIRM_AP)
@@ -535,18 +605,6 @@ public class Superstructure {
                   Commands.parallel(hopper.setSimDetected(true), outtake.setSimDetected(true))));
 
       stateTriggers
-          .get(State.ALGAE_INTAKE)
-          .and(
-              () ->
-                  (Reef.centerFaces[
-                          AutoAlign.getBestFace(
-                              pose.get(), driverX.getAsDouble(), driverY.getAsDouble())]
-                          .getTranslation()
-                          .getDistance(pose.get().getTranslation())
-                      < 0.25))
-          .onTrue(Commands.sequence(Commands.waitSeconds(0.5), hopper.setSimDetected(true)));
-
-      stateTriggers
           .get(State.CORAL_CONFIRM)
           .and(scoreRequest)
           .onTrue(Commands.sequence(Commands.waitSeconds(0.5), outtake.setSimDetected(false)));
@@ -555,13 +613,18 @@ public class Superstructure {
           .get(State.ALGAE_INTAKE)
           .and(
               () ->
-                  (FieldConstants.Reef.algaePoses[
+                  (FieldConstants.Reef.algaeIntake[
                           AutoAlign.getBestFace(
                               pose.get(), driverX.getAsDouble(), driverY.getAsDouble())]
                           .getTranslation()
                           .getDistance(pose.get().getTranslation())
                       < 0.75))
           .onTrue(Commands.sequence(Commands.waitSeconds(0.5), gripper.setSimDetected(true)));
+
+      stateTriggers
+          .get(State.ALGAE_CONFIRM_AN)
+          .and(scoreRequest)
+          .onTrue(Commands.sequence(Commands.waitSeconds(0.5), gripper.setSimDetected(false)));
     }
   }
 

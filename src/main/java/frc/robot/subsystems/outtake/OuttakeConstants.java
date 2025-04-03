@@ -7,7 +7,7 @@ import java.util.Map;
 
 public class OuttakeConstants {
   public static final int talon = 20;
-  public static final int current = 40;
+  public static final int current = 60;
   public static final boolean inverted = false;
 
   public static final int canandcolor = 21;
@@ -22,9 +22,9 @@ public class OuttakeConstants {
   public static final int laserBaseRight = 25;
 
   public static final double index = 3;
-  public static final double L1 = 2;
+  public static final double L1 = 3;
   public static final double L23 = 4;
-  public static final double L4 = 2;
+  public static final double L4 = 4;
 
   public static final Map<CoralTarget, Double> targetToCoral =
       Map.of(

@@ -65,6 +65,7 @@ public class Outtake extends SubsystemBase {
     return this.run(
         () -> {
           io.setVoltage(volts.getAsDouble());
+          if (coralProximityInputs.detected) setSimDetected(false);
         });
   }
 

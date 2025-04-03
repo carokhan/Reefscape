@@ -1,5 +1,6 @@
 package frc.robot.subsystems.gripper;
 
+import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
 import frc.robot.subsystems.proximity.ProximityIO;
@@ -13,6 +14,9 @@ public class Gripper extends SubsystemBase {
 
   private final ProximityIO proximityIO;
   private final ProximityIOInputsAutoLogged proximityInputs = new ProximityIOInputsAutoLogged();
+
+  private final Debouncer currentDebouncer = new Debouncer(0.25);
+  private final Debouncer dualDebouncer = new Debouncer(0.25);
 
   public Gripper(GripperIO io, ProximityIO proximityIO) {
     this.io = io;
@@ -48,7 +52,14 @@ public class Gripper extends SubsystemBase {
   }
 
   public boolean getCurrentDetected() {
-    return (inputs.motorCurrentAmps > 15) && (inputs.motorVelocityRPM > -3);
+    return currentDebouncer.calculate(
+        (inputs.motorCurrentAmps > 15) && (Math.abs(inputs.motorVelocityRPM) < 5));
+  }
+
+  public boolean getDualDetected() {
+    boolean debounced = dualDebouncer.calculate(getCurrentDetected() || getDetected());
+    Logger.recordOutput("Gripper/Detected", debounced);
+    return debounced;
   }
 
   public Command setSimDetected(boolean detected) {

@@ -44,6 +44,13 @@ public class FieldConstants {
   }
 
   public static class Barge {
+    public static final Pose2d net =
+        new Pose2d(
+            new Translation2d(
+                AllianceFlipUtil.applyX(fieldLength / 2 - 0.5),
+                AllianceFlipUtil.applyY(fieldWidth / 4)),
+            Rotation2d.kZero);
+
     public static final Translation2d farCage =
         new Translation2d(Units.inchesToMeters(345.428), Units.inchesToMeters(286.779));
     public static final Translation2d middleCage =
@@ -60,14 +67,14 @@ public class FieldConstants {
     public static final double stationLength = Units.inchesToMeters(79.750);
     public static final Pose2d rightCenterFace =
         new Pose2d(
-            Units.inchesToMeters(33.526),
-            Units.inchesToMeters(25.824),
+            Units.inchesToMeters(30.526),
+            Units.inchesToMeters(22.824),
             Rotation2d.fromDegrees(144.011 - 90));
 
     public static final Pose2d leftCenterFace =
         new Pose2d(
-            Units.inchesToMeters(33.526),
-            Units.inchesToMeters(291.176),
+            Units.inchesToMeters(30.526),
+            Units.inchesToMeters(281.176),
             Rotation2d.fromDegrees(90 - 144.011));
   }
 
@@ -89,6 +96,7 @@ public class FieldConstants {
     public static final Pose2d[] branchesLeft = new Pose2d[6];
     public static final Pose2d[] branchesRight = new Pose2d[6];
     public static final Pose2d[] algaePoses = new Pose2d[6];
+    public static final Pose2d[] algaeIntake = new Pose2d[6];
 
     public static final Pose2d[] robotLeft = new Pose2d[6];
     public static final Pose2d[] robotRight = new Pose2d[6];
@@ -113,6 +121,7 @@ public class FieldConstants {
           Pose2d poseDirection = new Pose2d(center, Rotation2d.fromDegrees((180 - (60 * face))));
           double adjustX = Units.inchesToMeters(57.738);
           double adjustY = Units.inchesToMeters(6.269);
+          double algaeAdjustY = Units.inchesToMeters(5.269);
 
           Pose3d rightBranchPose =
               new Pose3d(
@@ -142,6 +151,36 @@ public class FieldConstants {
                       0,
                       Units.degreesToRadians(level.pitch),
                       poseDirection.getRotation().getRadians()));
+          Pose3d rightAlgaeIntake =
+              new Pose3d(
+                  new Translation3d(
+                      poseDirection
+                          .transformBy(new Transform2d(adjustX, algaeAdjustY, new Rotation2d()))
+                          .getX(),
+                      poseDirection
+                          .transformBy(new Transform2d(adjustX, algaeAdjustY, new Rotation2d()))
+                          .getY(),
+                      level.height),
+                  new Rotation3d(
+                      0,
+                      Units.degreesToRadians(level.pitch),
+                      poseDirection.getRotation().getRadians()));
+
+          Pose3d leftAlgaeIntake =
+              new Pose3d(
+                  new Translation3d(
+                      poseDirection
+                          .transformBy(new Transform2d(adjustX, -algaeAdjustY, new Rotation2d()))
+                          .getX(),
+                      poseDirection
+                          .transformBy(new Transform2d(adjustX, -algaeAdjustY, new Rotation2d()))
+                          .getY(),
+                      level.height),
+                  new Rotation3d(
+                      0,
+                      Units.degreesToRadians(level.pitch),
+                      poseDirection.getRotation().getRadians()));
+
           branchesLeft[face] = leftBranchPose.toPose2d();
           branchesRight[face] = rightBranchPose.toPose2d();
           algaePoses[face] =
@@ -149,6 +188,12 @@ public class FieldConstants {
                   (branchesLeft[face].getX() + branchesRight[face].getX()) / 2,
                   (branchesLeft[face].getY() + branchesRight[face].getY()) / 2,
                   branchesLeft[face].getRotation().plus(Rotation2d.k180deg));
+          algaeIntake[face] =
+              new Pose2d(
+                  (leftAlgaeIntake.getX() + rightAlgaeIntake.getX()) / 2,
+                  (leftAlgaeIntake.getY() + rightAlgaeIntake.getY()) / 2,
+                  leftAlgaeIntake.toPose2d().getRotation().plus(Rotation2d.k180deg));
+
           fillRight.put(level, rightBranchPose);
           fillLeft.put(level, leftBranchPose);
           fillRight2d.put(level, rightBranchPose.toPose2d());
