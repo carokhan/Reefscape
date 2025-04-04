@@ -69,7 +69,8 @@ public class Superstructure {
     CLIMB_PREPULL,
     CLIMB_PULL,
     IDLE,
-    ELEV_MANUAL
+    ELEV_MANUAL,
+    REV_FUNNEL
   }
 
   private final Supplier<Pose2d> pose;
@@ -116,6 +117,9 @@ public class Superstructure {
 
   @AutoLogOutput(key = "Superstructure/Cancel Request")
   private final Trigger cancelRequest;
+
+  @AutoLogOutput(key = "Superstructure/Reverse Funnel Request")
+  private final Trigger revFunnelRequest;
 
   @AutoLogOutput(key = "Superstructure/State")
   private State state = State.IDLE;
@@ -238,7 +242,8 @@ public class Superstructure {
       Trigger homeRequest,
       Trigger elevManualRequest,
       Trigger superstructureCoastRequest,
-      Trigger cancelRequest) {
+      Trigger cancelRequest,
+      Trigger revFunnelRequest) {
     this.hopper = hopper;
     this.elevator = elevator;
     this.outtake = outtake;
@@ -267,6 +272,8 @@ public class Superstructure {
     this.elevManualRequest = elevManualRequest;
     this.superstructureCoastRequest = superstructureCoastRequest;
     this.cancelRequest = cancelRequest;
+    this.revFunnelRequest = revFunnelRequest;
+
     this.algaeTarget = ElevatorConstants.A3;
 
     // final Trigger elevatorNetSafety =
@@ -295,23 +302,19 @@ public class Superstructure {
             this.forceState(State.IDLE)));
 
     coralEjectRequest.onTrue(
-        Commands.parallel(
-                elevator.setExtension(ElevatorConstants.A2),
-                Commands.waitUntil(elevator::isNearExtension)
-                    .andThen(outtake.setVoltage(OuttakeConstants.L23)))
-            .onlyWhile(outtake::getDetected)
-            .andThen(Commands.parallel(outtake.setVoltage(0)), this.forceState(State.IDLE)));
+        outtake.setVoltage(OuttakeConstants.L23))
+            .onFalse(Commands.parallel(outtake.setVoltage(0), this.forceState(State.IDLE)));
 
     algaeEjectRequest.onTrue(
-        Commands.parallel(
-                elevator.setExtension(ElevatorConstants.A2),
-                Commands.waitUntil(elevator::isNearExtension)
-                    .andThen(gripper.setVoltage(GripperConstants.AP)))
-            .onlyWhile(gripper::getDetected)
-            .andThen(Commands.parallel(gripper.setVoltage(0)), this.forceState(State.IDLE)));
+            gripper.setVoltage(GripperConstants.AP))
+            .onFalse(Commands.parallel(gripper.setVoltage(0), this.forceState(State.IDLE)));
 
     elevManualRequest
         .onTrue(this.forceState(State.ELEV_MANUAL))
+        .onFalse(this.forceState(State.IDLE));
+
+    revFunnelRequest
+        .onTrue(this.forceState(State.REV_FUNNEL))
         .onFalse(this.forceState(State.IDLE));
 
     stateTriggers

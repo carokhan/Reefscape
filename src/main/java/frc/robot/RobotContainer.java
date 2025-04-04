@@ -79,465 +79,474 @@ import org.littletonrobotics.junction.Logger;
 import org.littletonrobotics.junction.networktables.LoggedDashboardChooser;
 
 /**
- * This class is where the bulk of the robot should be declared. Since Command-based is a
- * "declarative" paradigm, very little robot logic should actually be handled in the {@link Robot}
- * periodic methods (other than the scheduler calls). Instead, the structure of the robot (including
+ * This class is where the bulk of the robot should be declared. Since
+ * Command-based is a
+ * "declarative" paradigm, very little robot logic should actually be handled in
+ * the {@link Robot}
+ * periodic methods (other than the scheduler calls). Instead, the structure of
+ * the robot (including
  * subsystems, commands, and button mappings) should be declared here.
  */
 public class RobotContainer {
-  public enum RobotType {
-    REAL,
-    SIM,
-    REPLAY
-  }
-
-  public static final RobotType ROBOT_TYPE = Robot.isReal() ? RobotType.REAL : RobotType.SIM;
-
-  // Subsystems
-  public final Drive drive;
-  public final Hopper hopper;
-  public final Elevator elevator;
-  public final Outtake outtake;
-  public final Gripper gripper;
-  public final Climb climb;
-  public final LED led;
-  public final Vision vision;
-
-  public static Superstructure superstructure;
-
-  // Controller
-  private final CommandXboxControllerSubsystem driver = new CommandXboxControllerSubsystem(0);
-  private final CommandXboxControllerSubsystem operator = new CommandXboxControllerSubsystem(1);
-
-  private final LoggedDashboardChooser<Command> autoChooser;
-  private final AutoRoutines autoRoutines;
-
-  private boolean superstructureCoastOverride = false;
-
-  /** The container for the robot. Contains subsystems, OI devices, and commands. */
-  public RobotContainer() {
-    switch (ROBOT_TYPE) {
-      case REAL:
-        // Real robot, instantiate hardware IO implementations
-        drive =
-            new Drive(
-                new GyroIOPigeon2(),
-                new ModuleIOTalonFX(TunerConstants.FrontLeft),
-                new ModuleIOTalonFX(TunerConstants.FrontRight),
-                new ModuleIOTalonFX(TunerConstants.BackLeft),
-                new ModuleIOTalonFX(TunerConstants.BackRight));
-        hopper =
-            new Hopper(
-                new HopperIOSpark(),
-                // new ProximityIOGrapple(HopperConstants.laser, null,
-                new ProximityIO() {});
-        elevator = new Elevator(new ElevatorIOTalonFX());
-        outtake =
-            new Outtake(
-                new OuttakeIOTalonFX(),
-                new ProximityIORedux(
-                    OuttakeConstants.canandcolor, OuttakeConstants.proximityThreshold),
-                new ProximityIO() {
-                  {
-                  }
-                });
-        gripper =
-            new Gripper(
-                new GripperIOTalonFX(),
-                // new ProximityIOGrapple(GripperConstants.laser, null,
-                new ProximityIORedux(GripperConstants.laser, GripperConstants.proximityThreshold));
-        climb = new Climb(new ClimbIOTalonFX());
-        led = new LED(new LEDIO() {});
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVision(
-                    VisionConstants.CAM_FR_NAME,
-                    VisionConstants.robotToLeftCam,
-                    drive::getRotation),
-                new VisionIOPhotonVision(
-                    VisionConstants.CAM_FL_NAME,
-                    VisionConstants.robotToRightCam,
-                    drive::getRotation));
-        // vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new
-        // VisionIO() {});
-
-        break;
-
-      case SIM:
-        // Sim robot, instantiate physics sim IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIOSim(TunerConstants.FrontLeft),
-                new ModuleIOSim(TunerConstants.FrontRight),
-                new ModuleIOSim(TunerConstants.BackLeft),
-                new ModuleIOSim(TunerConstants.BackRight));
-        hopper = new Hopper(new HopperIOSim(), new ProximityIOSim(0.1));
-        elevator = new Elevator(new ElevatorIOSim());
-        outtake = new Outtake(new OuttakeIOSim(), new ProximityIOSim(0.1), new ProximityIO() {});
-        gripper = new Gripper(new GripperIOSim(), new ProximityIOSim(0.1));
-        climb = new Climb(new ClimbIOSim());
-        led = new LED(new LEDIOSim());
-        vision =
-            new Vision(
-                drive::addVisionMeasurement,
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.CAM_FL_NAME, VisionConstants.robotToLeftCam, drive::getPose),
-                new VisionIOPhotonVisionSim(
-                    VisionConstants.CAM_FR_NAME, VisionConstants.robotToRightCam, drive::getPose));
-        break;
-
-      default:
-        // Replayed robot, disable IO implementations
-        drive =
-            new Drive(
-                new GyroIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {},
-                new ModuleIO() {});
-        hopper = new Hopper(new HopperIO() {}, new ProximityIO() {});
-        elevator = new Elevator(new ElevatorIO() {});
-        outtake = new Outtake(new OuttakeIO() {}, new ProximityIO() {}, new ProximityIO() {});
-        gripper = new Gripper(new GripperIO() {}, new ProximityIO() {});
-        climb = new Climb(new ClimbIO() {});
-        led = new LED(new LEDIO() {});
-        vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new VisionIO() {});
-        break;
+    public enum RobotType {
+        REAL,
+        SIM,
+        REPLAY
     }
 
-    superstructure =
-        new Superstructure(
-            hopper,
-            elevator,
-            outtake,
-            gripper,
-            climb,
-            led,
-            drive::getPose,
-            drive::getVelocityFieldRelative,
-            CoralTarget.L4,
-            () -> -driver.getLeftY(),
-            () -> -driver.getLeftX(),
-            driver.rightTrigger(),
-            driver
+    public static final RobotType ROBOT_TYPE = Robot.isReal() ? RobotType.REAL : RobotType.SIM;
+
+    // Subsystems
+    public final Drive drive;
+    public final Hopper hopper;
+    public final Elevator elevator;
+    public final Outtake outtake;
+    public final Gripper gripper;
+    public final Climb climb;
+    public final LED led;
+    public final Vision vision;
+
+    public static Superstructure superstructure;
+
+    // Controller
+    private final CommandXboxControllerSubsystem driver = new CommandXboxControllerSubsystem(0);
+    private final CommandXboxControllerSubsystem operator = new CommandXboxControllerSubsystem(1);
+
+    private final LoggedDashboardChooser<Command> autoChooser;
+    private final AutoRoutines autoRoutines;
+
+    private boolean superstructureCoastOverride = false;
+
+    /**
+     * The container for the robot. Contains subsystems, OI devices, and commands.
+     */
+    public RobotContainer() {
+        switch (ROBOT_TYPE) {
+            case REAL:
+                // Real robot, instantiate hardware IO implementations
+                drive = new Drive(
+                        new GyroIOPigeon2(),
+                        new ModuleIOTalonFX(TunerConstants.FrontLeft),
+                        new ModuleIOTalonFX(TunerConstants.FrontRight),
+                        new ModuleIOTalonFX(TunerConstants.BackLeft),
+                        new ModuleIOTalonFX(TunerConstants.BackRight));
+                hopper = new Hopper(
+                        new HopperIOSpark(),
+                        // new ProximityIOGrapple(HopperConstants.laser, null,
+                        new ProximityIO() {
+                        });
+                elevator = new Elevator(new ElevatorIOTalonFX());
+                outtake = new Outtake(
+                        new OuttakeIOTalonFX(),
+                        new ProximityIORedux(
+                                OuttakeConstants.canandcolor, OuttakeConstants.proximityThreshold),
+                        new ProximityIO() {
+                            {
+                            }
+                        });
+                gripper = new Gripper(
+                        new GripperIOTalonFX(),
+                        // new ProximityIOGrapple(GripperConstants.laser, null,
+                        new ProximityIORedux(GripperConstants.laser, GripperConstants.proximityThreshold));
+                climb = new Climb(new ClimbIOTalonFX());
+                led = new LED(new LEDIO() {
+                });
+                vision = new Vision(
+                        drive::addVisionMeasurement,
+                        new VisionIOPhotonVision(
+                                VisionConstants.CAM_FR_NAME,
+                                VisionConstants.robotToLeftCam,
+                                drive::getRotation),
+                        new VisionIOPhotonVision(
+                                VisionConstants.CAM_FL_NAME,
+                                VisionConstants.robotToRightCam,
+                                drive::getRotation));
+                // vision = new Vision(drive::addVisionMeasurement, new VisionIO() {}, new
+                // VisionIO() {});
+
+                break;
+
+            case SIM:
+                // Sim robot, instantiate physics sim IO implementations
+                drive = new Drive(
+                        new GyroIO() {
+                        },
+                        new ModuleIOSim(TunerConstants.FrontLeft),
+                        new ModuleIOSim(TunerConstants.FrontRight),
+                        new ModuleIOSim(TunerConstants.BackLeft),
+                        new ModuleIOSim(TunerConstants.BackRight));
+                hopper = new Hopper(new HopperIOSim(), new ProximityIOSim(0.1));
+                elevator = new Elevator(new ElevatorIOSim());
+                outtake = new Outtake(new OuttakeIOSim(), new ProximityIOSim(0.1), new ProximityIO() {
+                });
+                gripper = new Gripper(new GripperIOSim(), new ProximityIOSim(0.1));
+                climb = new Climb(new ClimbIOSim());
+                led = new LED(new LEDIOSim());
+                vision = new Vision(
+                        drive::addVisionMeasurement,
+                        new VisionIOPhotonVisionSim(
+                                VisionConstants.CAM_FL_NAME, VisionConstants.robotToLeftCam, drive::getPose),
+                        new VisionIOPhotonVisionSim(
+                                VisionConstants.CAM_FR_NAME, VisionConstants.robotToRightCam, drive::getPose));
+                break;
+
+            default:
+                // Replayed robot, disable IO implementations
+                drive = new Drive(
+                        new GyroIO() {
+                        },
+                        new ModuleIO() {
+                        },
+                        new ModuleIO() {
+                        },
+                        new ModuleIO() {
+                        },
+                        new ModuleIO() {
+                        });
+                hopper = new Hopper(new HopperIO() {
+                }, new ProximityIO() {
+                });
+                elevator = new Elevator(new ElevatorIO() {
+                });
+                outtake = new Outtake(new OuttakeIO() {
+                }, new ProximityIO() {
+                }, new ProximityIO() {
+                });
+                gripper = new Gripper(new GripperIO() {
+                }, new ProximityIO() {
+                });
+                climb = new Climb(new ClimbIO() {
+                });
+                led = new LED(new LEDIO() {
+                });
+                vision = new Vision(drive::addVisionMeasurement, new VisionIO() {
+                }, new VisionIO() {
+                });
+                break;
+        }
+
+        superstructure = new Superstructure(
+                hopper,
+                elevator,
+                outtake,
+                gripper,
+                climb,
+                led,
+                drive::getPose,
+                drive::getVelocityFieldRelative,
+                CoralTarget.L4,
+                () -> -driver.getLeftY(),
+                () -> -driver.getLeftX(),
+                driver.rightTrigger(),
+                driver
+                        .leftTrigger()
+                        .and(
+                                () -> (AutoAlign.closerIntake(
+                                        drive.getPose(), -driver.getLeftY(),
+                                        -driver.getLeftX()) == IntakeLocation.SOURCE)),
+                driver.b(),
+                driver.x(),
+                driver
+                        .leftTrigger()
+                        .and(
+                                () -> (AutoAlign.closerIntake(
+                                        drive.getPose(), -driver.getLeftY(),
+                                        -driver.getLeftX()) == IntakeLocation.REEF)),
+                driver.povUp(),
+                driver.povDown(),
+                driver.a(),
+                driver.rightTrigger(),
+                driver.rightBumper(),
+                operator.leftTrigger(),
+                operator.rightTrigger(),
+                operator.leftBumper(),
+                driver.povLeft(),
+                driver.povRight());
+
+        // Set up auto routines
+        autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
+        autoRoutines = new AutoRoutines(drive, superstructure);
+
+        // Set up SysId routines
+        // autoChooser.addOption(
+        // "Drive Wheel Radius Characterization",
+        // DriveCommands.wheelRadiusCharacterization(drive));
+        // autoChooser.addOption(
+        // "Drive Simple FF Characterization",
+        // DriveCommands.feedforwardCharacterization(drive));
+        // autoChooser.addOption(
+        // "Drive SysId (Quasistatic Forward)",
+        // drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
+        // autoChooser.addOption(
+        // "Drive SysId (Quasistatic Reverse)",
+        // drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
+        // autoChooser.addOption(
+        // "Drive SysId (Dynamic Forward)",
+        // drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
+        // autoChooser.addOption(
+        // "Drive SysId (Dynamic Reverse)",
+        // drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
+        // autoChooser.addOption("Elevator static",
+        // elevator.staticCharacterization(1.0));
+
+        autoChooser.addOption("LM to H", autoRoutines.LMtoH());
+        autoChooser.addOption("RO to E", autoRoutines.ROtoE());
+        autoChooser.addOption("LO to I", autoRoutines.LOtoI());
+        autoChooser.addOption("LO to J", autoRoutines.LOtoJ());
+        autoChooser.addOption("LO to L", autoRoutines.LOtoL());
+
+        // RobotModeTriggers.autonomous()
+        // .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));
+
+        climb.setCoastOverride(() -> superstructureCoastOverride);
+
+        driver.setDefaultCommand(driver.rumbleCmd(0.0, 0.0));
+        operator.setDefaultCommand(operator.rumbleCmd(0.0, 0.0));
+
+        // Configure the button bindings
+        configureButtonBindings();
+    }
+
+    /**
+     * Use this method to define your button->command mappings. Buttons can be
+     * created by
+     * instantiating a {@link GenericHID} or one of its subclasses ({@link
+     * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing
+     * it to a {@link
+     * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
+     */
+    private void configureButtonBindings() {
+        // Default command, normal field-relative drive
+        drive.setDefaultCommand(
+                DriveCommands.joystickDrive(
+                        drive,
+                        () -> -driver.getLeftY(),
+                        () -> -driver.getLeftX(),
+                        () -> -driver.getRightX(),
+                        () -> OperatorConstants.deadband,
+                        () -> 1));
+        driver // TODO: TEST IF YOU CAN RESET GYRO ON INIT.
+                .y()
+                .onTrue(
+                        Commands.runOnce(
+                                () -> drive.setPose(
+                                        new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
+                                drive)
+                                .ignoringDisable(true));
+
+        driver.povRight().onTrue(Commands.parallel(
+                superstructure.hopper.setVoltage(-8),
+                superstructure.outtake.setVoltage(-6))).onFalse(
+                        Commands.parallel(
+                                superstructure.hopper.setVoltage(0), superstructure.outtake.setVoltage(0)));
+
+        driver
+                .rightBumper()
+                .or(driver.leftBumper())
+                .and(outtake::getDetected)
+                .whileTrue(
+                        Commands.parallel(
+                                AutoAlign.autoAimWithIntermediatePose(
+                                        drive,
+                                        () -> {
+                                            int bestFace = AutoAlign.getBestFace(
+                                                    drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
+                                            Pose2d selected = AllianceFlipUtil.apply(
+                                                    (driver.leftBumper().getAsBoolean())
+                                                            ? (Reef.robotLeft[bestFace])
+                                                            : Reef.robotRight[bestFace]);
+                                            Logger.recordOutput("AutoAlign/Active", selected);
+                                            return selected;
+                                        },
+                                        // Keeps the robot off the reef wall until it's aligned side-side
+                                        new Transform2d(
+                                                AutoAlignConstants.offsetReefKeepOff
+                                                        * Math.signum(
+                                                                drive.getVelocityFieldRelative().vyMetersPerSecond),
+                                                0.0,
+                                                Rotation2d.kZero))
+                                        .andThen(drive.stopWithXCmd()),
+                                Commands.waitUntil(
+                                        () -> AutoAlign.isInToleranceCoral(
+                                                drive.getPose(), -driver.getLeftY(), -driver.getLeftX()))
+                                        .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
+
+        driver
                 .leftTrigger()
+                .and(() -> !outtake.getDetected())
                 .and(
-                    () ->
-                        (AutoAlign.closerIntake(
-                                drive.getPose(), -driver.getLeftY(), -driver.getLeftX())
-                            == IntakeLocation.SOURCE)),
-            driver.b(),
-            driver.x(),
-            driver
+                        () -> gripper.getDetected()
+                                || (AutoAlign.closerIntake(
+                                        drive.getPose(), -driver.getLeftY(),
+                                        -driver.getLeftX()) == IntakeLocation.SOURCE))
+                .whileTrue(
+                        Commands.parallel(
+                                AutoAlign.autoAimWithIntermediatePose(
+                                        drive,
+                                        () -> {
+                                            Pose2d bestLoader = AutoAlign.getBestLoader(drive.getPose());
+                                            Pose2d selected = bestLoader;
+                                            Logger.recordOutput("AutoAlign/Active", selected);
+                                            return selected;
+                                        },
+                                        // Keeps the robot off the reef wall until it's aligned side-side
+                                        new Transform2d(0.0, 0.0, Rotation2d.kZero))
+                                        .andThen(drive.stopWithXCmd()),
+                                Commands.waitUntil(
+                                        () -> AutoAlign.isInTolerance(
+                                                drive.getPose(), AutoAlign.getBestLoader(drive.getPose())))
+                                        .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
+
+        driver
                 .leftTrigger()
+                .and(() -> !gripper.getDetected())
                 .and(
-                    () ->
-                        (AutoAlign.closerIntake(
-                                drive.getPose(), -driver.getLeftY(), -driver.getLeftX())
-                            == IntakeLocation.REEF)),
-            driver.povUp(),
-            driver.povDown(),
-            driver.a(),
-            driver.rightTrigger(),
-            driver.rightBumper(),
-            operator.leftTrigger(),
-            operator.rightTrigger(),
-            operator.leftBumper(),
-            driver.povLeft());
+                        () -> outtake.getDetected()
+                                || (AutoAlign.closerIntake(
+                                        drive.getPose(), -driver.getLeftY(),
+                                        -driver.getLeftX()) == IntakeLocation.REEF))
+                .whileTrue(
+                        Commands.parallel(
+                                AutoAlign.autoAimWithIntermediatePose(
+                                        drive,
+                                        () -> {
+                                            int bestFace = AutoAlign.getBestFace(
+                                                    drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
+                                            Pose2d selected = AllianceFlipUtil.apply(Reef.algaeIntake[bestFace]);
+                                            Logger.recordOutput("AutoAlign/Active", selected);
+                                            return selected;
+                                        },
+                                        // Keeps the robot off the reef wall until it's aligned side-side
+                                        new Transform2d(
+                                                AutoAlignConstants.offsetReefKeepOff
+                                                        * Math.signum(
+                                                                drive.getVelocityFieldRelative().vyMetersPerSecond),
+                                                0.0,
+                                                Rotation2d.kZero))
+                                        .andThen(drive.stopWithXCmd()),
+                                Commands.waitUntil(
+                                        () -> AutoAlign.isInToleranceCoral(
+                                                drive.getPose(), -driver.getLeftY(), -driver.getLeftX()))
+                                        .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
 
-    // Set up auto routines
-    autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
-    autoRoutines = new AutoRoutines(drive, superstructure);
+        driver
+                .povUp()
+                .and(gripper::getDualDetected)
+                .whileTrue(
+                        Commands.parallel(
+                                AutoAlign.autoAimWithIntermediatePose(
+                                        drive,
+                                        () -> AllianceFlipUtil.apply(FieldConstants.Barge.net),
+                                        // Keeps the robot off the reef wall until it's aligned side-side
+                                        new Transform2d(0.0, 0.0, Rotation2d.kZero),
+                                        new Constraints(
+                                                AutoAlignConstants.maxLinearSpeed / 2,
+                                                AutoAlignConstants.maxLinearAccel / 2))
+                                        .andThen(drive.stopWithXCmd()),
+                                Commands.waitUntil(
+                                        () -> AutoAlign.isInTolerance(
+                                                AllianceFlipUtil.apply(FieldConstants.Barge.net), drive.getPose()))
+                                        .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
 
-    // Set up SysId routines
-    // autoChooser.addOption(
-    // "Drive Wheel Radius Characterization",
-    // DriveCommands.wheelRadiusCharacterization(drive));
-    // autoChooser.addOption(
-    // "Drive Simple FF Characterization",
-    // DriveCommands.feedforwardCharacterization(drive));
-    // autoChooser.addOption(
-    // "Drive SysId (Quasistatic Forward)",
-    // drive.sysIdQuasistatic(SysIdRoutine.Direction.kForward));
-    // autoChooser.addOption(
-    // "Drive SysId (Quasistatic Reverse)",
-    // drive.sysIdQuasistatic(SysIdRoutine.Direction.kReverse));
-    // autoChooser.addOption(
-    // "Drive SysId (Dynamic Forward)",
-    // drive.sysIdDynamic(SysIdRoutine.Direction.kForward));
-    // autoChooser.addOption(
-    // "Drive SysId (Dynamic Reverse)",
-    // drive.sysIdDynamic(SysIdRoutine.Direction.kReverse));
-    // autoChooser.addOption("Elevator static",
-    // elevator.staticCharacterization(1.0));
+        driver
+                .povDown()
+                .and(gripper::getDualDetected)
+                .whileTrue(
+                        Commands.parallel(
+                                AutoAlign.autoAimWithIntermediatePose(
+                                        drive,
+                                        () -> AllianceFlipUtil.apply(FieldConstants.Processor.robotProcess),
+                                        // Keeps the robot off the reef wall until it's aligned side-side
+                                        new Transform2d(0.0, 0.0, Rotation2d.kZero),
+                                        new Constraints(
+                                                AutoAlignConstants.maxLinearSpeed / 2,
+                                                AutoAlignConstants.maxLinearAccel / 2))
+                                        .andThen(drive.stopWithXCmd()),
+                                Commands.waitUntil(
+                                        () -> AutoAlign.isInTolerance(
+                                                AllianceFlipUtil.apply(FieldConstants.Processor.robotProcess),
+                                                drive.getPose()))
+                                        .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
 
-    autoChooser.addOption("LM to H", autoRoutines.LMtoH());
-    autoChooser.addOption("RO to E", autoRoutines.ROtoE());
-    autoChooser.addOption("LO to I", autoRoutines.LOtoI());
-    autoChooser.addOption("LO to J", autoRoutines.LOtoJ());
-    autoChooser.addOption("LO to L", autoRoutines.LOtoL());
+        operator.y().onTrue(superstructure.setCoralTarget(CoralTarget.L4));
+        operator.x().onTrue(superstructure.setCoralTarget(CoralTarget.L3));
+        operator.b().onTrue(superstructure.setCoralTarget(CoralTarget.L2));
+        operator.a().onTrue(superstructure.setCoralTarget(CoralTarget.L1));
 
-    // RobotModeTriggers.autonomous()
-    // .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));
+        operator
+                .rightTrigger()
+                .and(operator.y())
+                .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L4)));
+        operator
+                .rightTrigger()
+                .and(operator.x())
+                .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L3)));
+        operator
+                .rightTrigger()
+                .and(operator.b())
+                .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L2)));
+        operator
+                .rightTrigger()
+                .and(operator.a())
+                .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L1)));
 
-    climb.setCoastOverride(() -> superstructureCoastOverride);
+        operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
+        operator
+                .leftBumper()
+                .onTrue(
+                        Commands.runOnce(
+                                () -> {
+                                    if (DriverStation.isDisabled()) {
+                                        superstructureCoastOverride = true;
+                                    }
+                                })
+                                .ignoringDisable(true))
+                .onFalse(
+                        Commands.runOnce(
+                                () -> {
+                                    superstructureCoastOverride = false;
+                                })
+                                .ignoringDisable(true));
+        operator
+                .rightTrigger()
+                .whileTrue(
+                        elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(-operator.getRightY(), 0.05)))
+                .onFalse(elevator.setVoltage(() -> 0));
+        RobotModeTriggers.disabled()
+                .onFalse(
+                        Commands.runOnce(
+                                () -> {
+                                    superstructureCoastOverride = false;
+                                })
+                                .ignoringDisable(true));
 
-    driver.setDefaultCommand(driver.rumbleCmd(0.0, 0.0));
-    operator.setDefaultCommand(operator.rumbleCmd(0.0, 0.0));
+        new Trigger(
+                () -> DriverStation.isTeleopEnabled()
+                        && DriverStation.getMatchTime() > 0
+                        && DriverStation.getMatchTime() <= Math.round(OperatorConstants.endgameAlert1Seconds))
+                .onTrue(driver.rumbleCmd(0.5, 0.5).withTimeout(0.5).withName("Controller Endgame Alert 1"));
+        new Trigger(
+                () -> DriverStation.isTeleopEnabled()
+                        && DriverStation.getMatchTime() > 0
+                        && DriverStation.getMatchTime() <= Math.round(OperatorConstants.endgameAlert2Seconds))
+                .onTrue(
+                        driver
+                                .rumbleCmd(1.0, 1.0)
+                                .withTimeout(0.2)
+                                .andThen(Commands.waitSeconds(0.1))
+                                .repeatedly()
+                                .withTimeout(0.9)
+                                .withName("Controller Endgame Alert 2")); // Rumble three times
 
-    // Configure the button bindings
-    configureButtonBindings();
-  }
+        // SmartDashboard.putData("Run Elevator Sysid", elevator.runSysid());
+    }
 
-  /**
-   * Use this method to define your button->command mappings. Buttons can be created by
-   * instantiating a {@link GenericHID} or one of its subclasses ({@link
-   * edu.wpi.first.wpilibj.Joystick} or {@link XboxController}), and then passing it to a {@link
-   * edu.wpi.first.wpilibj2.command.button.JoystickButton}.
-   */
-  private void configureButtonBindings() {
-    // Default command, normal field-relative drive
-    drive.setDefaultCommand(
-        DriveCommands.joystickDrive(
-            drive,
-            () -> -driver.getLeftY(),
-            () -> -driver.getLeftX(),
-            () -> -driver.getRightX(),
-            () -> OperatorConstants.deadband,
-            () -> 1));
-    driver // TODO: TEST IF YOU CAN RESET GYRO ON INIT.
-        .y()
-        .onTrue(
-            Commands.runOnce(
-                    () ->
-                        drive.setPose(
-                            new Pose2d(drive.getPose().getTranslation(), new Rotation2d())),
-                    drive)
-                .ignoringDisable(true));
-
-    driver.povRight().onTrue(Commands.runOnce(() -> climb.resetEncoder()));
-
-    driver
-        .rightBumper()
-        .or(driver.leftBumper())
-        .and(outtake::getDetected)
-        .whileTrue(
-            Commands.parallel(
-                AutoAlign.autoAimWithIntermediatePose(
-                        drive,
-                        () -> {
-                          int bestFace =
-                              AutoAlign.getBestFace(
-                                  drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
-                          Pose2d selected =
-                              AllianceFlipUtil.apply(
-                                  (driver.leftBumper().getAsBoolean())
-                                      ? (Reef.robotLeft[bestFace])
-                                      : Reef.robotRight[bestFace]);
-                          Logger.recordOutput("AutoAlign/Active", selected);
-                          return selected;
-                        },
-                        // Keeps the robot off the reef wall until it's aligned side-side
-                        new Transform2d(
-                            AutoAlignConstants.offsetReefKeepOff
-                                * Math.signum(drive.getVelocityFieldRelative().vyMetersPerSecond),
-                            0.0,
-                            Rotation2d.kZero))
-                    .andThen(drive.stopWithXCmd()),
-                Commands.waitUntil(
-                        () ->
-                            AutoAlign.isInToleranceCoral(
-                                drive.getPose(), -driver.getLeftY(), -driver.getLeftX()))
-                    .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
-
-    driver
-        .leftTrigger()
-        .and(() -> !outtake.getDetected())
-        .and(
-            () ->
-                gripper.getDetected()
-                    || (AutoAlign.closerIntake(
-                            drive.getPose(), -driver.getLeftY(), -driver.getLeftX())
-                        == IntakeLocation.SOURCE))
-        .whileTrue(
-            Commands.parallel(
-                AutoAlign.autoAimWithIntermediatePose(
-                        drive,
-                        () -> {
-                          Pose2d bestLoader = AutoAlign.getBestLoader(drive.getPose());
-                          Pose2d selected = bestLoader;
-                          Logger.recordOutput("AutoAlign/Active", selected);
-                          return selected;
-                        },
-                        // Keeps the robot off the reef wall until it's aligned side-side
-                        new Transform2d(0.0, 0.0, Rotation2d.kZero))
-                    .andThen(drive.stopWithXCmd()),
-                Commands.waitUntil(
-                        () ->
-                            AutoAlign.isInTolerance(
-                                drive.getPose(), AutoAlign.getBestLoader(drive.getPose())))
-                    .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
-
-    driver
-        .leftTrigger()
-        .and(() -> !gripper.getDetected())
-        .and(
-            () ->
-                outtake.getDetected()
-                    || (AutoAlign.closerIntake(
-                            drive.getPose(), -driver.getLeftY(), -driver.getLeftX())
-                        == IntakeLocation.REEF))
-        .whileTrue(
-            Commands.parallel(
-                AutoAlign.autoAimWithIntermediatePose(
-                        drive,
-                        () -> {
-                          int bestFace =
-                              AutoAlign.getBestFace(
-                                  drive.getPose(), -driver.getLeftY(), -driver.getLeftX());
-                          Pose2d selected = AllianceFlipUtil.apply(Reef.algaeIntake[bestFace]);
-                          Logger.recordOutput("AutoAlign/Active", selected);
-                          return selected;
-                        },
-                        // Keeps the robot off the reef wall until it's aligned side-side
-                        new Transform2d(
-                            AutoAlignConstants.offsetReefKeepOff
-                                * Math.signum(drive.getVelocityFieldRelative().vyMetersPerSecond),
-                            0.0,
-                            Rotation2d.kZero))
-                    .andThen(drive.stopWithXCmd()),
-                Commands.waitUntil(
-                        () ->
-                            AutoAlign.isInToleranceCoral(
-                                drive.getPose(), -driver.getLeftY(), -driver.getLeftX()))
-                    .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
-
-    driver
-        .povUp()
-        .and(gripper::getDualDetected)
-        .whileTrue(
-            Commands.parallel(
-                AutoAlign.autoAimWithIntermediatePose(
-                        drive,
-                        () -> AllianceFlipUtil.apply(FieldConstants.Barge.net),
-                        // Keeps the robot off the reef wall until it's aligned side-side
-                        new Transform2d(0.0, 0.0, Rotation2d.kZero),
-                        new Constraints(
-                            AutoAlignConstants.maxLinearSpeed / 2,
-                            AutoAlignConstants.maxLinearAccel / 2))
-                    .andThen(drive.stopWithXCmd()),
-                Commands.waitUntil(
-                        () ->
-                            AutoAlign.isInTolerance(
-                                AllianceFlipUtil.apply(FieldConstants.Barge.net), drive.getPose()))
-                    .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
-
-    driver
-        .povDown()
-        .and(gripper::getDualDetected)
-        .whileTrue(
-            Commands.parallel(
-                AutoAlign.autoAimWithIntermediatePose(
-                        drive,
-                        () -> AllianceFlipUtil.apply(FieldConstants.Processor.robotProcess),
-                        // Keeps the robot off the reef wall until it's aligned side-side
-                        new Transform2d(0.0, 0.0, Rotation2d.kZero),
-                        new Constraints(
-                            AutoAlignConstants.maxLinearSpeed / 2,
-                            AutoAlignConstants.maxLinearAccel / 2))
-                    .andThen(drive.stopWithXCmd()),
-                Commands.waitUntil(
-                        () ->
-                            AutoAlign.isInTolerance(
-                                AllianceFlipUtil.apply(FieldConstants.Processor.robotProcess),
-                                drive.getPose()))
-                    .andThen(driver.rumbleCmd(1.0, 1.0).withTimeout(0.75).asProxy())));
-
-    operator.y().onTrue(superstructure.setCoralTarget(CoralTarget.L4));
-    operator.x().onTrue(superstructure.setCoralTarget(CoralTarget.L3));
-    operator.b().onTrue(superstructure.setCoralTarget(CoralTarget.L2));
-    operator.a().onTrue(superstructure.setCoralTarget(CoralTarget.L1));
-
-    operator
-        .rightTrigger()
-        .and(operator.y())
-        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L4)));
-    operator
-        .rightTrigger()
-        .and(operator.x())
-        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L3)));
-    operator
-        .rightTrigger()
-        .and(operator.b())
-        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L2)));
-    operator
-        .rightTrigger()
-        .and(operator.a())
-        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L1)));
-
-    operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
-    operator
-        .leftBumper()
-        .onTrue(
-            Commands.runOnce(
-                    () -> {
-                      if (DriverStation.isDisabled()) {
-                        superstructureCoastOverride = true;
-                      }
-                    })
-                .ignoringDisable(true))
-        .onFalse(
-            Commands.runOnce(
-                    () -> {
-                      superstructureCoastOverride = false;
-                    })
-                .ignoringDisable(true));
-    operator
-        .rightTrigger()
-        .whileTrue(
-            elevator.setVoltage(() -> 12.0 * MathUtil.applyDeadband(-operator.getRightY(), 0.05)))
-        .onFalse(elevator.setVoltage(() -> 0));
-    RobotModeTriggers.disabled()
-        .onFalse(
-            Commands.runOnce(
-                    () -> {
-                      superstructureCoastOverride = false;
-                    })
-                .ignoringDisable(true));
-
-    new Trigger(
-            () ->
-                DriverStation.isTeleopEnabled()
-                    && DriverStation.getMatchTime() > 0
-                    && DriverStation.getMatchTime()
-                        <= Math.round(OperatorConstants.endgameAlert1Seconds))
-        .onTrue(driver.rumbleCmd(0.5, 0.5).withTimeout(0.5).withName("Controller Endgame Alert 1"));
-    new Trigger(
-            () ->
-                DriverStation.isTeleopEnabled()
-                    && DriverStation.getMatchTime() > 0
-                    && DriverStation.getMatchTime()
-                        <= Math.round(OperatorConstants.endgameAlert2Seconds))
-        .onTrue(
-            driver
-                .rumbleCmd(1.0, 1.0)
-                .withTimeout(0.2)
-                .andThen(Commands.waitSeconds(0.1))
-                .repeatedly()
-                .withTimeout(0.9)
-                .withName("Controller Endgame Alert 2")); // Rumble three times
-
-    // SmartDashboard.putData("Run Elevator Sysid", elevator.runSysid());
-  }
-
-  /**
-   * Use this to pass the autonomous command to the main {@link Robot} class.
-   *
-   * @return the command to run in autonomous
-   */
-  public Command getAutonomousCommand() {
-    return autoChooser.get();
-  }
+    /**
+     * Use this to pass the autonomous command to the main {@link Robot} class.
+     *
+     * @return the command to run in autonomous
+     */
+    public Command getAutonomousCommand() {
+        return autoChooser.get();
+    }
 }

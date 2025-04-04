@@ -47,8 +47,8 @@ public class FieldConstants {
     public static final Pose2d net =
         new Pose2d(
             new Translation2d(
-                AllianceFlipUtil.applyX(fieldLength / 2 - 0.5),
-                AllianceFlipUtil.applyY(fieldWidth / 4)),
+                AllianceFlipUtil.applyX(fieldLength / 2 - 1),
+                AllianceFlipUtil.applyY(3 * fieldWidth / 4)),
             Rotation2d.kZero);
 
     public static final Translation2d farCage =
