@@ -172,15 +172,13 @@ public class AutoRoutines {
         .observe(intake.done())
         .onTrue(
             Commands.parallel(
-                Commands.waitUntil(this::atReef)
-                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-                Commands.waitUntil(this::atScore)
-                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
-                AutoAlign.translateToPose(
-                    drive,
-                    () ->
-                        AutoAlign.getBestBranch(drive.getPose())
-                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+                    AutoAlign.translateToPose(
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())),
+                    Commands.waitUntil(superstructure.outtake::getDetected))
+                .andThen(
+                    Commands.parallel(
+                        superstructure.hopper.setVoltage(0),
+                        superstructure.outtake.setVoltage(0))));
     return routine.cmd();
   }
 

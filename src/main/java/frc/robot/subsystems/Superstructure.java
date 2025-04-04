@@ -301,21 +301,19 @@ public class Superstructure {
             gripper.setVoltage(0),
             this.forceState(State.IDLE)));
 
-    coralEjectRequest.onTrue(
-        outtake.setVoltage(OuttakeConstants.L23))
-            .onFalse(Commands.parallel(outtake.setVoltage(0), this.forceState(State.IDLE)));
+    coralEjectRequest
+        .onTrue(outtake.setVoltage(OuttakeConstants.L23))
+        .onFalse(Commands.parallel(outtake.setVoltage(0), this.forceState(State.IDLE)));
 
-    algaeEjectRequest.onTrue(
-            gripper.setVoltage(GripperConstants.AP))
-            .onFalse(Commands.parallel(gripper.setVoltage(0), this.forceState(State.IDLE)));
+    algaeEjectRequest
+        .onTrue(gripper.setVoltage(GripperConstants.AP))
+        .onFalse(Commands.parallel(gripper.setVoltage(0), this.forceState(State.IDLE)));
 
     elevManualRequest
         .onTrue(this.forceState(State.ELEV_MANUAL))
         .onFalse(this.forceState(State.IDLE));
 
-    revFunnelRequest
-        .onTrue(this.forceState(State.REV_FUNNEL))
-        .onFalse(this.forceState(State.IDLE));
+    revFunnelRequest.onTrue(this.forceState(State.REV_FUNNEL)).onFalse(this.forceState(State.IDLE));
 
     stateTriggers
         .get(State.ELEV_MANUAL)
