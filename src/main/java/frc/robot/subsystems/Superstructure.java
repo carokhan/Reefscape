@@ -68,7 +68,8 @@ public class Superstructure {
     ALGAE_CONFIRM_AN,
     CLIMB_PREPULL,
     CLIMB_PULL,
-    IDLE
+    IDLE,
+    ELEV_MANUAL
   }
 
   private final Supplier<Pose2d> pose;
@@ -309,6 +310,15 @@ public class Superstructure {
             .onlyWhile(gripper::getDetected)
             .andThen(Commands.parallel(gripper.setVoltage(0)), this.forceState(State.IDLE)));
 
+    elevManualRequest
+        .onTrue(this.forceState(State.ELEV_MANUAL))
+        .onFalse(this.forceState(State.IDLE));
+
+    stateTriggers
+        .get(State.ELEV_MANUAL)
+        .and(scoreRequest)
+        .onTrue(gripper.setVoltage(GripperConstants.AN));
+
     // IDLE State Transitions (Starts: Robot idle, Ends: Various transitions based
     // on detections and requests)
     stateTriggers
@@ -358,7 +368,9 @@ public class Superstructure {
         .and(() -> this.getAlgaeTarget() == ElevatorConstants.A3)
         .onTrue(
             Commands.parallel(
-                gripper.setVoltage(GripperConstants.A23), this.forceState(State.ALGAE_INTAKE)));
+                elevator.setExtension(ElevatorConstants.A3),
+                gripper.setVoltage(GripperConstants.A23),
+                this.forceState(State.ALGAE_INTAKE)));
 
     stateTriggers
         .get(State.IDLE)

@@ -44,6 +44,7 @@ import frc.robot.subsystems.drive.ModuleIOSim;
 import frc.robot.subsystems.drive.ModuleIOTalonFX;
 import frc.robot.subsystems.drive.TunerConstants;
 import frc.robot.subsystems.elevator.Elevator;
+import frc.robot.subsystems.elevator.ElevatorConstants;
 import frc.robot.subsystems.elevator.ElevatorIO;
 import frc.robot.subsystems.elevator.ElevatorIOSim;
 import frc.robot.subsystems.elevator.ElevatorIOTalonFX;
@@ -459,10 +460,22 @@ public class RobotContainer {
     operator.b().onTrue(superstructure.setCoralTarget(CoralTarget.L2));
     operator.a().onTrue(superstructure.setCoralTarget(CoralTarget.L1));
 
-    // operator.y().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L4)));
-    // operator.x().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L3)));
-    // operator.b().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L2)));
-    // operator.a().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L1)));
+    operator
+        .rightTrigger()
+        .and(operator.y())
+        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L4)));
+    operator
+        .rightTrigger()
+        .and(operator.x())
+        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L3)));
+    operator
+        .rightTrigger()
+        .and(operator.b())
+        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L2)));
+    operator
+        .rightTrigger()
+        .and(operator.a())
+        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L1)));
 
     operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
     operator
