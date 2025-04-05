@@ -13,7 +13,7 @@ public class ClimbConstants {
 
   public static final Rotation2d stow = Rotation2d.fromDegrees(0.0);
   public static final Rotation2d ready = Rotation2d.fromDegrees(27);
-  public static final Rotation2d climbed = Rotation2d.fromDegrees(50);
+  public static final Rotation2d climbed = Rotation2d.fromDegrees(486);
 
   public static final double kPSpark = 4;
   public static final double kPTalon = 150;
