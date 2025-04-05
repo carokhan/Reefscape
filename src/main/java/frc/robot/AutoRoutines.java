@@ -206,13 +206,34 @@ public class AutoRoutines {
     return routine.cmd();
   }
 
+  public Command LtoPLO() {
+    final var routine = factory.newRoutine("L to PLO");
+    final var intake = routine.trajectory("LtoPLO");
+
+    routine.active().whileTrue(Commands.sequence(intake.resetOdometry(), intake.cmd()));
+
+    routine
+        .observe(intake.done())
+        .onTrue(
+            Commands.parallel(
+                    AutoAlign.translateToPose(
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())),
+                    Commands.waitUntil(superstructure.outtake::getDetected))
+                .andThen(
+                    Commands.parallel(
+                        superstructure.hopper.setVoltage(0),
+                        superstructure.outtake.setVoltage(0))));
+    return routine.cmd();
+  }
+
   public Command LOtoL() {
     return Commands.sequence(
         this.LOtoI().onlyWhile(superstructure.outtake::getDetected),
         this.ItoPLO().onlyWhile(() -> !superstructure.outtake.getDetected()),
         this.PLOtoK().onlyWhile(superstructure.outtake::getDetected),
         this.KtoPLO().onlyWhile(() -> !superstructure.outtake.getDetected()),
-        this.PLOtoL());
+        this.PLOtoL().onlyWhile(superstructure.outtake::getDetected),
+        this.LtoPLO());
   }
 
   public Command LOtoJ() {
