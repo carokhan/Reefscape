@@ -323,10 +323,10 @@ public class RobotContainer {
         .povRight()
         .onTrue(
             Commands.parallel(
-                superstructure.hopper.setVoltage(-8), superstructure.outtake.setVoltage(-6)))
+                superstructure.hopper.setVoltage(-6), superstructure.outtake.setVoltage(-6)))
         .onFalse(
             Commands.parallel(
-                superstructure.hopper.setVoltage(0), superstructure.outtake.setVoltage(0)));
+                superstructure.hopper.setVoltage(6), superstructure.outtake.setVoltage(0)));
 
     driver
         .rightBumper()
