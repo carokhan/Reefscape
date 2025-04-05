@@ -279,6 +279,7 @@ public class RobotContainer {
     autoChooser.addOption("LO to I", autoRoutines.LOtoI());
     autoChooser.addOption("LO to J", autoRoutines.LOtoJ());
     autoChooser.addOption("LO to L", autoRoutines.LOtoL());
+    autoChooser.addOption("RO to C", autoRoutines.ROtoC());
 
     // RobotModeTriggers.autonomous()
     // .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));

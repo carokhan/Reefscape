@@ -236,6 +236,147 @@ public class AutoRoutines {
         this.LtoPLO());
   }
 
+  public Command ROtoF() {
+    superstructure.outtake.setSimDetected(true);
+    final var routine = factory.newRoutine("RO to F");
+    final var score = routine.trajectory("ROtoF");
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.waitUntil(this::atReef)
+                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
+                Commands.waitUntil(this::atScore)
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        // AllianceFlipUtil.apply(
+                        //     FieldConstants.Reef.branchPositions2d.get(5).get(ReefLevel.L4))
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command FtoPRO() {
+    final var routine = factory.newRoutine("F to PRO");
+    final var intake = routine.trajectory("FtoPRO");
+    routine.active().whileTrue(Commands.sequence(intake.resetOdometry(), intake.cmd()));
+
+    routine
+        .observe(intake.done())
+        .onTrue(
+            Commands.parallel(
+                    AutoAlign.translateToPose(
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())),
+                    Commands.waitUntil(superstructure.outtake::getDetected))
+                .andThen(
+                    Commands.parallel(
+                        superstructure.hopper.setVoltage(0),
+                        superstructure.outtake.setVoltage(0))));
+    return routine.cmd();
+  }
+
+  public Command PROtoD() {
+    final var routine = factory.newRoutine("PRO to D");
+    final var score = routine.trajectory("PROtoD");
+
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.waitUntil(this::atReef)
+                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
+                Commands.waitUntil(this::atScore)
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        // AllianceFlipUtil.apply(
+                        //     FieldConstants.Reef.branchPositions2d.get(3).get(ReefLevel.L4))
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command DtoPRO() {
+    final var routine = factory.newRoutine("D to PRO");
+    final var intake = routine.trajectory("DtoPRO");
+
+    routine.active().whileTrue(Commands.sequence(intake.resetOdometry(), intake.cmd()));
+
+    routine
+        .observe(intake.done())
+        .onTrue(
+            Commands.parallel(
+                    AutoAlign.translateToPose(
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())),
+                    Commands.waitUntil(superstructure.outtake::getDetected))
+                .andThen(
+                    Commands.parallel(
+                        superstructure.hopper.setVoltage(0),
+                        superstructure.outtake.setVoltage(0))));
+    return routine.cmd();
+  }
+
+  public Command PROtoC() {
+    final var routine = factory.newRoutine("PRO to C");
+    final var score = routine.trajectory("PROtoC");
+
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.waitUntil(this::atReef)
+                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
+                Commands.waitUntil(this::atScore)
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        // AllianceFlipUtil.apply(
+                        //     FieldConstants.Reef.branchPositions2d.get(2).get(ReefLevel.L4))
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command CtoPRO() {
+    final var routine = factory.newRoutine("C to PRO");
+    final var intake = routine.trajectory("CtoPRO");
+
+    routine.active().whileTrue(Commands.sequence(intake.resetOdometry(), intake.cmd()));
+
+    routine
+        .observe(intake.done())
+        .onTrue(
+            Commands.parallel(
+                    AutoAlign.translateToPose(
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())),
+                    Commands.waitUntil(superstructure.outtake::getDetected))
+                .andThen(
+                    Commands.parallel(
+                        superstructure.hopper.setVoltage(0),
+                        superstructure.outtake.setVoltage(0))));
+    return routine.cmd();
+  }
+
+  public Command ROtoC() {
+    return Commands.sequence(
+        this.ROtoF().onlyWhile(superstructure.outtake::getDetected),
+        this.FtoPRO().onlyWhile(() -> !superstructure.outtake.getDetected()),
+        this.PROtoD().onlyWhile(superstructure.outtake::getDetected),
+        this.DtoPRO().onlyWhile(() -> !superstructure.outtake.getDetected()),
+        this.PROtoC().onlyWhile(superstructure.outtake::getDetected),
+        this.CtoPRO());
+  }
+
   public Command LOtoJ() {
     superstructure.outtake.setSimDetected(true);
     final var routine = factory.newRoutine("LO to J");
