@@ -323,7 +323,7 @@ public class RobotContainer {
         .povRight()
         .onTrue(
             Commands.parallel(
-                superstructure.hopper.setVoltage(-6), superstructure.outtake.setVoltage(-6)))
+                superstructure.hopper.setVoltage(-7), superstructure.outtake.setVoltage(-7)))
         .onFalse(
             Commands.parallel(
                 superstructure.hopper.setVoltage(6), superstructure.outtake.setVoltage(0)));

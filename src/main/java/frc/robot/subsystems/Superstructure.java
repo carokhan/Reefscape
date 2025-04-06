@@ -313,7 +313,7 @@ public class Superstructure {
         .onTrue(this.forceState(State.ELEV_MANUAL))
         .onFalse(this.forceState(State.IDLE));
 
-    revFunnelRequest.onTrue(this.forceState(State.REV_FUNNEL)).onFalse(this.forceState(State.IDLE));
+    revFunnelRequest.onTrue(this.forceState(State.REV_FUNNEL)).onFalse(this.forceState(State.CORAL_PREINTAKE));
 
     stateTriggers
         .get(State.ELEV_MANUAL)
