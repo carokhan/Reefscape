@@ -18,7 +18,6 @@ public class LEDIOCandle implements LEDIO {
     config.disableWhenLOS = true;
     config.stripType = LEDStripType.RGB;
 
-
     config.vBatOutputMode = VBatOutputMode.Off;
     config.brightnessScalar = 1.0;
     candle.configAllSettings(config);
