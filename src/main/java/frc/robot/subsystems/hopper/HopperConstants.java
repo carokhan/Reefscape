@@ -15,5 +15,5 @@ public class HopperConstants {
 
   public static final double intake = 8.0;
 
-  public static final double enableDistanceToLoader = 0.6;
+  public static final double enableDistanceToLoader = 1;
 }

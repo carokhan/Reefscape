@@ -59,6 +59,7 @@ import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.hopper.HopperIOTalonFX;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.led.LEDIO;
+import frc.robot.subsystems.led.LEDIOCandle;
 import frc.robot.subsystems.led.LEDIOSim;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
@@ -147,7 +148,7 @@ public class RobotContainer {
                 // new ProximityIOGrapple(GripperConstants.laser, null,
                 new ProximityIORedux(GripperConstants.laser, GripperConstants.proximityThreshold));
         climb = new Climb(new ClimbIOTalonFX());
-        led = new LED(new LEDIO() {});
+        led = new LED(new LEDIOCandle());
         vision =
             new Vision(
                 drive::addVisionMeasurement,

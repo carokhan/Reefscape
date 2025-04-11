@@ -27,10 +27,11 @@ public class ElevatorConstants {
 
   public static final double confirmTimeout = 0.5;
 
-  public static final double reefRaiseDistance = 1.5;
+  public static final double reefRaiseDistance = 1.2;
   public static final double processRaiseDistance = 0.5;
   public static final double netRaiseDistanceLower = 0.75;
   public static final double netRaiseDistanceUpper = 1;
+  public static final double loaderRaiseDistance = 1;
 
   public static final double travel = Units.inchesToMeters(69.0);
   public static final double mass = Units.lbsToKilograms(25.1);
