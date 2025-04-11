@@ -32,7 +32,8 @@ public class Hopper extends SubsystemBase {
   }
 
   public Command setVoltage(DoubleSupplier volts) {
-    double multiplier = proximityInputs.detected ? -1.0 : 1.0;
+    boolean shouldAct = proximityInputs.detected && (volts.getAsDouble() > 0);
+    double multiplier = shouldAct ? -1.0 : 1.0;
     return this.run(
         () -> {
           io.setVoltage(volts.getAsDouble() * multiplier);
