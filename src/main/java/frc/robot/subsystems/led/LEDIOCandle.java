@@ -17,6 +17,6 @@ public class LEDIOCandle implements LEDIO {
     config.brightnessScalar = 1.0;
     candle.configAllSettings(config);
 
-    candle.setLEDs(255, 0, 0);
+    candle.setLEDs(255, 0, 0, 0, 0, LEDConstants.length);
   }
 }
