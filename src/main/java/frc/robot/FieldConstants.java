@@ -104,7 +104,7 @@ public class FieldConstants {
     static {
       // Initialize faces
       AprilTagFieldLayout aprilTagLayout = AprilTagLayoutType.OFFICIAL.getLayout();
-      centerFaces[0] = aprilTagLayout.getTagPose(18).get().toPose2d();
+    centerFaces[0] = aprilTagLayout.getTagPose(18).get().toPose2d();
       centerFaces[1] = aprilTagLayout.getTagPose(19).get().toPose2d();
       centerFaces[2] = aprilTagLayout.getTagPose(20).get().toPose2d();
       centerFaces[3] = aprilTagLayout.getTagPose(21).get().toPose2d();

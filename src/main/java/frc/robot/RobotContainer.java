@@ -57,6 +57,7 @@ import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.HopperIO;
 import frc.robot.subsystems.hopper.HopperIOSim;
 import frc.robot.subsystems.hopper.HopperIOSpark;
+import frc.robot.subsystems.hopper.HopperIOTalonFX;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.led.LEDIO;
 import frc.robot.subsystems.led.LEDIOSim;
@@ -128,7 +129,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         hopper =
             new Hopper(
-                new HopperIOSpark(),
+                new HopperIOTalonFX(),
                 // new ProximityIOGrapple(HopperConstants.laser, null,
                 new ProximityIO() {});
         elevator = new Elevator(new ElevatorIOTalonFX());
