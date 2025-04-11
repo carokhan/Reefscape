@@ -8,7 +8,6 @@ import com.ctre.phoenix6.configs.TalonFXConfiguration;
 import com.ctre.phoenix6.controls.VoltageOut;
 import com.ctre.phoenix6.hardware.TalonFX;
 import com.ctre.phoenix6.signals.InvertedValue;
-
 import edu.wpi.first.math.filter.Debouncer;
 import edu.wpi.first.units.measure.Angle;
 import edu.wpi.first.units.measure.AngularVelocity;
@@ -17,9 +16,9 @@ import edu.wpi.first.units.measure.Temperature;
 import edu.wpi.first.units.measure.Voltage;
 
 public class HopperIOTalonFX implements HopperIO {
-    private final TalonFX talon;
+  private final TalonFX talon;
 
-    private final StatusSignal<AngularVelocity> velocity;
+  private final StatusSignal<AngularVelocity> velocity;
   private final StatusSignal<Voltage> voltage;
   private final StatusSignal<Current> statorCurrent;
   private final StatusSignal<Current> supplyCurrent;
@@ -34,7 +33,10 @@ public class HopperIOTalonFX implements HopperIO {
 
   public HopperIOTalonFX() {
     talon = new TalonFX(HopperConstants.talon, "rio");
-    config.MotorOutput.Inverted = HopperConstants.inverted ? InvertedValue.Clockwise_Positive : InvertedValue.CounterClockwise_Positive;
+    config.MotorOutput.Inverted =
+        HopperConstants.inverted
+            ? InvertedValue.Clockwise_Positive
+            : InvertedValue.CounterClockwise_Positive;
     config.CurrentLimits.SupplyCurrentLimit = HopperConstants.current;
     config.CurrentLimits.SupplyCurrentLimitEnable = true;
     config.CurrentLimits.SupplyCurrentLowerLimit = HopperConstants.currentLower;
@@ -56,7 +58,7 @@ public class HopperIOTalonFX implements HopperIO {
     tryUntilOk(5, () -> talon.optimizeBusUtilization(0, 1.0));
   }
 
-   @Override
+  @Override
   public void updateInputs(HopperIOInputsAutoLogged inputs) {
     BaseStatusSignal.refreshAll(
         position, velocity, voltage, statorCurrent, supplyCurrent, temperature);
