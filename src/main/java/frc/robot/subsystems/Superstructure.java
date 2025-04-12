@@ -482,6 +482,7 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 outtake.setVoltage(OuttakeConstants.L1),
+                elevator.setExtension(ElevatorConstants.L1 + 0.25),
                 Commands.waitUntil(() -> !outtake.getDetected())
                     .andThen(
                         Commands.waitSeconds(ElevatorConstants.confirmTimeout)
