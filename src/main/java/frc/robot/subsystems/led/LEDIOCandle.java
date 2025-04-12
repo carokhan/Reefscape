@@ -19,6 +19,6 @@ public class LEDIOCandle implements LEDIO {
     config.vBatOutputMode = VBatOutputMode.Modulated;
     candle.configAllSettings(config);
 
-    candle.setLEDs(255, 0, 0, 0, 0, LEDConstants.length);
+    candle.setLEDs(0, 255, 0, 0, 0, LEDConstants.length);
   }
 }
