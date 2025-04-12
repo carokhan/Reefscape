@@ -436,18 +436,15 @@ public class AutoRoutines {
                 AutoAlign.translateToPose(
                     drive,
                     () ->
-                    AllianceFlipUtil.apply(Reef.algaeIntake[AutoAlign.getBestFace(
-                                  drive.getPose(), 0, 0)]))
-            )
-        );
+                        AllianceFlipUtil.apply(
+                            Reef.algaeIntake[AutoAlign.getBestFace(drive.getPose(), 0, 0)]))));
     return routine.cmd();
   }
 
   public Command LMtobarge() {
     return Commands.sequence(
         this.LMtoH().onlyWhile(superstructure.outtake::getDetected),
-        this.HtoI().onlyWhile(() -> !superstructure.gripper.getDetected())
-    );
+        this.HtoI().onlyWhile(() -> !superstructure.gripper.getDetected()));
   }
 
   public boolean atReef() {
