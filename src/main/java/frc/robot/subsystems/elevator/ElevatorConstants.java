@@ -27,7 +27,7 @@ public class ElevatorConstants {
 
   public static final double confirmTimeout = 0.5;
 
-  public static final double reefRaiseDistance = 1.35;
+  public static final double reefRaiseDistance = 1.45;
   public static final double processRaiseDistance = 0.5;
   public static final double netRaiseDistanceLower = 0.75;
   public static final double netRaiseDistanceUpper = 1;
