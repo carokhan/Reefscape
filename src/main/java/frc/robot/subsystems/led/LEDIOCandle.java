@@ -16,7 +16,7 @@ public class LEDIOCandle implements LEDIO {
 
     config.stripType = LEDStripType.GRB;
     config.brightnessScalar = 0.5;
-    config.vBatOutputMode = VBatOutputMode.On;
+    config.vBatOutputMode = VBatOutputMode.Modulated;
     candle.configAllSettings(config);
 
     candle.setLEDs(0, 0, 255, 0, 0, LEDConstants.length);
