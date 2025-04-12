@@ -42,6 +42,7 @@ import edu.wpi.first.wpilibj2.command.sysid.SysIdRoutine;
 import frc.robot.Constants;
 import frc.robot.Constants.Mode;
 import frc.robot.FieldConstants;
+import frc.robot.util.AllianceFlipUtil;
 import frc.robot.util.LoggedTunableNumber;
 import java.util.Arrays;
 import java.util.concurrent.locks.Lock;
@@ -195,8 +196,8 @@ public class Drive extends SubsystemBase {
         autoHeadingPID.setP(headingkP.get());
       }
 
-      Logger.recordOutput("Drive/BranchesLeft", FieldConstants.Reef.robotLeft);
-      Logger.recordOutput("Drive/BranchesRight", FieldConstants.Reef.robotRight);
+      Logger.recordOutput("Drive/Net", FieldConstants.Barge.net);
+      Logger.recordOutput("Drive/Net", AllianceFlipUtil.apply(FieldConstants.Barge.net));
     }
 
     // Update gyro alert

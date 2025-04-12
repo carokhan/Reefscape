@@ -57,7 +57,7 @@ public class AutoAlign {
         Rotation2d robotToFaceAngle = robotToFaceVector.getAngle();
         Rotation2d driverControlAngle = driverControlVector.getAngle();
 
-        driverInputScore = driverControlAngle.minus(robotToFaceAngle).getCos() * 2;
+        driverInputScore = driverControlAngle.minus(robotToFaceAngle).getCos() * 0; // DISABLED
       }
 
       Logger.recordOutput("AutoAlign/Reef/Face " + i + "/Distance", faceDistanceScore);
@@ -145,14 +145,14 @@ public class AutoAlign {
     headingController.enableContinuousInput(-Math.PI, Math.PI);
     final ProfiledPIDController vxController =
         new ProfiledPIDController(
-            11.0,
+            10.0,
             0.01,
             0.02,
             new TrapezoidProfile.Constraints(
                 AutoAlignConstants.maxLinearSpeed, AutoAlignConstants.maxLinearAccel));
     final ProfiledPIDController vyController =
         new ProfiledPIDController(
-            11.0,
+            10.0,
             0.01,
             0.02,
             new TrapezoidProfile.Constraints(

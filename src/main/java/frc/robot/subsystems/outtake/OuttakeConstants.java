@@ -23,8 +23,8 @@ public class OuttakeConstants {
 
   public static final double index = 3;
   public static final double L1 = 3;
-  public static final double L23 = 4;
-  public static final double L4 = 4;
+  public static final double L23 = 8;
+  public static final double L4 = 3;
 
   public static final Map<CoralTarget, Double> targetToCoral =
       Map.of(

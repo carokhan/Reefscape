@@ -47,8 +47,8 @@ public class FieldConstants {
     public static final Pose2d net =
         new Pose2d(
             new Translation2d(
-                AllianceFlipUtil.applyX(fieldLength / 2 - 0.5),
-                AllianceFlipUtil.applyY(fieldWidth / 4)),
+                AllianceFlipUtil.applyX(fieldLength / 2 - 1),
+                AllianceFlipUtil.applyY(3 * fieldWidth / 4)),
             Rotation2d.kZero);
 
     public static final Translation2d farCage =
@@ -119,9 +119,9 @@ public class FieldConstants {
         Map<ReefLevel, Pose2d> fillLeft2d = new HashMap<>();
         for (ReefLevel level : ReefLevel.values()) {
           Pose2d poseDirection = new Pose2d(center, Rotation2d.fromDegrees((180 - (60 * face))));
-          double adjustX = Units.inchesToMeters(57.738);
-          double adjustY = Units.inchesToMeters(6.269);
-          double algaeAdjustY = Units.inchesToMeters(5.269);
+          double adjustX = Units.inchesToMeters(54.738);
+          double adjustY = Units.inchesToMeters(6.469);
+          double algaeAdjustY = Units.inchesToMeters(4.769);
 
           Pose3d rightBranchPose =
               new Pose3d(

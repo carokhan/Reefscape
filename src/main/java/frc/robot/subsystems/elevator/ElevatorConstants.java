@@ -12,9 +12,9 @@ public class ElevatorConstants {
   public static final double AP = 0.05;
   public static final double L1 = 0.33;
   public static final double A2 = 0.25;
-  public static final double L2 = 0.75;
-  public static final double A3 = 0.73;
-  public static final double L3 = 1.18;
+  public static final double L2 = 0.8;
+  public static final double A3 = 0.81;
+  public static final double L3 = 1.17;
   public static final double L4 = 1.77;
   public static final double AN = 1.78;
 
@@ -31,6 +31,7 @@ public class ElevatorConstants {
   public static final double processRaiseDistance = 0.5;
   public static final double netRaiseDistanceLower = 0.75;
   public static final double netRaiseDistanceUpper = 1;
+  public static final double loaderRaiseDistance = 1;
 
   public static final double travel = Units.inchesToMeters(69.0);
   public static final double mass = Units.lbsToKilograms(25.1);

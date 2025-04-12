@@ -68,8 +68,9 @@ public class Superstructure {
     ALGAE_CONFIRM_AN,
     CLIMB_PREPULL,
     CLIMB_PULL,
+    IDLE,
     ELEV_MANUAL,
-    IDLE
+    REV_FUNNEL
   }
 
   private final Supplier<Pose2d> pose;
@@ -116,6 +117,9 @@ public class Superstructure {
 
   @AutoLogOutput(key = "Superstructure/Cancel Request")
   private final Trigger cancelRequest;
+
+  @AutoLogOutput(key = "Superstructure/Reverse Funnel Request")
+  private final Trigger revFunnelRequest;
 
   @AutoLogOutput(key = "Superstructure/State")
   private State state = State.IDLE;
@@ -240,7 +244,8 @@ public class Superstructure {
       Trigger homeRequest,
       Trigger elevManualRequest,
       Trigger superstructureCoastRequest,
-      Trigger cancelRequest) {
+      Trigger cancelRequest,
+      Trigger revFunnelRequest) {
     this.hopper = hopper;
     this.elevator = elevator;
     this.outtake = outtake;
@@ -270,6 +275,8 @@ public class Superstructure {
     this.elevManualRequest = elevManualRequest;
     this.superstructureCoastRequest = superstructureCoastRequest;
     this.cancelRequest = cancelRequest;
+    this.revFunnelRequest = revFunnelRequest;
+
     this.algaeTarget = ElevatorConstants.A3;
 
     // final Trigger elevatorNetSafety =
@@ -310,21 +317,26 @@ public class Superstructure {
             gripper.setVoltage(0),
             this.forceState(State.IDLE)));
 
-    coralEjectRequest.onTrue(
-        Commands.parallel(
-                elevator.setExtension(ElevatorConstants.A2),
-                Commands.waitUntil(elevator::isNearExtension)
-                    .andThen(outtake.setVoltage(OuttakeConstants.L23)))
-            .onlyWhile(outtake::getDetected)
-            .andThen(Commands.parallel(outtake.setVoltage(0)), this.forceState(State.IDLE)));
+    coralEjectRequest
+        .onTrue(outtake.setVoltage(OuttakeConstants.L23))
+        .onFalse(Commands.parallel(outtake.setVoltage(0), this.forceState(State.IDLE)));
 
-    algaeEjectRequest.onTrue(
-        Commands.parallel(
-                elevator.setExtension(ElevatorConstants.A2),
-                Commands.waitUntil(elevator::isNearExtension)
-                    .andThen(gripper.setVoltage(GripperConstants.AP)))
-            .onlyWhile(gripper::getDetected)
-            .andThen(Commands.parallel(gripper.setVoltage(0)), this.forceState(State.IDLE)));
+    algaeEjectRequest
+        .onTrue(gripper.setVoltage(GripperConstants.AP))
+        .onFalse(Commands.parallel(gripper.setVoltage(0), this.forceState(State.IDLE)));
+
+    elevManualRequest
+        .onTrue(this.forceState(State.ELEV_MANUAL))
+        .onFalse(this.forceState(State.IDLE));
+
+    revFunnelRequest
+        .onTrue(this.forceState(State.REV_FUNNEL))
+        .onFalse(this.forceState(State.CORAL_PREINTAKE));
+
+    stateTriggers
+        .get(State.ELEV_MANUAL)
+        .and(scoreRequest)
+        .onTrue(gripper.setVoltage(GripperConstants.AN));
 
     // IDLE State Transitions (Starts: Robot idle, Ends: Various transitions based
     // on detections and requests)
@@ -375,7 +387,9 @@ public class Superstructure {
         .and(() -> this.getAlgaeTarget() == ElevatorConstants.A3)
         .onTrue(
             Commands.parallel(
-                gripper.setVoltage(GripperConstants.A23), this.forceState(State.ALGAE_INTAKE)));
+                elevator.setExtension(ElevatorConstants.A3),
+                gripper.setVoltage(GripperConstants.A23),
+                this.forceState(State.ALGAE_INTAKE)));
 
     stateTriggers
         .get(State.IDLE)
@@ -464,9 +478,55 @@ public class Superstructure {
     stateTriggers
         .get(State.CORAL_CONFIRM)
         .and(scoreRequest)
+        .and(() -> (this.getCoralTarget().equals(CoralTarget.L1)))
         .onTrue(
             Commands.parallel(
-                outtake.setVoltage(OuttakeConstants.targetToCoral.get(coralTarget)),
+                outtake.setVoltage(OuttakeConstants.L1),
+                Commands.waitUntil(() -> !outtake.getDetected())
+                    .andThen(
+                        Commands.waitSeconds(ElevatorConstants.confirmTimeout)
+                            .andThen(
+                                elevator
+                                    .setExtension(ElevatorConstants.intake)
+                                    .andThen(this.forceState(State.IDLE))))));
+
+    stateTriggers
+        .get(State.CORAL_CONFIRM)
+        .and(scoreRequest)
+        .and(() -> (this.getCoralTarget().equals(CoralTarget.L2)))
+        .onTrue(
+            Commands.parallel(
+                outtake.setVoltage(OuttakeConstants.L23),
+                Commands.waitUntil(() -> !outtake.getDetected())
+                    .andThen(
+                        Commands.waitSeconds(ElevatorConstants.confirmTimeout)
+                            .andThen(
+                                elevator
+                                    .setExtension(ElevatorConstants.intake)
+                                    .andThen(this.forceState(State.IDLE))))));
+
+    stateTriggers
+        .get(State.CORAL_CONFIRM)
+        .and(scoreRequest)
+        .and(() -> (this.getCoralTarget().equals(CoralTarget.L3)))
+        .onTrue(
+            Commands.parallel(
+                outtake.setVoltage(OuttakeConstants.L23),
+                Commands.waitUntil(() -> !outtake.getDetected())
+                    .andThen(
+                        Commands.waitSeconds(ElevatorConstants.confirmTimeout)
+                            .andThen(
+                                elevator
+                                    .setExtension(ElevatorConstants.intake)
+                                    .andThen(this.forceState(State.IDLE))))));
+
+    stateTriggers
+        .get(State.CORAL_CONFIRM)
+        .and(scoreRequest)
+        .and(() -> (this.getCoralTarget().equals(CoralTarget.L4)))
+        .onTrue(
+            Commands.parallel(
+                outtake.setVoltage(OuttakeConstants.L4),
                 Commands.waitUntil(() -> !outtake.getDetected())
                     .andThen(
                         Commands.waitSeconds(ElevatorConstants.confirmTimeout)

@@ -56,9 +56,10 @@ import frc.robot.subsystems.gripper.GripperIOTalonFX;
 import frc.robot.subsystems.hopper.Hopper;
 import frc.robot.subsystems.hopper.HopperIO;
 import frc.robot.subsystems.hopper.HopperIOSim;
-import frc.robot.subsystems.hopper.HopperIOSpark;
+import frc.robot.subsystems.hopper.HopperIOTalonFX;
 import frc.robot.subsystems.led.LED;
 import frc.robot.subsystems.led.LEDIO;
+import frc.robot.subsystems.led.LEDIOCandle;
 import frc.robot.subsystems.led.LEDIOSim;
 import frc.robot.subsystems.outtake.Outtake;
 import frc.robot.subsystems.outtake.OuttakeConstants;
@@ -128,7 +129,7 @@ public class RobotContainer {
                 new ModuleIOTalonFX(TunerConstants.BackRight));
         hopper =
             new Hopper(
-                new HopperIOSpark(),
+                new HopperIOTalonFX(),
                 // new ProximityIOGrapple(HopperConstants.laser, null,
                 new ProximityIO() {});
         elevator = new Elevator(new ElevatorIOTalonFX());
@@ -147,7 +148,7 @@ public class RobotContainer {
                 // new ProximityIOGrapple(GripperConstants.laser, null,
                 new ProximityIORedux(GripperConstants.laser, GripperConstants.proximityThreshold));
         climb = new Climb(new ClimbIOTalonFX());
-        led = new LED(new LEDIO() {});
+        led = new LED(new LEDIOCandle());
         vision =
             new Vision(
                 drive::addVisionMeasurement,
@@ -246,7 +247,8 @@ public class RobotContainer {
             operator.leftTrigger(),
             operator.rightTrigger(),
             operator.leftBumper(),
-            driver.povLeft());
+            driver.povLeft(),
+            driver.povRight());
 
     // Set up auto routines
     autoChooser = new LoggedDashboardChooser<>("Choreo Auto Chooser");
@@ -279,6 +281,7 @@ public class RobotContainer {
     autoChooser.addOption("LO to I", autoRoutines.LOtoI());
     autoChooser.addOption("LO to J", autoRoutines.LOtoJ());
     autoChooser.addOption("LO to L", autoRoutines.LOtoL());
+    autoChooser.addOption("RO to C", autoRoutines.ROtoC());
 
     // RobotModeTriggers.autonomous()
     // .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));
@@ -317,7 +320,14 @@ public class RobotContainer {
                     drive)
                 .ignoringDisable(true));
 
-    driver.povRight().onTrue(Commands.runOnce(() -> climb.resetEncoder()));
+    driver
+        .povRight()
+        .onTrue(
+            Commands.parallel(
+                superstructure.hopper.setVoltage(-7), superstructure.outtake.setVoltage(-7)))
+        .onFalse(
+            Commands.parallel(
+                superstructure.hopper.setVoltage(6), superstructure.outtake.setVoltage(0)));
 
     driver
         .rightBumper()
@@ -460,10 +470,22 @@ public class RobotContainer {
     operator.b().onTrue(superstructure.setCoralTarget(CoralTarget.L2));
     operator.a().onTrue(superstructure.setCoralTarget(CoralTarget.L1));
 
-    // operator.y().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L4)));
-    // operator.x().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L3)));
-    // operator.b().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L2)));
-    // operator.a().onTrue(superstructure.elevator.setExtension((ElevatorConstants.L1)));
+    operator
+        .rightTrigger()
+        .and(operator.y())
+        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L4)));
+    operator
+        .rightTrigger()
+        .and(operator.x())
+        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L3)));
+    operator
+        .rightTrigger()
+        .and(operator.b())
+        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L2)));
+    operator
+        .rightTrigger()
+        .and(operator.a())
+        .onTrue(superstructure.elevator.setExtension((ElevatorConstants.L1)));
 
     operator.leftTrigger().onTrue(elevator.homingSequence().andThen(elevator.reset()));
     operator

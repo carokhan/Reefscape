@@ -3,8 +3,10 @@ package frc.robot.subsystems.led;
 import edu.wpi.first.wpilibj.util.Color;
 
 public class LEDConstants {
-  public static final int id = 0;
-  public static final int length = 90;
+  public static final int rioId = 0;
+  public static final int candleId = 60;
+
+  public static final int length = 40;
 
   public static enum Mode {
     OFF(Color.kBlack),

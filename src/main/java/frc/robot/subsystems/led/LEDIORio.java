@@ -8,12 +8,12 @@ import edu.wpi.first.wpilibj.AddressableLED;
 import edu.wpi.first.wpilibj.AddressableLEDBuffer;
 import edu.wpi.first.wpilibj.util.Color;
 
-public class LEDIOReal implements LEDIO {
+public class LEDIORio implements LEDIO {
   private final AddressableLED led;
   private final AddressableLEDBuffer buffer;
 
-  public LEDIOReal() {
-    led = new AddressableLED(LEDConstants.id);
+  public LEDIORio() {
+    led = new AddressableLED(LEDConstants.rioId);
     buffer = new AddressableLEDBuffer(LEDConstants.length);
     led.setLength(buffer.getLength());
     led.start();
