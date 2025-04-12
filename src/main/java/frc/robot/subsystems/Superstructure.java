@@ -459,7 +459,7 @@ public class Superstructure {
                     && !this.getCoralTarget().equals(CoralTarget.L3)
                     && !this.getCoralTarget().equals(CoralTarget.L4)));
 
-                    stateTriggers
+    stateTriggers
         .get(State.CORAL_CONFIRM)
         .and(scoreRequest)
         .and(() -> (this.getCoralTarget().equals(CoralTarget.L1)))
@@ -474,22 +474,22 @@ public class Superstructure {
                                     .setExtension(ElevatorConstants.intake)
                                     .andThen(this.forceState(State.IDLE))))));
 
-                    stateTriggers
-                    .get(State.CORAL_CONFIRM)
-                    .and(scoreRequest)
-                    .and(() -> (this.getCoralTarget().equals(CoralTarget.L2)))
-                    .onTrue(
-                        Commands.parallel(
-                            outtake.setVoltage(OuttakeConstants.L23),
-                            Commands.waitUntil(() -> !outtake.getDetected())
-                                .andThen(
-                                    Commands.waitSeconds(ElevatorConstants.confirmTimeout)
-                                        .andThen(
-                                            elevator
-                                                .setExtension(ElevatorConstants.intake)
-                                                .andThen(this.forceState(State.IDLE))))));
-    
-                    stateTriggers
+    stateTriggers
+        .get(State.CORAL_CONFIRM)
+        .and(scoreRequest)
+        .and(() -> (this.getCoralTarget().equals(CoralTarget.L2)))
+        .onTrue(
+            Commands.parallel(
+                outtake.setVoltage(OuttakeConstants.L23),
+                Commands.waitUntil(() -> !outtake.getDetected())
+                    .andThen(
+                        Commands.waitSeconds(ElevatorConstants.confirmTimeout)
+                            .andThen(
+                                elevator
+                                    .setExtension(ElevatorConstants.intake)
+                                    .andThen(this.forceState(State.IDLE))))));
+
+    stateTriggers
         .get(State.CORAL_CONFIRM)
         .and(scoreRequest)
         .and(() -> (this.getCoralTarget().equals(CoralTarget.L3)))
@@ -504,7 +504,7 @@ public class Superstructure {
                                     .setExtension(ElevatorConstants.intake)
                                     .andThen(this.forceState(State.IDLE))))));
 
-                                    stateTriggers
+    stateTriggers
         .get(State.CORAL_CONFIRM)
         .and(scoreRequest)
         .and(() -> (this.getCoralTarget().equals(CoralTarget.L4)))
