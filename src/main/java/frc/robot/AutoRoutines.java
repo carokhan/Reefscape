@@ -8,6 +8,7 @@ import edu.wpi.first.wpilibj.DriverStation;
 import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.Commands;
+import frc.robot.FieldConstants.Reef;
 import frc.robot.subsystems.Superstructure;
 import frc.robot.subsystems.autoalign.AutoAlign;
 import frc.robot.subsystems.drive.Drive;
@@ -55,6 +56,28 @@ public class AutoRoutines {
     superstructure.outtake.setSimDetected(true);
     final var routine = factory.newRoutine("LM to H");
     final var score = routine.trajectory("LMtoH");
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.waitUntil(this::atReef)
+                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
+                Commands.waitUntil(this::atScore)
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command RMtoG() {
+    superstructure.outtake.setSimDetected(true);
+    final var routine = factory.newRoutine("RM to G");
+    final var score = routine.trajectory("RMtoG");
     routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
 
     routine
@@ -396,6 +419,35 @@ public class AutoRoutines {
                         AutoAlign.getBestBranch(drive.getPose())
                             .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
     return routine.cmd();
+  }
+
+  public Command HtoI() {
+    final var routine = factory.newRoutine("H to I");
+    final var intake = routine.trajectory("HtoI");
+    routine.active().whileTrue(Commands.sequence(intake.resetOdometry(), intake.cmd()));
+    routine
+        .observe(intake.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.waitUntil(this::atReef)
+                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
+                Commands.waitUntil(this::atScore)
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                    AllianceFlipUtil.apply(Reef.algaeIntake[AutoAlign.getBestFace(
+                                  drive.getPose(), 0, 0)]))
+            )
+        );
+    return routine.cmd();
+  }
+
+  public Command LMtobarge() {
+    return Commands.sequence(
+        this.LMtoH().onlyWhile(superstructure.outtake::getDetected),
+        this.HtoI().onlyWhile(() -> !superstructure.gripper.getDetected())
+    );
   }
 
   public boolean atReef() {

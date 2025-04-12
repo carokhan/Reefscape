@@ -15,8 +15,8 @@ public class LEDIOCandle implements LEDIO {
     candle = new CANdle(LEDConstants.candleId, "rio");
 
     config.stripType = LEDStripType.GRB;
-    config.brightnessScalar = 1.0;
-    config.vBatOutputMode = VBatOutputMode.Off;
+    config.brightnessScalar = 0.5;
+    config.vBatOutputMode = VBatOutputMode.On;
     candle.configAllSettings(config);
 
     candle.setLEDs(0, 0, 255, 0, 0, LEDConstants.length);
