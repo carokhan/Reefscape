@@ -57,7 +57,7 @@ public class AutoAlign {
         Rotation2d robotToFaceAngle = robotToFaceVector.getAngle();
         Rotation2d driverControlAngle = driverControlVector.getAngle();
 
-        driverInputScore = driverControlAngle.minus(robotToFaceAngle).getCos() * 2;
+        driverInputScore = driverControlAngle.minus(robotToFaceAngle).getCos() * 0; // DISABLED
       }
 
       Logger.recordOutput("AutoAlign/Reef/Face " + i + "/Distance", faceDistanceScore);
