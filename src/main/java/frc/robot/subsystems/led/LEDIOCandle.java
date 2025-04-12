@@ -2,6 +2,7 @@ package frc.robot.subsystems.led;
 
 import com.ctre.phoenix.led.CANdle;
 import com.ctre.phoenix.led.CANdle.LEDStripType;
+import com.ctre.phoenix.led.CANdle.VBatOutputMode;
 import com.ctre.phoenix.led.CANdleConfiguration;
 import frc.robot.subsystems.led.LEDConstants.Mode;
 
@@ -15,6 +16,7 @@ public class LEDIOCandle implements LEDIO {
 
     config.stripType = LEDStripType.GRB;
     config.brightnessScalar = 1.0;
+    config.vBatOutputMode = VBatOutputMode.Modulated;
     candle.configAllSettings(config);
 
     candle.setLEDs(255, 0, 0, 0, 0, LEDConstants.length);
