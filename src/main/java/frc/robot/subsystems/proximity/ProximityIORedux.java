@@ -3,12 +3,14 @@ package frc.robot.subsystems.proximity;
 import com.reduxrobotics.sensors.canandcolor.Canandcolor;
 import com.reduxrobotics.sensors.canandcolor.CanandcolorSettings;
 import com.reduxrobotics.sensors.canandcolor.ProximityPeriod;
+import edu.wpi.first.math.filter.LinearFilter;
 
 public class ProximityIORedux implements ProximityIO {
   private final Canandcolor canandcolor;
   private CanandcolorSettings settings = new CanandcolorSettings();
 
   public double maxThreshold;
+  private final LinearFilter proximityFilter = LinearFilter.movingAverage(5);
 
   public ProximityIORedux(int id) {
     canandcolor = new Canandcolor(id);
@@ -37,7 +39,7 @@ public class ProximityIORedux implements ProximityIO {
 
   public void updateInputs(ProximityIOInputsAutoLogged inputs) {
     inputs.connected = canandcolor.isConnected();
-    inputs.raw = canandcolor.getProximity();
+    inputs.raw = proximityFilter.calculate(canandcolor.getProximity());
     inputs.detected = canandcolor.getProximity() < maxThreshold;
     inputs.tempCelsius = canandcolor.getTemperature();
   }

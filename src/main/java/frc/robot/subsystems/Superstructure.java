@@ -139,6 +139,7 @@ public class Superstructure {
 
   private final DoubleSupplier driverX;
   private final DoubleSupplier driverY;
+  private final DoubleSupplier operatorY;
 
   private CoralTarget coralTarget;
   private double algaeTarget;
@@ -229,6 +230,7 @@ public class Superstructure {
       CoralTarget initCoralTarget,
       DoubleSupplier driverX,
       DoubleSupplier driverY,
+      DoubleSupplier operatorY,
       Trigger scoreRequest,
       Trigger coralIntakeRequest,
       Trigger coralEjectRequest,
@@ -257,6 +259,7 @@ public class Superstructure {
 
     this.driverX = driverX;
     this.driverY = driverY;
+    this.operatorY = operatorY;
 
     this.scoreRequest = scoreRequest;
     this.coralIntakeRequest = coralIntakeRequest;
@@ -289,6 +292,19 @@ public class Superstructure {
     // elevatorNetSafety.onTrue(
     // Commands.parallel(
     // elevator.setExtension(ElevatorConstants.AP), this.forceState(State.IDLE)));
+    elevManualRequest
+        .onTrue(this.forceState(State.ELEV_MANUAL))
+        .onFalse(this.forceState(State.IDLE));
+
+    // stateTriggers
+    //     .get(State.ELEV_MANUAL)
+    //     .onTrue(
+    //         Commands.parallel(
+    //             elevator.setVoltage(12.0 * MathUtil.applyDeadband(operatorY.getAsDouble(),
+    // 0.05)),
+    //             Commands.print(
+    //                 "MANUAL MODE "
+    //                     + 12.0 * MathUtil.applyDeadband(operatorY.getAsDouble(), 0.05))));
 
     cancelRequest.onTrue(
         Commands.parallel(
@@ -576,6 +592,8 @@ public class Superstructure {
 
     stateTriggers
         .get(State.ALGAE_READY)
+        .and(algaeNetRequest)
+        .and(scoreRequest)
         .or(
             () ->
                 (stateTriggers.get(State.ALGAE_INTAKE).getAsBoolean() && gripper.getDualDetected()))
