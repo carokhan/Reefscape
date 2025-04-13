@@ -10,7 +10,7 @@ import java.util.function.Consumer;
 public class HopperIOSim implements HopperIO {
   private final DCMotorSim motorSim;
 
-  private Optional<Consumer<HopperIOInputsAutoLogged>> callback = Optional.empty();
+  private Optional<Consumer<HopperIOInputs>> callback = Optional.empty();
   private double appliedVolts = 0.0;
 
   public HopperIOSim() {
