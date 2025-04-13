@@ -2,6 +2,7 @@ package frc.robot.subsystems.outtake;
 
 import au.grapplerobotics.interfaces.LaserCanInterface.RangingMode;
 import au.grapplerobotics.interfaces.LaserCanInterface.RegionOfInterest;
+import com.reduxrobotics.sensors.canandcolor.ProximityPeriod;
 import frc.robot.subsystems.Superstructure.CoralTarget;
 import java.util.Map;
 
@@ -22,7 +23,7 @@ public class OuttakeConstants {
   public static final int laserBaseRight = 25;
 
   public static final double index = 3;
-  public static final double L1 = 3;
+  public static final double L1 = 6;
   public static final double L23 = 8;
   public static final double L4 = 3;
 
@@ -35,4 +36,6 @@ public class OuttakeConstants {
 
   public static final double gearing = 20.0 / 12.0;
   public static final double moi = 0.004;
+
+  public static ProximityPeriod period = ProximityPeriod.k5ms;
 }

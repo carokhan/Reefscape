@@ -137,7 +137,9 @@ public class RobotContainer {
             new Outtake(
                 new OuttakeIOTalonFX(),
                 new ProximityIORedux(
-                    OuttakeConstants.canandcolor, OuttakeConstants.proximityThreshold),
+                    OuttakeConstants.canandcolor,
+                    OuttakeConstants.proximityThreshold,
+                    OuttakeConstants.period),
                 new ProximityIO() {
                   {
                   }
@@ -146,7 +148,10 @@ public class RobotContainer {
             new Gripper(
                 new GripperIOTalonFX(),
                 // new ProximityIOGrapple(GripperConstants.laser, null,
-                new ProximityIORedux(GripperConstants.laser, GripperConstants.proximityThreshold));
+                new ProximityIORedux(
+                    GripperConstants.laser,
+                    GripperConstants.proximityThreshold,
+                    GripperConstants.period));
         climb = new Climb(new ClimbIOTalonFX());
         led = new LED(new LEDIOCandle());
         vision =
@@ -426,7 +431,7 @@ public class RobotContainer {
 
     driver
         .povUp()
-        .and(gripper::getDualDetected)
+        .and(gripper::getDetected)
         .whileTrue(
             Commands.parallel(
                 AutoAlign.autoAimWithIntermediatePose(
@@ -446,7 +451,7 @@ public class RobotContainer {
 
     driver
         .povDown()
-        .and(gripper::getDualDetected)
+        .and(gripper::getDetected)
         .whileTrue(
             Commands.parallel(
                 AutoAlign.autoAimWithIntermediatePose(

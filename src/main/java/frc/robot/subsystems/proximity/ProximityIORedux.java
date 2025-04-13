@@ -12,27 +12,28 @@ public class ProximityIORedux implements ProximityIO {
   public double maxThreshold;
   private final LinearFilter proximityFilter = LinearFilter.movingAverage(5);
 
-  public ProximityIORedux(int id) {
+  public ProximityIORedux(int id, ProximityPeriod period) {
     canandcolor = new Canandcolor(id);
     canandcolor.resetFactoryDefaults();
     settings = canandcolor.getSettings();
 
-    settings.setProximityIntegrationPeriod(ProximityPeriod.k5ms);
+    settings.setProximityIntegrationPeriod(period);
     settings.setAlignProximityFramesToIntegrationPeriod(true);
     canandcolor.setSettings(settings);
   }
 
-  public ProximityIORedux(int id, double maxThreshold) {
-    this(id, maxThreshold, 0);
+  public ProximityIORedux(int id, double maxThreshold, ProximityPeriod period) {
+    this(id, maxThreshold, 0, period);
     this.maxThreshold = maxThreshold;
   }
 
-  public ProximityIORedux(int id, double maxThreshold, double minThreshold) {
+  public ProximityIORedux(
+      int id, double maxThreshold, double minThreshold, ProximityPeriod period) {
     canandcolor = new Canandcolor(id);
     canandcolor.resetFactoryDefaults();
     settings = canandcolor.getSettings();
 
-    settings.setProximityIntegrationPeriod(ProximityPeriod.k5ms);
+    settings.setProximityIntegrationPeriod(period);
     settings.setAlignProximityFramesToIntegrationPeriod(true);
     canandcolor.setSettings(settings);
   }

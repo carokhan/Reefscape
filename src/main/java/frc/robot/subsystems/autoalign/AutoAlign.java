@@ -145,14 +145,14 @@ public class AutoAlign {
     headingController.enableContinuousInput(-Math.PI, Math.PI);
     final ProfiledPIDController vxController =
         new ProfiledPIDController(
-            10.0,
+            8.0,
             0.01,
             0.02,
             new TrapezoidProfile.Constraints(
                 AutoAlignConstants.maxLinearSpeed, AutoAlignConstants.maxLinearAccel));
     final ProfiledPIDController vyController =
         new ProfiledPIDController(
-            10.0,
+            8.0,
             0.01,
             0.02,
             new TrapezoidProfile.Constraints(

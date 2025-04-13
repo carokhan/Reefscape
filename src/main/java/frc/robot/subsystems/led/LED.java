@@ -1,18 +1,46 @@
 package frc.robot.subsystems.led;
 
+import com.ctre.phoenix.led.Animation;
+import com.ctre.phoenix.led.SingleFadeAnimation;
+import edu.wpi.first.wpilibj.DriverStation;
+import edu.wpi.first.wpilibj.DriverStation.Alliance;
 import edu.wpi.first.wpilibj.Timer;
 import edu.wpi.first.wpilibj.util.Color;
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.Superstructure.State;
 import org.littletonrobotics.junction.Logger;
 
 public class LED extends SubsystemBase {
   private final LEDIO io;
   private final LEDIOInputsAutoLogged inputs = new LEDIOInputsAutoLogged();
 
+  State state = State.IDLE;
+
+  private Color color;
+  private Animation disabledAnimation;
+
+  private Animation animation;
+  private Animation lastAnimation;
+
   public LED(LEDIO io) {
     this.io = io;
-    solid(Color.kAliceBlue);
+
+    color =
+        DriverStation.getAlliance()
+            .map(alliance -> alliance == Alliance.Red ? Color.kFirstRed : Color.kNavy)
+            .orElse(Color.kNavy);
+    disabledAnimation =
+        new SingleFadeAnimation(
+            (int) (color.red * 255),
+            (int) (color.green * 255),
+            (int) (color.blue * 255),
+            0,
+            0,
+            LEDConstants.length);
+    io.set(disabledAnimation);
+    animation = disabledAnimation;
+    lastAnimation = disabledAnimation;
   }
 
   @Override
@@ -21,12 +49,71 @@ public class LED extends SubsystemBase {
     Logger.processInputs("LED", inputs);
   }
 
+  public void setAnimation(State state) {
+
+    if (DriverStation.isDisabled() && state != State.CLIMB_PULL) {
+      animation = disabledAnimation;
+    } else {
+      switch (state) {
+        case IDLE:
+        case ELEV_MANUAL:
+          animation = LEDConstants.idleAnimation;
+          break;
+        case CORAL_PREINTAKE:
+          animation = LEDConstants.coralIntakeAnimation;
+          break;
+        case CORAL_READY:
+          animation = LEDConstants.coralReadyAnimation;
+          break;
+        case ALGAE_INTAKE:
+          animation = LEDConstants.algaeIntakeAnimation;
+          break;
+        case ALGAE_READY:
+          animation = LEDConstants.algaeReadyAnimation;
+          break;
+        case CLIMB_PREPULL:
+          animation = LEDConstants.climbReadyAnimation;
+          break;
+        case CLIMB_PULL:
+          if (DriverStation.isDisabled()) {
+            animation = LEDConstants.climbedAnimation;
+          } else {
+            animation = LEDConstants.endAnimation;
+          }
+          break;
+        case ALGAE_CONFIRM_AP:
+        case ALGAE_CONFIRM_AN:
+        case CORAL_CONFIRM:
+          animation = LEDConstants.outtakeAnimation;
+        case SCORE:
+          io.set(Color.kGreen);
+        case REV_FUNNEL:
+          animation = LEDConstants.revFunnelAnimation;
+        default:
+          break;
+      }
+    }
+    // io.set(animation);
+    if (animation != lastAnimation) {
+      io.set(animation);
+      lastAnimation = animation;
+    }
+  }
+
+  public void setState(State state, boolean scoring) {
+    if (scoring) {
+      this.state = State.SCORE;
+    } else {
+      this.state = state;
+    }
+  }
+
   private void setIndex(int i, Color color) {
-    io.set(i, color);
+    io.set(color, i);
   }
 
   private Color solid(Color color) {
-    io.solid(color);
+    io.set(color);
     return color;
   }
 

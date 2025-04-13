@@ -456,7 +456,7 @@ public class AutoRoutines {
                 Commands.waitUntil(
                         () -> superstructure.elevator.isNearExtension(ElevatorConstants.AN))
                     .andThen(superstructure.gripper.setVoltage(GripperConstants.AN)),
-                Commands.waitUntil(() -> !superstructure.gripper.getDualDetected())
+                Commands.waitUntil(() -> !superstructure.gripper.getDetected())
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.intake))));
 
     return routine.cmd();
@@ -465,7 +465,7 @@ public class AutoRoutines {
   public Command LMtobarge() {
     return Commands.sequence(
         this.LMtoH().onlyWhile(superstructure.outtake::getDetected),
-        this.HtoI().onlyWhile(() -> !superstructure.gripper.getDualDetected()),
+        this.HtoI().onlyWhile(() -> !superstructure.gripper.getDetected()),
         this.Itobarge());
   }
 

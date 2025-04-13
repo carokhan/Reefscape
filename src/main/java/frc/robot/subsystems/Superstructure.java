@@ -57,7 +57,6 @@ public class Superstructure {
 
   public enum State {
     CORAL_PREINTAKE,
-    CORAL_OUTTAKE,
     CORAL_READY,
     CORAL_CONFIRM,
     ALGAE_INTAKE,
@@ -70,7 +69,8 @@ public class Superstructure {
     CLIMB_PULL,
     IDLE,
     ELEV_MANUAL,
-    REV_FUNNEL
+    REV_FUNNEL,
+    SCORE
   }
 
   private final Supplier<Pose2d> pose;
@@ -297,14 +297,14 @@ public class Superstructure {
         .onFalse(this.forceState(State.IDLE));
 
     // stateTriggers
-    //     .get(State.ELEV_MANUAL)
-    //     .onTrue(
-    //         Commands.parallel(
-    //             elevator.setVoltage(12.0 * MathUtil.applyDeadband(operatorY.getAsDouble(),
+    // .get(State.ELEV_MANUAL)
+    // .onTrue(
+    // Commands.parallel(
+    // elevator.setVoltage(12.0 * MathUtil.applyDeadband(operatorY.getAsDouble(),
     // 0.05)),
-    //             Commands.print(
-    //                 "MANUAL MODE "
-    //                     + 12.0 * MathUtil.applyDeadband(operatorY.getAsDouble(), 0.05))));
+    // Commands.print(
+    // "MANUAL MODE "
+    // + 12.0 * MathUtil.applyDeadband(operatorY.getAsDouble(), 0.05))));
 
     cancelRequest.onTrue(
         Commands.parallel(
@@ -480,16 +480,17 @@ public class Superstructure {
         .and(scoreRequest)
         .and(() -> (this.getCoralTarget().equals(CoralTarget.L1)))
         .onTrue(
-            Commands.parallel(
-                outtake.setVoltage(OuttakeConstants.L1),
-                elevator.setExtension(ElevatorConstants.L1 + 0.25),
-                Commands.waitUntil(() -> !outtake.getDetected())
-                    .andThen(
-                        Commands.waitSeconds(ElevatorConstants.confirmTimeout)
-                            .andThen(
-                                elevator
-                                    .setExtension(ElevatorConstants.intake)
-                                    .andThen(this.forceState(State.IDLE))))));
+            Commands.deadline(
+                    Commands.waitUntil(() -> !outtake.getDetected()),
+                    Commands.parallel(
+                        outtake.setVoltage(OuttakeConstants.L1),
+                        elevator.setExtension(ElevatorConstants.L1 + 0.375)))
+                .andThen(
+                    Commands.waitSeconds(ElevatorConstants.confirmTimeout)
+                        .andThen(
+                            elevator
+                                .setExtension(ElevatorConstants.intake)
+                                .andThen(this.forceState(State.IDLE)))));
 
     stateTriggers
         .get(State.CORAL_CONFIRM)
@@ -542,13 +543,6 @@ public class Superstructure {
         .and(() -> !outtake.getDetected())
         .onTrue(this.forceState(State.IDLE));
 
-    stateTriggers
-        .get(State.CORAL_OUTTAKE)
-        .whileTrue(outtake.setVoltage(OuttakeConstants.L23))
-        .and(() -> !outtake.getDetected())
-        .and(preClimbRequest.negate())
-        .onTrue(this.forceState(State.IDLE));
-
     // ALGAE State Transitions (Starts: Algae handling, Ends: Scoring or reset)
     stateTriggers
         .get(State.ALGAE_INTAKE)
@@ -557,7 +551,7 @@ public class Superstructure {
         .onTrue(
             elevator
                 .setExtension(ElevatorConstants.A3 + .25)
-                .onlyWhile(() -> !gripper.getDualDetected())
+                .onlyWhile(() -> !gripper.getDetected())
                 .andThen(
                     Commands.waitUntil(
                             () ->
@@ -578,7 +572,7 @@ public class Superstructure {
             Commands.parallel(
                 elevator
                     .setExtension(ElevatorConstants.A2 + .25)
-                    .onlyWhile(() -> !gripper.getDualDetected())
+                    .onlyWhile(() -> !gripper.getDetected())
                     .andThen(
                         Commands.waitUntil(
                                 () ->
@@ -595,9 +589,7 @@ public class Superstructure {
         .get(State.ALGAE_READY)
         .and(algaeNetRequest)
         .and(scoreRequest)
-        .or(
-            () ->
-                (stateTriggers.get(State.ALGAE_INTAKE).getAsBoolean() && gripper.getDualDetected()))
+        .or(() -> (stateTriggers.get(State.ALGAE_INTAKE).getAsBoolean() && gripper.getDetected()))
         // .and(
         // () ->
         // (Math.abs(pose.get().getX() - FieldConstants.fieldLength / 2)
@@ -632,7 +624,7 @@ public class Superstructure {
                     elevator.setExtension(ElevatorConstants.AN),
                     Commands.waitUntil(elevator::isNearExtension)
                         .andThen(gripper.setVoltage(GripperConstants.AN)))
-                .onlyWhile(gripper::getDualDetected)
+                .onlyWhile(gripper::getDetected)
                 .andThen(
                     elevator
                         .setExtension(ElevatorConstants.intake)
@@ -710,6 +702,7 @@ public class Superstructure {
 
   /** This file is not a subsystem, so this MUST be called manually. */
   public void periodic() {
+    led.setAnimation(state);
     algaeTarget =
         FieldConstants.Reef.algaeHeights.get(
             FieldConstants.Reef.centerFaces[
@@ -780,5 +773,9 @@ public class Superstructure {
   public double getAlgaeTarget() {
     // Commands.print(this.coralTarget);
     return this.algaeTarget;
+  }
+
+  public boolean getScore() {
+    return this.scoreRequest.getAsBoolean();
   }
 }

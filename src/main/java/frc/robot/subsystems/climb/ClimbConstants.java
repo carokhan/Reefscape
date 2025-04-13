@@ -12,8 +12,8 @@ public class ClimbConstants {
   public static final double mass = Units.lbsToKilograms(25.1);
 
   public static final Rotation2d stow = Rotation2d.fromDegrees(0.0);
-  public static final Rotation2d ready = Rotation2d.fromDegrees(27);
-  public static final Rotation2d climbed = Rotation2d.fromDegrees(44);
+  public static final Rotation2d ready = Rotation2d.fromDegrees(33);
+  public static final Rotation2d climbed = Rotation2d.fromDegrees(135);
 
   public static final double kPSpark = 4;
   public static final double kPTalon = 150;
