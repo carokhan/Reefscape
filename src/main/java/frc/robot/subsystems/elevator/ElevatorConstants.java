@@ -11,7 +11,7 @@ public class ElevatorConstants {
   public static final double intake = 0.014;
   public static final double AP = 0.05;
   public static final double L1 = 0.38;
-  public static final double A2 = 0.3;
+  public static final double A2 = 0.42;
   public static final double L2 = 0.83;
   public static final double A3 = 0.81;
   public static final double L3 = 1.2;

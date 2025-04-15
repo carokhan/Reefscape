@@ -260,9 +260,8 @@ public class RobotContainer {
     autoRoutines = new AutoRoutines(drive, superstructure);
 
     // Set up SysId routines
-    // autoChooser.addOption(
-    // "Drive Wheel Radius Characterization",
-    // DriveCommands.wheelRadiusCharacterization(drive));
+    autoChooser.addOption(
+        "Drive Wheel Radius Characterization", DriveCommands.wheelRadiusCharacterization(drive));
     // autoChooser.addOption(
     // "Drive Simple FF Characterization",
     // DriveCommands.feedforwardCharacterization(drive));
@@ -287,6 +286,7 @@ public class RobotContainer {
     autoChooser.addOption("LO to J", autoRoutines.LOtoJ());
     autoChooser.addOption("LO to L", autoRoutines.LOtoL());
     autoChooser.addOption("RO to C", autoRoutines.ROtoC());
+    autoChooser.addOption("LM to barge", autoRoutines.LMtobarge());
 
     // RobotModeTriggers.autonomous()
     // .whileTrue(Commands.defer(() -> autoChooser.get().asProxy(), Set.of()));

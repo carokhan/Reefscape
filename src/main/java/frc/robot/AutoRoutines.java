@@ -66,6 +66,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore)
+                    .andThen(Commands.waitSeconds(0.125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,
@@ -88,6 +89,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore)
+                    .andThen(Commands.waitSeconds(0.125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,
@@ -110,6 +112,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore)
+                    .andThen(Commands.waitSeconds(0.125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,
@@ -132,6 +135,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore)
+                    .andThen(Commands.waitSeconds(0.125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,
@@ -175,6 +179,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore)
+                    .andThen(Commands.waitSeconds(0.125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,
@@ -219,6 +224,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore)
+                    .andThen(Commands.waitSeconds(0.125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,
@@ -273,6 +279,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore)
+                    .andThen(Commands.waitSeconds(0.125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,
@@ -316,6 +323,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore)
+                    .andThen(Commands.waitSeconds(0.125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,
@@ -360,6 +368,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore)
+                    .andThen(Commands.waitSeconds(0.125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,
@@ -413,6 +422,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore)
+                    .andThen(Commands.waitSeconds(0.125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,
@@ -430,11 +440,9 @@ public class AutoRoutines {
         .observe(intake.done())
         .onTrue(
             Commands.parallel(
-                Commands.waitUntil(this::atBranch)
-                    .andThen(
-                        Commands.parallel(
-                            superstructure.elevator.setExtension(ElevatorConstants.A2 + 0.25),
-                            superstructure.gripper.setVoltage(GripperConstants.A23))),
+                Commands.parallel(
+                    superstructure.elevator.setExtension(ElevatorConstants.A3),
+                    superstructure.gripper.setVoltage(GripperConstants.A23)),
                 AutoAlign.translateToPose(
                     drive,
                     () ->
@@ -451,14 +459,33 @@ public class AutoRoutines {
         .observe(score.done())
         .onTrue(
             Commands.parallel(
-                Commands.waitUntil(this::atBarge)
-                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.AN)),
-                Commands.waitUntil(
-                        () -> superstructure.elevator.isNearExtension(ElevatorConstants.AN))
-                    .andThen(superstructure.gripper.setVoltage(GripperConstants.AN)),
-                Commands.waitUntil(() -> !superstructure.gripper.getDetected())
-                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.intake))));
+                    Commands.waitUntil(this::atBarge)
+                        .andThen(superstructure.elevator.setExtension(ElevatorConstants.AN)),
+                    Commands.waitUntil(
+                            () -> superstructure.elevator.isNearExtension(ElevatorConstants.AN))
+                        .andThen(superstructure.gripper.setVoltage(GripperConstants.AN)))
+                .onlyWhile(superstructure.gripper::getDetected)
+                .andThen(superstructure.elevator.setExtension(ElevatorConstants.intake)));
 
+    return routine.cmd();
+  }
+
+  public Command bargeToF() {
+    final var routine = factory.newRoutine("barge to F");
+    final var intake = routine.trajectory("bargetoF");
+    routine.active().whileTrue(Commands.sequence(intake.resetOdometry(), intake.cmd()));
+    routine
+        .observe(intake.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.parallel(
+                    superstructure.elevator.setExtension(ElevatorConstants.A3),
+                    superstructure.gripper.setVoltage(GripperConstants.A23)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        AllianceFlipUtil.apply(
+                            Reef.algaeIntake[AutoAlign.getBestFace(drive.getPose(), 0, 0)]))));
     return routine.cmd();
   }
 
@@ -466,7 +493,9 @@ public class AutoRoutines {
     return Commands.sequence(
         this.LMtoH().onlyWhile(superstructure.outtake::getDetected),
         this.HtoI().onlyWhile(() -> !superstructure.gripper.getDetected()),
-        this.Itobarge());
+        Commands.waitSeconds(1),
+        this.Itobarge().onlyWhile(superstructure.outtake::getDetected),
+        this.bargeToF());
   }
 
   public boolean atReef() {
@@ -495,7 +524,15 @@ public class AutoRoutines {
   }
 
   public boolean atBarge() {
-    return Math.abs(7.75 - AllianceFlipUtil.applyX(drive.getPose().getX())) < 0.125;
+    double threshold =
+        DriverStation.getAlliance()
+            .map(alliance -> alliance == Alliance.Red ? 10.5 : 7.5)
+            .orElse(7.5);
+    boolean reached = false;
+
+    reached = (Math.abs(threshold - drive.getPose().getX()) < 0.125);
+    Logger.recordOutput("AutoAlign/atBarge", reached);
+    return reached;
   }
 
   public boolean readyToIntake() {

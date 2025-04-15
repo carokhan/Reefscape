@@ -92,7 +92,6 @@ public class AutoAlign {
   }
 
   public static Command translateToPose(Drive drive, Supplier<Pose2d> target) {
-    Logger.recordOutput("AutoAlign/Raw Raw Target", target.get());
     return translateToPose(drive, target, () -> new ChassisSpeeds());
   }
 
@@ -145,14 +144,14 @@ public class AutoAlign {
     headingController.enableContinuousInput(-Math.PI, Math.PI);
     final ProfiledPIDController vxController =
         new ProfiledPIDController(
-            8.0,
+            6.0,
             0.01,
             0.02,
             new TrapezoidProfile.Constraints(
                 AutoAlignConstants.maxLinearSpeed, AutoAlignConstants.maxLinearAccel));
     final ProfiledPIDController vyController =
         new ProfiledPIDController(
-            8.0,
+            6.0,
             0.01,
             0.02,
             new TrapezoidProfile.Constraints(
@@ -192,15 +191,15 @@ public class AutoAlign {
                                           cachedTarget[0].getRotation().getRadians())
                                       + headingController.getSetpoint().velocity)
                               .plus(speedsModifier.get());
-                  if (Constants.currentMode == Mode.SIM)
-                    Logger.recordOutput(
-                        "AutoAlign/Target Pose",
-                        new Pose2d(
-                            vxController.getSetpoint().position,
-                            vyController.getSetpoint().position,
-                            Rotation2d.fromRadians(headingController.getSetpoint().position)));
-                  if (Constants.currentMode == Mode.SIM)
-                    Logger.recordOutput("AutoAlign/Target Speeds", speeds);
+                  // if (Constants.currentMode == Mode.SIM)
+                  Logger.recordOutput(
+                      "AutoAlign/Target Pose",
+                      new Pose2d(
+                          vxController.getSetpoint().position,
+                          vyController.getSetpoint().position,
+                          Rotation2d.fromRadians(headingController.getSetpoint().position)));
+                  // if (Constants.currentMode == Mode.SIM)
+                  Logger.recordOutput("AutoAlign/Target Speeds", speeds);
                   return speeds;
                 }));
   }

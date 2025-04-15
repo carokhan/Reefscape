@@ -21,14 +21,13 @@ public class LED extends SubsystemBase {
   private Animation disabledAnimation;
 
   private Animation animation;
-  private Animation lastAnimation;
 
   public LED(LEDIO io) {
     this.io = io;
 
     color =
         DriverStation.getAlliance()
-            .map(alliance -> alliance == Alliance.Red ? Color.kFirstRed : Color.kNavy)
+            .map(alliance -> alliance == Alliance.Red ? Color.kDarkRed : Color.kDarkBlue)
             .orElse(Color.kNavy);
     disabledAnimation =
         new SingleFadeAnimation(
@@ -40,72 +39,12 @@ public class LED extends SubsystemBase {
             LEDConstants.length);
     io.set(disabledAnimation);
     animation = disabledAnimation;
-    lastAnimation = disabledAnimation;
   }
 
   @Override
   public void periodic() {
     io.updateInputs(inputs);
     Logger.processInputs("LED", inputs);
-  }
-
-  public void setAnimation(State state) {
-
-    if (DriverStation.isDisabled() && state != State.CLIMB_PULL) {
-      animation = disabledAnimation;
-    } else {
-      switch (state) {
-        case IDLE:
-        case ELEV_MANUAL:
-          animation = LEDConstants.idleAnimation;
-          break;
-        case CORAL_PREINTAKE:
-          animation = LEDConstants.coralIntakeAnimation;
-          break;
-        case CORAL_READY:
-          animation = LEDConstants.coralReadyAnimation;
-          break;
-        case ALGAE_INTAKE:
-          animation = LEDConstants.algaeIntakeAnimation;
-          break;
-        case ALGAE_READY:
-          animation = LEDConstants.algaeReadyAnimation;
-          break;
-        case CLIMB_PREPULL:
-          animation = LEDConstants.climbReadyAnimation;
-          break;
-        case CLIMB_PULL:
-          if (DriverStation.isDisabled()) {
-            animation = LEDConstants.climbedAnimation;
-          } else {
-            animation = LEDConstants.endAnimation;
-          }
-          break;
-        case ALGAE_CONFIRM_AP:
-        case ALGAE_CONFIRM_AN:
-        case CORAL_CONFIRM:
-          animation = LEDConstants.outtakeAnimation;
-        case SCORE:
-          io.set(Color.kGreen);
-        case REV_FUNNEL:
-          animation = LEDConstants.revFunnelAnimation;
-        default:
-          break;
-      }
-    }
-    // io.set(animation);
-    if (animation != lastAnimation) {
-      io.set(animation);
-      lastAnimation = animation;
-    }
-  }
-
-  public void setState(State state, boolean scoring) {
-    if (scoring) {
-      this.state = State.SCORE;
-    } else {
-      this.state = state;
-    }
   }
 
   private void setIndex(int i, Color color) {
@@ -168,10 +107,54 @@ public class LED extends SubsystemBase {
     }
   }
 
-  public Command setColor(Color color) {
+  public Command set(Animation animation) {
     return this.run(
         () -> {
-          solid(color);
+          io.set(animation);
+        });
+  }
+
+  public Command setState(State state) {
+    return this.run(
+        () -> {
+          switch (state) {
+            case IDLE:
+            case ELEV_MANUAL:
+              animation = LEDConstants.idleAnimation;
+              break;
+            case CORAL_PREINTAKE:
+              animation = LEDConstants.coralIntakeAnimation;
+              break;
+            case CORAL_READY:
+              animation = LEDConstants.coralReadyAnimation;
+              break;
+            case ALGAE_INTAKE:
+              animation = LEDConstants.algaeIntakeAnimation;
+              break;
+            case ALGAE_READY:
+              animation = LEDConstants.algaeReadyAnimation;
+              break;
+            case CLIMB_PREPULL:
+              animation = LEDConstants.climbReadyAnimation;
+              break;
+            case CLIMB_PULL:
+              if (DriverStation.isDisabled()) {
+                animation = LEDConstants.climbedAnimation;
+              } else {
+                animation = LEDConstants.endAnimation;
+              }
+              break;
+            case ALGAE_CONFIRM_AP:
+            case ALGAE_CONFIRM_AN:
+            case CORAL_CONFIRM:
+              animation = LEDConstants.outtakeAnimation;
+            case REV_FUNNEL:
+              animation = LEDConstants.revFunnelAnimation;
+            default:
+              animation = LEDConstants.idleAnimation;
+              break;
+          }
+          io.set(animation);
         });
   }
 }

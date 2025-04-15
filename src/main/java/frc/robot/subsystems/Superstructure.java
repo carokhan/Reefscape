@@ -315,23 +315,31 @@ public class Superstructure {
             outtake.setVoltage(0),
             hopper.setVoltage(0),
             gripper.setVoltage(0),
+            led.setState(State.IDLE),
             this.forceState(State.IDLE)));
 
     coralEjectRequest
         .onTrue(outtake.setVoltage(OuttakeConstants.L23))
-        .onFalse(Commands.parallel(outtake.setVoltage(0), this.forceState(State.IDLE)));
+        .onFalse(
+            Commands.parallel(
+                outtake.setVoltage(0), led.setState(State.IDLE), this.forceState(State.IDLE)));
 
     algaeEjectRequest
         .onTrue(gripper.setVoltage(GripperConstants.AP))
-        .onFalse(Commands.parallel(gripper.setVoltage(0), this.forceState(State.IDLE)));
+        .onFalse(
+            Commands.parallel(
+                gripper.setVoltage(0), led.setState(State.IDLE), this.forceState(State.IDLE)));
 
     elevManualRequest
         .onTrue(this.forceState(State.ELEV_MANUAL))
         .onFalse(this.forceState(State.IDLE));
 
     revFunnelRequest
-        .onTrue(this.forceState(State.REV_FUNNEL))
-        .onFalse(this.forceState(State.CORAL_PREINTAKE));
+        .onTrue(
+            Commands.parallel(led.setState(State.REV_FUNNEL), this.forceState(State.REV_FUNNEL)))
+        .onFalse(
+            Commands.parallel(
+                led.setState(State.CORAL_PREINTAKE), this.forceState(State.CORAL_PREINTAKE)));
 
     stateTriggers
         .get(State.ELEV_MANUAL)
@@ -357,14 +365,18 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 // led.setColor(LEDConstants.Mode.CORAL_READY.color),
-                outtake.setVoltage(0), this.forceState(State.CORAL_READY)));
+                outtake.setVoltage(0),
+                led.setState(State.CORAL_READY),
+                this.forceState(State.CORAL_READY)));
 
     stateTriggers
         .get(State.IDLE)
         .and(gripper::getDetected)
         .onTrue(
             Commands.parallel(
-                gripper.setVoltage(GripperConstants.A23), this.forceState(State.ALGAE_READY)));
+                gripper.setVoltage(GripperConstants.A23),
+                led.setState(State.ALGAE_READY),
+                this.forceState(State.ALGAE_READY)));
 
     stateTriggers
         .get(State.IDLE)
@@ -377,7 +389,9 @@ public class Superstructure {
                         .getTranslation()
                         .getDistance(AutoAlign.getBestLoader(pose.get()).getTranslation()))
                     < HopperConstants.enableDistanceToLoader)
-        .onTrue(this.forceState(State.CORAL_PREINTAKE));
+        .onTrue(
+            Commands.parallel(
+                led.setState(State.CORAL_PREINTAKE), this.forceState(State.CORAL_PREINTAKE)));
 
     stateTriggers
         .get(State.IDLE)
@@ -389,6 +403,7 @@ public class Superstructure {
             Commands.parallel(
                 elevator.setExtension(ElevatorConstants.A3),
                 gripper.setVoltage(GripperConstants.A23),
+                led.setState(State.ALGAE_INTAKE),
                 this.forceState(State.ALGAE_INTAKE)));
 
     stateTriggers
@@ -401,9 +416,11 @@ public class Superstructure {
             Commands.parallel(
                 elevator.setExtension(ElevatorConstants.A2),
                 gripper.setVoltage(GripperConstants.A23),
+                led.setState(State.ALGAE_INTAKE),
                 this.forceState(State.ALGAE_INTAKE)));
 
-    preClimbRequest.onTrue(this.forceState(State.CLIMB_PREPULL));
+    preClimbRequest.onTrue(
+        Commands.parallel(led.setState(State.CLIMB_PREPULL), this.forceState(State.CLIMB_PREPULL)));
 
     // CORAL State Transitions (Starts: Coral handling, Ends: Scoring or reset)
     stateTriggers
@@ -416,6 +433,7 @@ public class Superstructure {
             Commands.parallel(
                 outtake.setVoltage(() -> 0),
                 hopper.setVoltage(() -> 0),
+                led.setState(State.CORAL_READY),
                 this.forceState(State.CORAL_READY)));
 
     stateTriggers
@@ -427,7 +445,9 @@ public class Superstructure {
         .and(() -> (this.getCoralTarget().equals(CoralTarget.L4)))
         .onTrue(
             Commands.parallel(
-                elevator.setExtension(ElevatorConstants.L4), this.forceState(State.CORAL_CONFIRM)));
+                elevator.setExtension(ElevatorConstants.L4),
+                led.setState(State.CORAL_CONFIRM),
+                this.forceState(State.CORAL_CONFIRM)));
 
     stateTriggers
         .get(State.CORAL_READY)
@@ -438,7 +458,9 @@ public class Superstructure {
         .and(() -> (this.getCoralTarget().equals(CoralTarget.L3)))
         .onTrue(
             Commands.parallel(
-                elevator.setExtension(ElevatorConstants.L3), this.forceState(State.CORAL_CONFIRM)));
+                elevator.setExtension(ElevatorConstants.L3),
+                led.setState(State.CORAL_CONFIRM),
+                this.forceState(State.CORAL_CONFIRM)));
 
     stateTriggers
         .get(State.CORAL_READY)
@@ -449,7 +471,9 @@ public class Superstructure {
         .and(() -> (this.getCoralTarget().equals(CoralTarget.L2)))
         .onTrue(
             Commands.parallel(
-                elevator.setExtension(ElevatorConstants.L2), this.forceState(State.CORAL_CONFIRM)));
+                elevator.setExtension(ElevatorConstants.L2),
+                led.setState(State.CORAL_CONFIRM),
+                this.forceState(State.CORAL_CONFIRM)));
 
     stateTriggers
         .get(State.CORAL_READY)
@@ -460,7 +484,9 @@ public class Superstructure {
         .and(() -> (this.getCoralTarget().equals(CoralTarget.L1)))
         .onTrue(
             Commands.parallel(
-                elevator.setExtension(ElevatorConstants.L1), this.forceState(State.CORAL_CONFIRM)));
+                elevator.setExtension(ElevatorConstants.L1),
+                led.setState(State.CORAL_CONFIRM),
+                this.forceState(State.CORAL_CONFIRM)));
 
     stateTriggers
         .get(State.CORAL_READY)
@@ -490,7 +516,9 @@ public class Superstructure {
                         .andThen(
                             elevator
                                 .setExtension(ElevatorConstants.intake)
-                                .andThen(this.forceState(State.IDLE)))));
+                                .andThen(
+                                    Commands.parallel(
+                                        led.setState(State.IDLE), this.forceState(State.IDLE))))));
 
     stateTriggers
         .get(State.CORAL_CONFIRM)
@@ -505,7 +533,10 @@ public class Superstructure {
                             .andThen(
                                 elevator
                                     .setExtension(ElevatorConstants.intake)
-                                    .andThen(this.forceState(State.IDLE))))));
+                                    .andThen(
+                                        Commands.parallel(
+                                            led.setState(State.IDLE),
+                                            this.forceState(State.IDLE)))))));
 
     stateTriggers
         .get(State.CORAL_CONFIRM)
@@ -520,7 +551,10 @@ public class Superstructure {
                             .andThen(
                                 elevator
                                     .setExtension(ElevatorConstants.intake)
-                                    .andThen(this.forceState(State.IDLE))))));
+                                    .andThen(
+                                        Commands.parallel(
+                                            led.setState(State.IDLE),
+                                            this.forceState(State.IDLE)))))));
 
     stateTriggers
         .get(State.CORAL_CONFIRM)
@@ -535,13 +569,16 @@ public class Superstructure {
                             .andThen(
                                 elevator
                                     .setExtension(ElevatorConstants.intake)
-                                    .andThen(this.forceState(State.IDLE))))));
+                                    .andThen(
+                                        Commands.parallel(
+                                            led.setState(State.IDLE),
+                                            this.forceState(State.IDLE)))))));
 
     stateTriggers
         .get(State.CORAL_READY)
         .or(stateTriggers.get(State.CORAL_CONFIRM))
         .and(() -> !outtake.getDetected())
-        .onTrue(this.forceState(State.IDLE));
+        .onTrue(Commands.parallel(led.setState(State.IDLE), this.forceState(State.IDLE)));
 
     // ALGAE State Transitions (Starts: Algae handling, Ends: Scoring or reset)
     stateTriggers
@@ -562,6 +599,7 @@ public class Superstructure {
                         .andThen(
                             Commands.parallel(
                                 elevator.setExtension(ElevatorConstants.intake),
+                                led.setState(State.ALGAE_READY),
                                 this.forceState(State.ALGAE_READY)))));
 
     stateTriggers
@@ -583,6 +621,7 @@ public class Superstructure {
                             .andThen(
                                 Commands.parallel(
                                     elevator.setExtension(ElevatorConstants.intake),
+                                    led.setState(State.ALGAE_READY),
                                     this.forceState(State.ALGAE_READY))))));
 
     stateTriggers
@@ -598,7 +637,9 @@ public class Superstructure {
         // > ElevatorConstants.netRaiseDistanceLower))
         // .and(() -> AllianceFlipUtil.applyY(pose.get().getY()) >
         // FieldConstants.fieldWidth / 2)
-        .onTrue(this.forceState(State.ALGAE_CONFIRM_AN));
+        .onTrue(
+            Commands.parallel(
+                led.setState(State.ALGAE_CONFIRM_AN), this.forceState(State.ALGAE_CONFIRM_AN)));
 
     stateTriggers
         .get(State.ALGAE_READY)
@@ -614,6 +655,7 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 elevator.setExtension(ElevatorConstants.AP),
+                led.setState(State.ALGAE_CONFIRM_AP),
                 this.forceState(State.ALGAE_CONFIRM_AP)));
 
     stateTriggers
@@ -628,7 +670,9 @@ public class Superstructure {
                 .andThen(
                     elevator
                         .setExtension(ElevatorConstants.intake)
-                        .andThen(this.forceState(State.IDLE))));
+                        .andThen(
+                            Commands.parallel(
+                                led.setState(State.IDLE), this.forceState(State.IDLE)))));
 
     stateTriggers
         .get(State.ALGAE_CONFIRM_AP)
@@ -640,14 +684,17 @@ public class Superstructure {
                     .andThen(
                         elevator
                             .setExtension(ElevatorConstants.intake)
-                            .andThen(this.forceState(State.IDLE)))));
+                            .andThen(
+                                Commands.parallel(
+                                    led.setState(State.IDLE), this.forceState(State.IDLE))))));
 
     // CLIMB State Transitions (Starts: Climb initiation, Ends: Climbing or reset)
     stateTriggers
         .get(State.CLIMB_PREPULL)
         .whileTrue(climb.setPosition(ClimbConstants.ready))
         .and(climbRequest)
-        .onTrue(this.forceState(State.CLIMB_PULL));
+        .onTrue(
+            Commands.parallel(led.setState(State.CLIMB_PULL), this.forceState(State.CLIMB_PULL)));
 
     stateTriggers
         .get(State.CLIMB_PULL)
@@ -659,7 +706,9 @@ public class Superstructure {
     stateTriggers
         .get(State.CLIMB_PULL)
         .and(cancelClimbRequest)
-        .onTrue(this.forceState(State.CLIMB_PREPULL));
+        .onTrue(
+            Commands.parallel(
+                led.setState(State.CLIMB_PREPULL), this.forceState(State.CLIMB_PREPULL)));
 
     // SIM Inputs (Starts: Simulation conditions, Ends: Simulated state triggers)
     if (Constants.currentMode == Mode.SIM) {
@@ -702,7 +751,6 @@ public class Superstructure {
 
   /** This file is not a subsystem, so this MUST be called manually. */
   public void periodic() {
-    led.setAnimation(state);
     algaeTarget =
         FieldConstants.Reef.algaeHeights.get(
             FieldConstants.Reef.centerFaces[

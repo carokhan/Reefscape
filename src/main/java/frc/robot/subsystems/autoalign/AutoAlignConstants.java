@@ -8,7 +8,7 @@ public class AutoAlignConstants {
   public static final double maxLinearSpeed = 3.0;
   public static final double maxLinearAccel = 4.0;
 
-  public static final double linearTolerance = Units.inchesToMeters(3.0);
+  public static final double linearTolerance = Units.inchesToMeters(1.0);
   public static final double angularTolerance = Units.degreesToRadians(2.0);
   public static final double velocityTolerance = 0.5;
 

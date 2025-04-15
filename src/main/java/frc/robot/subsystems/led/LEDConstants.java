@@ -48,6 +48,7 @@ public class LEDConstants {
           0,
           0.5,
           length);
+
   public static final Animation endAnimation = new RainbowAnimation();
   public static final Animation idleAnimation = new SingleFadeAnimation(0, 0, 255, 0, 0.85, length);
   public static final Animation coralReadyAnimation =
