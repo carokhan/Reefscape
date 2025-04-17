@@ -156,10 +156,9 @@ public class AutoRoutines {
         .observe(intake.done())
         .onTrue(
             Commands.deadline(
-                Commands.waitUntil(superstructure.outtake::getDetected),
+                    Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
-                        drive, () -> AutoAlign.getBestLoader(drive.getPose()))
-                    )
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())))
                 .andThen(
                     Commands.parallel(
                         superstructure.hopper.setVoltage(0),
@@ -202,11 +201,9 @@ public class AutoRoutines {
         .observe(intake.done())
         .onTrue(
             Commands.deadline(
-                Commands.waitUntil(superstructure.outtake::getDetected),
+                    Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
-                        drive, () -> AutoAlign.getBestLoader(drive.getPose()))
-                    
-                    )
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())))
                 .andThen(
                     Commands.parallel(
                         superstructure.hopper.setVoltage(0),
@@ -248,10 +245,10 @@ public class AutoRoutines {
     routine
         .observe(intake.done())
         .onTrue(
-            Commands.deadline(Commands.waitUntil(superstructure.outtake::getDetected),
+            Commands.deadline(
+                    Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
-                        drive, () -> AutoAlign.getBestLoader(drive.getPose()))
-                    )
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())))
                 .andThen(
                     Commands.parallel(
                         superstructure.hopper.setVoltage(0),
@@ -303,10 +300,9 @@ public class AutoRoutines {
         .observe(intake.done())
         .onTrue(
             Commands.deadline(
-                Commands.waitUntil(superstructure.outtake::getDetected),
+                    Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
-                        drive, () -> AutoAlign.getBestLoader(drive.getPose()))
-                    )
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())))
                 .andThen(
                     Commands.parallel(
                         superstructure.hopper.setVoltage(0),
@@ -344,16 +340,14 @@ public class AutoRoutines {
     final var intake = routine.trajectory("DtoPRO");
 
     routine.active().whileTrue(Commands.sequence(intake.resetOdometry(), intake.cmd()));
-    
+
     routine
         .observe(intake.done())
         .onTrue(
             Commands.deadline(
-                Commands.waitUntil(superstructure.outtake::getDetected),
+                    Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
-                        drive, () -> AutoAlign.getBestLoader(drive.getPose()))
-                    
-                    )
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())))
                 .andThen(
                     Commands.parallel(
                         superstructure.hopper.setVoltage(0),
@@ -396,10 +390,9 @@ public class AutoRoutines {
         .observe(intake.done())
         .onTrue(
             Commands.deadline(
-                Commands.waitUntil(superstructure.outtake::getDetected),
+                    Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
-                        drive, () -> AutoAlign.getBestLoader(drive.getPose()))
-                    )
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())))
                 .andThen(
                     Commands.parallel(
                         superstructure.hopper.setVoltage(0),
