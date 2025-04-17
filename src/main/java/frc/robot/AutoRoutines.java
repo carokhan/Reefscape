@@ -155,7 +155,7 @@ public class AutoRoutines {
     routine
         .observe(intake.done())
         .onTrue(
-            Commands.deadline(
+            Commands.parallel( // DEADLINE
                     Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
                         drive, () -> AutoAlign.getBestLoader(drive.getPose())))
@@ -200,7 +200,7 @@ public class AutoRoutines {
     routine
         .observe(intake.done())
         .onTrue(
-            Commands.deadline(
+            Commands.parallel( // DEADLINE
                     Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
                         drive, () -> AutoAlign.getBestLoader(drive.getPose())))
@@ -245,7 +245,7 @@ public class AutoRoutines {
     routine
         .observe(intake.done())
         .onTrue(
-            Commands.deadline(
+            Commands.parallel( // DEADLINE
                     Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
                         drive, () -> AutoAlign.getBestLoader(drive.getPose())))
@@ -299,7 +299,7 @@ public class AutoRoutines {
     routine
         .observe(intake.done())
         .onTrue(
-            Commands.deadline(
+            Commands.parallel( // DEADLINE
                     Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
                         drive, () -> AutoAlign.getBestLoader(drive.getPose())))
@@ -344,7 +344,7 @@ public class AutoRoutines {
     routine
         .observe(intake.done())
         .onTrue(
-            Commands.deadline(
+            Commands.parallel( // DEADLINE
                     Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
                         drive, () -> AutoAlign.getBestLoader(drive.getPose())))
@@ -389,7 +389,7 @@ public class AutoRoutines {
     routine
         .observe(intake.done())
         .onTrue(
-            Commands.deadline(
+            Commands.parallel( // DEADLINE
                     Commands.waitUntil(superstructure.outtake::getDetected),
                     AutoAlign.translateToPose(
                         drive, () -> AutoAlign.getBestLoader(drive.getPose())))

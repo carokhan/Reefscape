@@ -175,8 +175,8 @@ public class AutoAlign {
                 () -> {
                   final Transform2d diff = drive.getPose().minus(cachedTarget[0]);
                   final ChassisSpeeds speeds =
-                      MathUtil.isNear(0.0, diff.getX(), Units.inchesToMeters(0.25))
-                              && MathUtil.isNear(0.0, diff.getY(), Units.inchesToMeters(0.25))
+                      MathUtil.isNear(0.0, diff.getX(), Units.inchesToMeters(0.75)) // .25
+                              && MathUtil.isNear(0.0, diff.getY(), Units.inchesToMeters(0.75)) // .25
                               && MathUtil.isNear(0.0, diff.getRotation().getDegrees(), 0.5)
                           ? new ChassisSpeeds().plus(speedsModifier.get())
                           : new ChassisSpeeds(
@@ -237,8 +237,8 @@ public class AutoAlign {
                 () -> {
                   final Transform2d diff = drive.getPose().minus(cachedTarget[0]);
                   final ChassisSpeeds speeds =
-                      MathUtil.isNear(0.0, diff.getX(), Units.inchesToMeters(0.25))
-                              && MathUtil.isNear(0.0, diff.getY(), Units.inchesToMeters(0.25))
+                      MathUtil.isNear(0.0, diff.getX(), Units.inchesToMeters(0.75)) // .25
+                              && MathUtil.isNear(0.0, diff.getY(), Units.inchesToMeters(0.75)) // .25
                               && MathUtil.isNear(0.0, diff.getRotation().getDegrees(), 0.5)
                           ? new ChassisSpeeds()
                           : new ChassisSpeeds(
