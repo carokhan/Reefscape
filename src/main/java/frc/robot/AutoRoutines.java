@@ -153,7 +153,6 @@ public class AutoRoutines {
     final var score = routine.trajectory("LOfasttoJ");
     routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
 
-    
     routine
         .observe(score.done())
         .onTrue(
@@ -179,7 +178,6 @@ public class AutoRoutines {
     final var score = routine.trajectory("ROfasttoE");
     routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
 
-    
     routine
         .observe(score.done())
         .onTrue(
@@ -443,8 +441,7 @@ public class AutoRoutines {
         this.KtoPLO().onlyWhile(() -> !superstructure.outtake.getDetected()),
         this.PLOtoL().onlyWhile(superstructure.outtake::getDetected),
         this.LtoPLO().onlyWhile(() -> !superstructure.outtake.getDetected()),
-        Commands.either(
-            this.PLOtoA4(), this.PLOtoA2(), () -> DriverStation.getMatchTime() > 2.0));
+        Commands.either(this.PLOtoA4(), this.PLOtoA2(), () -> DriverStation.getMatchTime() > 2.0));
   }
 
   public Command ROtoF() {
@@ -599,8 +596,7 @@ public class AutoRoutines {
         this.DtoPRO().onlyWhile(() -> !superstructure.outtake.getDetected()),
         this.PROtoC().onlyWhile(superstructure.outtake::getDetected),
         this.CtoPRO().onlyWhile(() -> !superstructure.outtake.getDetected()),
-        Commands.either(
-            this.PROtoB4(), this.PROtoB2(), () -> DriverStation.getMatchTime() > 2.0));
+        Commands.either(this.PROtoB4(), this.PROtoB2(), () -> DriverStation.getMatchTime() > 2.0));
   }
 
   public Command LOtoJ() {
@@ -640,7 +636,11 @@ public class AutoRoutines {
                     drive,
                     () ->
                         AllianceFlipUtil.apply(
-                            Reef.algaeIntake[AutoAlign.getBestFace(drive.getPose(), 0, 0)]))));
+                            Reef.centerFaces[AutoAlign.getBestFace(drive.getPose(), 0, 0)]
+                                .rotateAround(
+                                    Reef.centerFaces[AutoAlign.getBestFace(drive.getPose(), 0, 0)]
+                                        .getTranslation(),
+                                    Rotation2d.k180deg)))));
     return routine.cmd();
   }
 
@@ -678,7 +678,11 @@ public class AutoRoutines {
                     drive,
                     () ->
                         AllianceFlipUtil.apply(
-                            Reef.algaeIntake[AutoAlign.getBestFace(drive.getPose(), 0, 0)]))));
+                            Reef.centerFaces[AutoAlign.getBestFace(drive.getPose(), 0, 0)]
+                                .rotateAround(
+                                    Reef.centerFaces[AutoAlign.getBestFace(drive.getPose(), 0, 0)]
+                                        .getTranslation(),
+                                    Rotation2d.k180deg)))));
     return routine.cmd();
   }
 
@@ -720,7 +724,6 @@ public class AutoRoutines {
                         superstructure.outtake.setVoltage(0))));
     return routine.cmd();
   }
-
 
   public Command LMtobarge() {
     return Commands.sequence(
