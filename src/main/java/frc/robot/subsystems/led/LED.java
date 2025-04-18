@@ -28,7 +28,7 @@ public class LED extends SubsystemBase {
     color =
         DriverStation.getAlliance()
             .map(alliance -> alliance == Alliance.Red ? Color.kDarkRed : Color.kNavy)
-            .orElse(Color.kNavy);
+            .orElse(Color.kDarkRed);
     disabledAnimation =
         new SingleFadeAnimation(
             (int) (color.red * 255),
