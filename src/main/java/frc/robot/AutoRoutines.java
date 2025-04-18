@@ -65,7 +65,7 @@ public class AutoRoutines {
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-                Commands.waitUntil(this::atScore)
+                Commands.waitUntil(this::atScore4)
                     .andThen(Commands.waitSeconds(0.03125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
@@ -88,7 +88,7 @@ public class AutoRoutines {
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-                Commands.waitUntil(this::atScore)
+                Commands.waitUntil(this::atScore4)
                     .andThen(Commands.waitSeconds(0.03125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
@@ -111,7 +111,7 @@ public class AutoRoutines {
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-                Commands.waitUntil(this::atScore)
+                Commands.waitUntil(this::atScore4)
                     .andThen(Commands.waitSeconds(0.03125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
@@ -134,7 +134,59 @@ public class AutoRoutines {
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-                Commands.waitUntil(this::atScore)
+                Commands.waitUntil(this::atScore4)
+                    .andThen(Commands.waitSeconds(0.03125))
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        // AllianceFlipUtil.apply(
+                        // FieldConstants.Reef.branchPositions2d.get(5).get(ReefLevel.L4))
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command LOfasttoJ() {
+    superstructure.outtake.setSimDetected(true);
+    final var routine = factory.newRoutine("LOfast to J");
+    final var score = routine.trajectory("LOfasttoJ");
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+
+    
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.waitUntil(this::atReef)
+                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
+                Commands.waitUntil(this::atScore4)
+                    .andThen(Commands.waitSeconds(0.03125))
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        // AllianceFlipUtil.apply(
+                        // FieldConstants.Reef.branchPositions2d.get(5).get(ReefLevel.L4))
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command ROfasttoE() {
+    superstructure.outtake.setSimDetected(true);
+    final var routine = factory.newRoutine("ROfast to E");
+    final var score = routine.trajectory("ROfasttoE");
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+
+    
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.waitUntil(this::atReef)
+                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
+                Commands.waitUntil(this::atScore4)
                     .andThen(Commands.waitSeconds(0.03125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
@@ -178,7 +230,7 @@ public class AutoRoutines {
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-                Commands.waitUntil(this::atScore)
+                Commands.waitUntil(this::atScore4)
                     .andThen(Commands.waitSeconds(0.03125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
@@ -223,7 +275,7 @@ public class AutoRoutines {
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-                Commands.waitUntil(this::atScore)
+                Commands.waitUntil(this::atScore4)
                     .andThen(Commands.waitSeconds(0.03125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
@@ -266,6 +318,135 @@ public class AutoRoutines {
         this.LtoPLO());
   }
 
+  public Command JtoPLO() {
+    final var routine = factory.newRoutine("J to PLO");
+    final var intake = routine.trajectory("JtoPLO");
+    routine.active().whileTrue(Commands.sequence(intake.resetOdometry(), intake.cmd()));
+
+    routine
+        .observe(intake.done())
+        .onTrue(
+            Commands.deadline(
+                    Commands.waitUntil(superstructure.outtake::getDetected),
+                    AutoAlign.translateToPose(
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())))
+                .andThen(
+                    Commands.parallel(
+                        superstructure.hopper.setVoltage(0),
+                        superstructure.outtake.setVoltage(0))));
+    return routine.cmd();
+  }
+
+  public Command PLOtoA4() {
+    final var routine = factory.newRoutine("PLO to A4");
+    final var score = routine.trajectory("PLOtoA");
+
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.waitUntil(this::atReef)
+                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
+                Commands.waitUntil(this::atScore4)
+                    .andThen(Commands.waitSeconds(0.03125))
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        // AllianceFlipUtil.apply(
+                        // FieldConstants.Reef.branchPositions2d.get(3).get(ReefLevel.L4))
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command PLOtoA2() {
+    final var routine = factory.newRoutine("PLO to A2");
+    final var score = routine.trajectory("PLOtoA");
+
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                superstructure.elevator.setExtension(ElevatorConstants.L2),
+                Commands.waitUntil(this::atScore2)
+                    .andThen(Commands.waitSeconds(0.03125))
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L23)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        // AllianceFlipUtil.apply(
+                        // FieldConstants.Reef.branchPositions2d.get(3).get(ReefLevel.L4))
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command PROtoB4() {
+    final var routine = factory.newRoutine("PRO to B4");
+    final var score = routine.trajectory("PROtoB");
+
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                Commands.waitUntil(this::atReef)
+                    .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
+                Commands.waitUntil(this::atScore4)
+                    .andThen(Commands.waitSeconds(0.03125))
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        // AllianceFlipUtil.apply(
+                        // FieldConstants.Reef.branchPositions2d.get(3).get(ReefLevel.L4))
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command PROtoB2() {
+    final var routine = factory.newRoutine("PRO to B2");
+    final var score = routine.trajectory("PROtoB");
+
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                superstructure.elevator.setExtension(ElevatorConstants.L2),
+                Commands.waitUntil(this::atScore2)
+                    .andThen(Commands.waitSeconds(0.03125))
+                    .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L23)),
+                AutoAlign.translateToPose(
+                    drive,
+                    () ->
+                        // AllianceFlipUtil.apply(
+                        // FieldConstants.Reef.branchPositions2d.get(3).get(ReefLevel.L4))
+                        AutoAlign.getBestBranch(drive.getPose())
+                            .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)))));
+    return routine.cmd();
+  }
+
+  public Command LOtoL4() {
+    return Commands.sequence(
+        this.LOfasttoJ().onlyWhile(superstructure.outtake::getDetected),
+        this.JtoPLO().onlyWhile(() -> !superstructure.outtake.getDetected()),
+        this.PLOtoK().onlyWhile(superstructure.outtake::getDetected),
+        this.KtoPLO().onlyWhile(() -> !superstructure.outtake.getDetected()),
+        this.PLOtoL().onlyWhile(superstructure.outtake::getDetected),
+        this.LtoPLO().onlyWhile(() -> !superstructure.outtake.getDetected()),
+        Commands.either(
+            this.PLOtoA4(), this.PLOtoA2(), () -> DriverStation.getMatchTime() > 2.0));
+  }
+
   public Command ROtoF() {
     superstructure.outtake.setSimDetected(true);
     final var routine = factory.newRoutine("RO to F");
@@ -278,7 +459,7 @@ public class AutoRoutines {
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-                Commands.waitUntil(this::atScore)
+                Commands.waitUntil(this::atScore4)
                     .andThen(Commands.waitSeconds(0.03125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
@@ -322,7 +503,7 @@ public class AutoRoutines {
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-                Commands.waitUntil(this::atScore)
+                Commands.waitUntil(this::atScore4)
                     .andThen(Commands.waitSeconds(0.03125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
@@ -367,7 +548,7 @@ public class AutoRoutines {
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-                Commands.waitUntil(this::atScore)
+                Commands.waitUntil(this::atScore4)
                     .andThen(Commands.waitSeconds(0.03125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
@@ -410,6 +591,18 @@ public class AutoRoutines {
         this.CtoPRO());
   }
 
+  public Command ROtoC4() {
+    return Commands.sequence(
+        this.ROfasttoE().onlyWhile(superstructure.outtake::getDetected),
+        this.FtoPRO().onlyWhile(() -> !superstructure.outtake.getDetected()),
+        this.PROtoD().onlyWhile(superstructure.outtake::getDetected),
+        this.DtoPRO().onlyWhile(() -> !superstructure.outtake.getDetected()),
+        this.PROtoC().onlyWhile(superstructure.outtake::getDetected),
+        this.CtoPRO().onlyWhile(() -> !superstructure.outtake.getDetected()),
+        Commands.either(
+            this.PROtoB4(), this.PROtoB2(), () -> DriverStation.getMatchTime() > 2.0));
+  }
+
   public Command LOtoJ() {
     superstructure.outtake.setSimDetected(true);
     final var routine = factory.newRoutine("LO to J");
@@ -421,7 +614,7 @@ public class AutoRoutines {
             Commands.parallel(
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
-                Commands.waitUntil(this::atScore)
+                Commands.waitUntil(this::atScore4)
                     .andThen(Commands.waitSeconds(0.03125))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
@@ -489,13 +682,57 @@ public class AutoRoutines {
     return routine.cmd();
   }
 
+  public Command Ftobarge() {
+    final var routine = factory.newRoutine("F to barge");
+    final var score = routine.trajectory("Ftobarge");
+    routine.active().whileTrue(Commands.sequence(score.resetOdometry(), score.cmd()));
+    routine
+        .observe(score.done())
+        .onTrue(
+            Commands.parallel(
+                    Commands.waitUntil(this::atBarge)
+                        .andThen(superstructure.elevator.setExtension(ElevatorConstants.AN)),
+                    Commands.waitUntil(
+                            () -> superstructure.elevator.isNearExtension(ElevatorConstants.AN))
+                        .andThen(superstructure.gripper.setVoltage(GripperConstants.AN)))
+                .onlyWhile(superstructure.gripper::getDetected)
+                .andThen(superstructure.elevator.setExtension(ElevatorConstants.intake)));
+
+    return routine.cmd();
+  }
+
+  public Command bargetoPLO() {
+    final var routine = factory.newRoutine("barge to PLO");
+    final var intake = routine.trajectory("bargetoPLO");
+
+    routine.active().whileTrue(Commands.sequence(intake.resetOdometry(), intake.cmd()));
+
+    routine
+        .observe(intake.done())
+        .onTrue(
+            Commands.deadline(
+                    Commands.waitUntil(superstructure.outtake::getDetected),
+                    AutoAlign.translateToPose(
+                        drive, () -> AutoAlign.getBestLoader(drive.getPose())))
+                .andThen(
+                    Commands.parallel(
+                        superstructure.hopper.setVoltage(0),
+                        superstructure.outtake.setVoltage(0))));
+    return routine.cmd();
+  }
+
+
   public Command LMtobarge() {
     return Commands.sequence(
         this.LMtoH().onlyWhile(superstructure.outtake::getDetected),
+        Commands.waitSeconds(1),
         this.HtoI().onlyWhile(() -> !superstructure.gripper.getDetected()),
         Commands.waitSeconds(1),
-        this.Itobarge().onlyWhile(superstructure.outtake::getDetected),
-        this.bargeToF());
+        this.Itobarge().onlyWhile(superstructure.gripper::getDetected),
+        this.bargeToF().onlyWhile(() -> !superstructure.gripper.getDetected()),
+        Commands.waitSeconds(1),
+        this.Ftobarge().onlyWhile(superstructure.gripper::getDetected),
+        this.bargetoPLO());
   }
 
   public boolean atReef() {
@@ -503,7 +740,7 @@ public class AutoRoutines {
             .getPose()
             .getTranslation()
             .getDistance(AllianceFlipUtil.apply(FieldConstants.Reef.center))
-        < ElevatorConstants.reefRaiseDistance;
+        < ElevatorConstants.autoReefRaiseDistance;
   }
 
   public boolean atBranch() {
@@ -513,8 +750,12 @@ public class AutoRoutines {
             .plus(new Transform2d(new Translation2d(), Rotation2d.k180deg)));
   }
 
-  public boolean atScore() {
+  public boolean atScore4() {
     return atBranch() && superstructure.elevator.isNearExtension(ElevatorConstants.L4);
+  }
+
+  public boolean atScore2() {
+    return atBranch() && superstructure.elevator.isNearExtension(ElevatorConstants.L2);
   }
 
   public boolean atAlgae() {
