@@ -280,6 +280,8 @@ public class RobotContainer {
     // autoChooser.addOption("Elevator static",
     // elevator.staticCharacterization(1.0));
 
+    autoChooser.addOption("LOfast to A4", autoRoutines.LOtoL4());
+    autoChooser.addOption("ROfast to C4", autoRoutines.ROtoC4());
     autoChooser.addOption("LM to H", autoRoutines.LMtoH());
     autoChooser.addOption("RO to E", autoRoutines.ROtoE());
     autoChooser.addOption("LO to I", autoRoutines.LOtoI());

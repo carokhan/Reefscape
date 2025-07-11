@@ -23,7 +23,7 @@ public class OuttakeConstants {
   public static final int laserBaseRight = 25;
 
   public static final double index = 3;
-  public static final double L1 = 6;
+  public static final double L1 = 8;
   public static final double L23 = 8;
   public static final double L4 = 3;
 

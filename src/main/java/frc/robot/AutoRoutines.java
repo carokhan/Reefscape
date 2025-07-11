@@ -160,7 +160,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore4)
-                    .andThen(Commands.waitSeconds(0.03125))
+                    .andThen(Commands.waitSeconds(0.0625))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,

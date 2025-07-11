@@ -365,6 +365,7 @@ public class Superstructure {
         .onTrue(
             Commands.parallel(
                 // led.setColor(LEDConstants.Mode.CORAL_READY.color),
+                hopper.setVoltage(0),
                 outtake.setVoltage(0),
                 led.setState(State.CORAL_READY),
                 this.forceState(State.CORAL_READY)));
@@ -510,7 +511,7 @@ public class Superstructure {
                     Commands.waitUntil(() -> !outtake.getDetected()),
                     Commands.parallel(
                         outtake.setVoltage(OuttakeConstants.L1),
-                        elevator.setExtension(ElevatorConstants.L1 + 0.375)))
+                        elevator.setExtension(ElevatorConstants.L1 + 0.5)))
                 .andThen(
                     Commands.waitSeconds(ElevatorConstants.confirmTimeout)
                         .andThen(

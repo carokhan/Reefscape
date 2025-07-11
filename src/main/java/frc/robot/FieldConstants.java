@@ -67,14 +67,14 @@ public class FieldConstants {
     public static final double stationLength = Units.inchesToMeters(79.750);
     public static final Pose2d rightCenterFace =
         new Pose2d(
-            Units.inchesToMeters(30.526),
-            Units.inchesToMeters(22.824),
+            Units.inchesToMeters(35.526),
+            Units.inchesToMeters(45.824),
             Rotation2d.fromDegrees(144.011 - 90));
 
     public static final Pose2d leftCenterFace =
         new Pose2d(
-            Units.inchesToMeters(30.526),
-            Units.inchesToMeters(281.176),
+            Units.inchesToMeters(35.526),
+            Units.inchesToMeters(276.176),
             Rotation2d.fromDegrees(90 - 144.011));
   }
 
