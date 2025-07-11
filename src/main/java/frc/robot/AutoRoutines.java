@@ -779,7 +779,7 @@ public class AutoRoutines {
             .orElse(7.15);
     boolean reached = false;
 
-    reached = (Math.abs(threshold - drive.getPose().getX()) < 0.2);
+    reached = (Math.abs(threshold - drive.getPose().getX()) < 0.05);
     Logger.recordOutput("AutoAlign/atBarge", reached);
     return reached;
   }
