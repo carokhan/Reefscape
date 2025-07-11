@@ -654,7 +654,7 @@ public class AutoRoutines {
             Commands.parallel(
                     Commands.waitUntil(this::atBarge)
                         .andThen(superstructure.elevator.setExtension(ElevatorConstants.AN)),
-                    Commands.waitUntil(
+                Commands.waitUntil(
                             () -> superstructure.elevator.isNearExtension(ElevatorConstants.AN))
                         .andThen(superstructure.gripper.setVoltage(GripperConstants.AN)))
                 .onlyWhile(superstructure.gripper::getDetected)
@@ -736,13 +736,10 @@ public class AutoRoutines {
         Commands.waitSeconds(1),
         this.HtoI().onlyWhile(() -> !superstructure.gripper.getDetected()),
         Commands.waitSeconds(1),
-        this.Itobarge().onlyWhile(superstructure.gripper::getDetected),
-        this.bargeToF().onlyWhile(() -> !superstructure.gripper.getDetected()),
-        Commands.waitSeconds(1),
         Commands.deadline(
             Commands.waitUntil(() -> DriverStation.getMatchTime() > 2.0),
             Commands.sequence(
-                this.Ftobarge().onlyWhile(superstructure.gripper::getDetected), this.bargetoPLO())),
+                this.Itobarge().onlyWhile(superstructure.gripper::getDetected), this.bargetoPLO())),
         this.bargetoPLO());
   }
 
