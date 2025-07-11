@@ -775,7 +775,7 @@ public class AutoRoutines {
   public boolean atBarge() {
     double threshold =
         DriverStation.getAlliance()
-            .map(alliance -> alliance == Alliance.Red ? 10.45 : 7.15)
+            .map(alliance -> alliance == Alliance.Red ? 10.375 : 7.15)
             .orElse(7.15);
     boolean reached = false;
 
