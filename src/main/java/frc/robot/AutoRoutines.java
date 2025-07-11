@@ -654,7 +654,7 @@ public class AutoRoutines {
             Commands.parallel(
                     Commands.waitUntil(this::atBarge)
                         .andThen(superstructure.elevator.setExtension(ElevatorConstants.AN)),
-                Commands.waitUntil(
+                    Commands.waitUntil(
                             () -> superstructure.elevator.isNearExtension(ElevatorConstants.AN))
                         .andThen(superstructure.gripper.setVoltage(GripperConstants.AN)))
                 .onlyWhile(superstructure.gripper::getDetected)
