@@ -2,9 +2,12 @@ package frc.robot.subsystems.hopper;
 
 import edu.wpi.first.wpilibj2.command.Command;
 import edu.wpi.first.wpilibj2.command.SubsystemBase;
+import frc.robot.subsystems.hopper.HopperIO.HopperIOInputs;
 import frc.robot.subsystems.proximity.ProximityIO;
 import frc.robot.subsystems.proximity.ProximityIOInputsAutoLogged;
+import frc.robot.subsystems.proximity.ProximityIO.ProximityIOInputs;
 import java.util.function.DoubleSupplier;
+
 import org.littletonrobotics.junction.Logger;
 
 public class Hopper extends SubsystemBase {
@@ -29,9 +32,11 @@ public class Hopper extends SubsystemBase {
   }
 
   public Command setVoltage(DoubleSupplier volts) {
+    boolean shouldAct = proximityInputs.detected && (volts.getAsDouble() > 0);
+    double multiplier = shouldAct ? -1.0 : 1.0;
     return this.run(
         () -> {
-          io.setVoltage(volts.getAsDouble());
+          io.setVoltage(volts.getAsDouble() * multiplier);
         });
   }
 
