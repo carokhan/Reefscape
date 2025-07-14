@@ -6,7 +6,7 @@ public class GripperConstants {
   public static final int talon = 40;
   public static final int laser = 41;
 
-  public static final double AP = 1;
+  public static final double AP = 8;
   public static final double A23 = -12;
   public static final double AN = 9;
 
@@ -18,7 +18,7 @@ public class GripperConstants {
   public static final double gearing = 3.0;
   public static final double moi = 0.004;
 
-  public static final double proximityThreshold = 0.1;
+  public static final double proximityThreshold = 0.15;
 
   public static final ProximityPeriod period = ProximityPeriod.k40ms;
 }

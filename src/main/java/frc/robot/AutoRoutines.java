@@ -160,7 +160,7 @@ public class AutoRoutines {
                 Commands.waitUntil(this::atReef)
                     .andThen(superstructure.elevator.setExtension(ElevatorConstants.L4)),
                 Commands.waitUntil(this::atScore4)
-                    .andThen(Commands.waitSeconds(0.03125))
+                    .andThen(Commands.waitSeconds(0.0625))
                     .andThen(superstructure.outtake.setVoltage(OuttakeConstants.L4)),
                 AutoAlign.translateToPose(
                     drive,
@@ -709,7 +709,12 @@ public class AutoRoutines {
     final var routine = factory.newRoutine("barge to PLO");
     final var intake = routine.trajectory("bargetoPLO");
 
-    routine.active().whileTrue(Commands.sequence(intake.resetOdometry(), intake.cmd()));
+    routine
+        .active()
+        .whileTrue(
+            Commands.parallel(
+                Commands.sequence(intake.resetOdometry(), intake.cmd()),
+                superstructure.elevator.setExtension(ElevatorConstants.intake)));
 
     routine
         .observe(intake.done())
@@ -731,10 +736,10 @@ public class AutoRoutines {
         Commands.waitSeconds(1),
         this.HtoI().onlyWhile(() -> !superstructure.gripper.getDetected()),
         Commands.waitSeconds(1),
-        this.Itobarge().onlyWhile(superstructure.gripper::getDetected),
-        this.bargeToF().onlyWhile(() -> !superstructure.gripper.getDetected()),
-        Commands.waitSeconds(1),
-        this.Ftobarge().onlyWhile(superstructure.gripper::getDetected),
+        Commands.deadline(
+            Commands.waitUntil(() -> DriverStation.getMatchTime() > 2.0),
+            Commands.sequence(
+                this.Itobarge().onlyWhile(superstructure.gripper::getDetected), this.bargetoPLO())),
         this.bargetoPLO());
   }
 
@@ -770,11 +775,11 @@ public class AutoRoutines {
   public boolean atBarge() {
     double threshold =
         DriverStation.getAlliance()
-            .map(alliance -> alliance == Alliance.Red ? 10.5 : 7.5)
+            .map(alliance -> alliance == Alliance.Red ? 10 : 7.5)
             .orElse(7.5);
     boolean reached = false;
 
-    reached = (Math.abs(threshold - drive.getPose().getX()) < 0.03125);
+    reached = (Math.abs(threshold - drive.getPose().getX()) < 0.1);
     Logger.recordOutput("AutoAlign/atBarge", reached);
     return reached;
   }

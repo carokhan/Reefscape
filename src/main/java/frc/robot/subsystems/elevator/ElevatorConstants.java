@@ -5,16 +5,16 @@ import frc.robot.subsystems.Superstructure.CoralTarget;
 import java.util.Map;
 
 public class ElevatorConstants {
-  public static final int talon = 10;
-  public static final int followerTalon = 11;
+  public static final int talon = 11;
+  public static final int followerTalon = 10;
 
   public static final double intake = 0.014;
   public static final double AP = 0.05;
-  public static final double L1 = 0.38;
+  public static final double L1 = 0.42;
   public static final double A2 = 0.42;
-  public static final double L2 = 0.86;
+  public static final double L2 = 0.79;
   public static final double A3 = 0.81;
-  public static final double L3 = 1.23;
+  public static final double L3 = 1.18;
   public static final double L4 = 1.77;
   public static final double AN = 1.78;
 
@@ -46,8 +46,8 @@ public class ElevatorConstants {
   public static final double positionConversionFactor = drumRadius * 2 * Math.PI / gearing;
   public static final double tolerance = .005;
 
-  public static final int statorCurrent = 120;
-  public static final int supplyCurrent = 100;
+  public static final int statorCurrent = 100;
+  public static final int supplyCurrent = 80;
   public static final int supplyCurrentLow = 60;
 
   public static final double[] kS = {0.74, 0.74, 0.74}; // 0.2
