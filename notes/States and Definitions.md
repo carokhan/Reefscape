@@ -14,7 +14,6 @@ erDiagram
     PREINTAKE{
         bool coral_in_robot "false"
         bool rollers_running "true"
-        **
         bool coralHopper "false"
         bool coralOuttake "false"
         string elevatorPos "INTAKE"
@@ -22,7 +21,6 @@ erDiagram
     TRANSFER{
         bool coral_in_robot "true"
         bool rollers_running "true"
-        **
         bool coralHopper "true"
         bool coralOuttake "false"
         string elevatorPos "INTAKE"
@@ -30,57 +28,51 @@ erDiagram
     PRESHOOT{
         bool coral_in_robot "true"
         bool rollers_running "false"
-        **
         bool coralHopper "false"
         bool coralOuttake "true"
         string elevatorPos "INTAKE"
         bool reefAlign "false"
     }
-    C-PRESCORE {
+    CPRESCORE{
         bool coral_in_robot "true"
         bool rollers_running "false"
         bool atReef "false"
-        **
         bool coralHopper "false"
         bool coralOuttake "true"
         string elevatorPos "INTAKE"
         bool reefDetected "false"
         bool reefAlign "true"
     }
-    SCORE {
+    SCORE{
         bool coral_in_robot "true"
         bool rollers_running "false"
         bool atReef "false"
-        **
         bool coralHopper "false"
         bool coralOuttake "true"
         string elevatorPos "INTAKE"
         bool reefDetected "false"
         bool reefAlign "true"
     }
-    APREINTAKE {
+    APREINTAKE{
         bool algae_in_robot "false"
         bool rollers_running "false"
-        **
         bool algaeDetected "false"
         string elevatorPos "ZERO"
         bool reefAlign "true"
     }
-    INTAKE-LEVEL {
+    INTAKE_LEVEL{
         bool algae_in_robot "false"
         bool rollers_running "true"
-        **
         bool algaeDetected "false"
         string elevatorPos "LEVEL"
         bool reefAlign "true"
     }
-    A-IDLE {
+    A_IDLE{
         bool algae_in_robot "true"
         bool rollers_running "false"
-        **
         bool algaeDetected "true"
         string elevatorPos "ZERO"
-        bool reefAlign "??"
+        bool reefAlign "unknown"
     }
 ```
 
